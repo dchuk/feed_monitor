@@ -33,3 +33,10 @@ Adopt imperative commit messages in the format `scope: action`, e.g., `sources: 
 ## Security & Configuration Tips
 
 Store secrets (API keys, webhook tokens) in `config/credentials/` and never commit plain-text values. When adding HTTP endpoints or webhooks, default to Solid Queue middleware for retries and respect the allowlist in `config/feed_monitor.yml`. Document new environment variables in `config/application.yml.sample` and call out any migrations that impact host apps.
+
+## Agent Notes (2025-10-08)
+
+- Finished roadmap section 05.03 (structured fetch error handling). Added `FeedMonitor::Fetching::FetchError` hierarchy, expanded `FeedFetcher` error handling, and ensured instrumentation payloads include success/error context.
+- Fetch attempts now always create `FetchLog` records and update `Source` failure state; added MiniTest coverage for timeout, HTTP 404, and malformed feed scenarios.
+- Relevant tests: `bundle exec rails test test/lib/feed_monitor/fetching/feed_fetcher_test.rb` and full suite via `bundle exec rails test` (both passing).
+- Next roadmap item is 05.04 (not started). Untracked tmp dir `test/lib/tmp` can be safely ignored if it reappears.

@@ -160,11 +160,11 @@
 
 ### 05.03 Add Structured Error Handling
 
-- [ ] 05.03.01 Create FetchError class hierarchy
-- [ ] 05.03.02 Log all fetch attempts to FetchLog
-- [ ] 05.03.03 Update source status on fetch
-- [ ] 05.03.04 Emit ActiveSupport notifications
-- [ ] 05.03.05 Test error scenarios (timeout, 404, malformed)
+- [x] 05.03.01 Create FetchError class hierarchy
+- [x] 05.03.02 Log all fetch attempts to FetchLog
+- [x] 05.03.03 Update source status on fetch
+- [x] 05.03.04 Emit ActiveSupport notifications
+- [x] 05.03.05 Test error scenarios (timeout, 404, malformed)
 
 ### 05.04 Implement Rate Limiting
 

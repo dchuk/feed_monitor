@@ -3,6 +3,7 @@ require "feed_monitor/engine"
 require "feed_monitor/instrumentation"
 require "feed_monitor/metrics"
 require "feed_monitor/http"
+require "feed_monitor/fetching/fetch_error"
 require "feed_monitor/fetching/feed_fetcher"
 
 module FeedMonitor

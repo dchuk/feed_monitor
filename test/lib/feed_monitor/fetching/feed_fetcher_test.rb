@@ -15,9 +15,15 @@ module FeedMonitor
           feed_url: "https://www.ruby-lang.org/en/feeds/news.rss"
         )
 
+        finish_payloads = []
         result = nil
-        VCR.use_cassette("feed_monitor/fetching/rss_success") do
-          result = FeedFetcher.new(source: source).call
+        ActiveSupport::Notifications.subscribed(
+          ->(_name, _start, _finish, _id, payload) { finish_payloads << payload },
+          "feed_monitor.fetch.finish"
+        ) do
+          VCR.use_cassette("feed_monitor/fetching/rss_success") do
+            result = FeedFetcher.new(source: source).call
+          end
         end
 
         assert_equal :fetched, result.status
@@ -34,6 +40,13 @@ module FeedMonitor
         assert log.feed_size_bytes.positive?
         assert_equal result.feed.entries.size, log.items_in_feed
         assert_equal Feedjira::Parser::RSS.name, log.metadata["parser"]
+
+        finish_payload = finish_payloads.last
+        assert finish_payload[:success]
+        assert_equal :fetched, finish_payload[:status]
+        assert_equal 200, finish_payload[:http_status]
+        assert_equal source.id, finish_payload[:source_id]
+        assert_equal Feedjira::Parser::RSS.name, finish_payload[:parser]
       end
 
       test "reuses etag and handles 304 not modified responses" do
@@ -74,6 +87,11 @@ module FeedMonitor
         assert log.success
         assert_equal 304, log.http_status
         assert_nil log.items_in_feed
+
+        source.reload
+        assert_equal 0, source.failure_count
+        assert_nil source.last_error
+        assert_nil source.last_error_at
       end
 
       test "parses rss atom and json feeds via feedjira" do
@@ -105,6 +123,93 @@ module FeedMonitor
           expected_format = format == :json ? "json_feed" : format.to_s
           assert_equal expected_format, source.reload.feed_format
         end
+      end
+
+      test "records timeout failures and emits failure notifications" do
+        url = "https://example.com/rss-timeout.xml"
+        source = build_source(name: "Timeout Source", feed_url: url)
+
+        stub_request(:get, url).to_raise(Faraday::TimeoutError.new("execution expired"))
+
+        finish_payloads = []
+        result = ActiveSupport::Notifications.subscribed(
+          ->(_name, _start, _finish, _id, payload) { finish_payloads << payload },
+          "feed_monitor.fetch.finish"
+        ) do
+          FeedFetcher.new(source: source).call
+        end
+
+        assert_equal :failed, result.status
+        assert_kind_of FeedMonitor::Fetching::TimeoutError, result.error
+
+        source.reload
+        assert_equal 1, source.failure_count
+        assert_nil source.last_http_status
+        assert_equal result.error.message, source.last_error
+        assert source.last_error_at.present?
+
+        log = source.fetch_logs.order(:created_at).last
+        refute log.success
+        assert_nil log.http_status
+        assert_equal "FeedMonitor::Fetching::TimeoutError", log.error_class
+        assert_equal result.error.message, log.error_message
+        assert_equal "timeout", log.metadata["error_code"]
+
+        payload = finish_payloads.last
+        refute payload[:success]
+        assert_equal :failed, payload[:status]
+        assert_equal "FeedMonitor::Fetching::TimeoutError", payload[:error_class]
+        assert_equal source.id, payload[:source_id]
+        assert_equal "timeout", payload[:error_code]
+      end
+
+      test "records http failures with status codes" do
+        url = "https://example.com/missing-feed.xml"
+        source = build_source(name: "Missing Feed", feed_url: url)
+
+        stub_request(:get, url).to_return(status: 404, body: "Not Found", headers: { "Content-Type" => "text/plain" })
+
+        result = FeedFetcher.new(source: source).call
+
+        assert_equal :failed, result.status
+        assert_kind_of FeedMonitor::Fetching::HTTPError, result.error
+        assert_equal 404, result.error.http_status
+
+        source.reload
+        assert_equal 1, source.failure_count
+        assert_equal 404, source.last_http_status
+        assert source.last_error.include?("404")
+
+        log = source.fetch_logs.order(:created_at).last
+        refute log.success
+        assert_equal 404, log.http_status
+        assert_equal "FeedMonitor::Fetching::HTTPError", log.error_class
+        assert_equal "http_error", log.metadata["error_code"]
+        assert_match(/404/, log.error_message)
+      end
+
+      test "records parsing failures when feed is malformed" do
+        url = "https://example.com/bad-feed.xml"
+        source = build_source(name: "Bad Feed", feed_url: url)
+
+        stub_request(:get, url).to_return(status: 200, body: "not actually a feed", headers: { "Content-Type" => "text/plain" })
+
+        result = FeedFetcher.new(source: source).call
+
+        assert_equal :failed, result.status
+        assert_kind_of FeedMonitor::Fetching::ParsingError, result.error
+
+        source.reload
+        assert_equal 1, source.failure_count
+        assert_equal 200, source.last_http_status
+        assert source.last_error.present?
+
+        log = source.fetch_logs.order(:created_at).last
+        refute log.success
+        assert_equal 200, log.http_status
+        assert_equal "FeedMonitor::Fetching::ParsingError", log.error_class
+        assert_equal "parsing", log.metadata["error_code"]
+        assert_match(/parse/i, log.error_message)
       end
 
       private
