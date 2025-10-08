@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "time"
+require "digest"
 require "feed_monitor/http"
 require "feed_monitor/fetching/fetch_error"
 
@@ -10,11 +11,19 @@ module FeedMonitor
       Result = Struct.new(:status, :feed, :response, :body, :error, keyword_init: true)
       ResponseWrapper = Struct.new(:status, :headers, :body, keyword_init: true)
 
-      attr_reader :source, :client
+      MIN_FETCH_INTERVAL = 5.minutes.to_f
+      MAX_FETCH_INTERVAL = 24.hours.to_f
+      INCREASE_FACTOR = 1.25
+      DECREASE_FACTOR = 0.75
+      FAILURE_INCREASE_FACTOR = 1.5
+      JITTER_PERCENT = 0.1
 
-      def initialize(source:, client: nil)
+      attr_reader :source, :client, :jitter_proc
+
+      def initialize(source:, client: nil, jitter: nil)
         @source = source
         @client = client
+        @jitter_proc = jitter
       end
 
       def call
@@ -98,14 +107,16 @@ module FeedMonitor
         body = response.body
         feed = parse_feed(body, response)
 
-        update_source_for_success(response, duration_ms, feed)
+        feed_body_signature = body_digest(body)
+        update_source_for_success(response, duration_ms, feed, feed_body_signature)
         create_fetch_log(
           response: response,
           duration_ms: duration_ms,
           started_at: started_at,
           feed: feed,
           success: true,
-          body: body
+          body: body,
+          feed_signature: feed_body_signature
         )
 
         instrumentation_payload[:success] = true
@@ -140,7 +151,7 @@ module FeedMonitor
         raise ParsingError.new(error.message, response: response, original_error: error)
       end
 
-      def update_source_for_success(response, duration_ms, feed)
+      def update_source_for_success(response, duration_ms, feed, feed_signature)
         attributes = {
           last_fetched_at: Time.current,
           last_fetch_duration_ms: duration_ms,
@@ -160,6 +171,8 @@ module FeedMonitor
           attributes[:last_modified] = parsed_time if parsed_time
         end
 
+        interval_seconds = apply_adaptive_interval!(attributes, content_changed: feed_signature_changed?(feed_signature))
+        persist_adaptive_metadata!(interval_seconds:, feed_signature: feed_signature)
         source.update!(attributes)
       end
 
@@ -182,6 +195,8 @@ module FeedMonitor
           attributes[:last_modified] = parsed_time if parsed_time
         end
 
+        interval_seconds = apply_adaptive_interval!(attributes, content_changed: false)
+        persist_adaptive_metadata!(interval_seconds:)
         source.update!(attributes)
       end
 
@@ -196,10 +211,12 @@ module FeedMonitor
           failure_count: source.failure_count.to_i + 1
         }
 
+        interval_seconds = apply_adaptive_interval!(attrs, content_changed: false, failure: true)
+        persist_adaptive_metadata!(interval_seconds:)
         source.update!(attrs)
       end
 
-      def create_fetch_log(response:, duration_ms:, started_at:, success:, feed: nil, error: nil, body: nil)
+      def create_fetch_log(response:, duration_ms:, started_at:, success:, feed: nil, error: nil, body: nil, feed_signature: nil)
         source.fetch_logs.create!(
           success:,
           started_at: started_at,
@@ -212,7 +229,7 @@ module FeedMonitor
           error_class: error&.class&.name,
           error_message: error&.message,
           error_backtrace: error_backtrace(error),
-          metadata: feed_metadata(feed, error: error)
+          metadata: feed_metadata(feed, error: error, feed_signature: feed_signature)
         )
       end
 
@@ -222,10 +239,11 @@ module FeedMonitor
         feed.class.name.split("::").last.underscore
       end
 
-      def feed_metadata(feed, error: nil)
+      def feed_metadata(feed, error: nil, feed_signature: nil)
         metadata = {}
         metadata[:parser] = feed.class.name if feed
         metadata[:error_code] = error.code if error&.respond_to?(:code)
+        metadata[:feed_signature] = feed_signature if feed_signature
         metadata
       end
 
@@ -290,6 +308,76 @@ module FeedMonitor
           message = error.message
           HTTPError.new(status: status, message: message, response: response, original_error: error)
         end
+      end
+
+      def feed_signature_changed?(feed_signature)
+        return false if feed_signature.blank?
+
+        (source.metadata || {}).fetch("last_feed_signature", nil) != feed_signature
+      end
+
+      def persist_adaptive_metadata!(interval_seconds:, feed_signature: nil)
+        metadata = (source.metadata || {}).dup
+        metadata["dynamic_fetch_interval_seconds"] = interval_seconds
+        metadata["last_feed_signature"] = feed_signature if feed_signature.present?
+        source.metadata = metadata
+      end
+
+      def apply_adaptive_interval!(attributes, content_changed:, failure: false)
+        interval_seconds = compute_next_interval_seconds(content_changed:, failure:)
+        scheduled_time = Time.current + adjusted_interval_with_jitter(interval_seconds)
+        scheduled_time = [scheduled_time, source.backoff_until].compact.max if source.backoff_until.present?
+
+        attributes[:next_fetch_at] = scheduled_time
+        attributes[:backoff_until] = failure ? scheduled_time : nil
+        interval_seconds
+      end
+
+      def compute_next_interval_seconds(content_changed:, failure:)
+        current = [current_interval_seconds, MIN_FETCH_INTERVAL].max
+
+        next_interval = if failure
+                          current * FAILURE_INCREASE_FACTOR
+                        elsif content_changed
+                          current * DECREASE_FACTOR
+                        else
+                          current * INCREASE_FACTOR
+                        end
+
+        next_interval = MIN_FETCH_INTERVAL if next_interval < MIN_FETCH_INTERVAL
+        next_interval = MAX_FETCH_INTERVAL if next_interval > MAX_FETCH_INTERVAL
+        next_interval.to_f
+      end
+
+      def current_interval_seconds
+        metadata = source.metadata || {}
+        stored = metadata["dynamic_fetch_interval_seconds"]
+        return stored.to_f if stored.present?
+
+        source.fetch_interval_hours.to_f * 1.hour.to_f
+      end
+
+      def adjusted_interval_with_jitter(interval_seconds)
+        jitter = jitter_offset(interval_seconds)
+        adjusted = interval_seconds + jitter
+        adjusted = MIN_FETCH_INTERVAL if adjusted < MIN_FETCH_INTERVAL
+        adjusted
+      end
+
+      def jitter_offset(interval_seconds)
+        return 0 if interval_seconds <= 0
+        return jitter_proc.call(interval_seconds) if jitter_proc.respond_to?(:call)
+
+        jitter_range = interval_seconds * JITTER_PERCENT
+        return 0 if jitter_range <= 0
+
+        ((rand * 2) - 1) * jitter_range
+      end
+
+      def body_digest(body)
+        return if body.blank?
+
+        Digest::SHA256.hexdigest(body)
       end
     end
   end

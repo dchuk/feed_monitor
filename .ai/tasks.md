@@ -168,11 +168,11 @@
 
 ### 05.04 Implement Rate Limiting
 
-- [ ] 05.04.01 Add per-host rate limiting logic
-- [ ] 05.04.02 Add source-level jitter to avoid stampedes
-- [ ] 05.04.03 Respect backoff_until field
-- [ ] 05.04.04 Update failure_count on errors
-- [ ] 05.04.05 Test rate limiting behavior
+- [x] 05.04.01 Add adaptive fetch interval logic based on feed activity
+- [x] 05.04.02 Add source-level jitter to avoid stampedes
+- [x] 05.04.03 Respect backoff_until field
+- [x] 05.04.04 Update failure_count on errors
+- [x] 05.04.05 Test rate limiting behavior
 
 **Deliverable: Production-grade fetching with Feedjira-backed parsing**
 **Test: Fetch real feeds via console, verify Feedjira parsing and conditional GET**

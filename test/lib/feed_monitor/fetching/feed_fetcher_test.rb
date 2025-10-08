@@ -22,7 +22,7 @@ module FeedMonitor
           "feed_monitor.fetch.finish"
         ) do
           VCR.use_cassette("feed_monitor/fetching/rss_success") do
-            result = FeedFetcher.new(source: source).call
+            result = FeedFetcher.new(source: source, jitter: ->(_) { 0 }).call
           end
         end
 
@@ -65,7 +65,7 @@ module FeedMonitor
             }
           )
 
-        result = FeedFetcher.new(source: source).call
+        result = FeedFetcher.new(source: source, jitter: ->(_) { 0 }).call
         assert_equal :fetched, result.status
 
         source.reload
@@ -75,7 +75,7 @@ module FeedMonitor
           .with(headers: { "If-None-Match" => '"abcd1234"' })
           .to_return(status: 304, headers: { "ETag" => '"abcd1234"' })
 
-        second_result = FeedFetcher.new(source: source).call
+        second_result = FeedFetcher.new(source: source, jitter: ->(_) { 0 }).call
 
         assert_equal :not_modified, second_result.status
 
@@ -115,7 +115,7 @@ module FeedMonitor
 
           result = nil
           VCR.use_cassette("feed_monitor/fetching/#{format}_success") do
-            result = FeedFetcher.new(source: source).call
+            result = FeedFetcher.new(source: source, jitter: ->(_) { 0 }).call
           end
 
           assert_equal :fetched, result.status
@@ -136,7 +136,7 @@ module FeedMonitor
           ->(_name, _start, _finish, _id, payload) { finish_payloads << payload },
           "feed_monitor.fetch.finish"
         ) do
-          FeedFetcher.new(source: source).call
+          FeedFetcher.new(source: source, jitter: ->(_) { 0 }).call
         end
 
         assert_equal :failed, result.status
@@ -169,7 +169,7 @@ module FeedMonitor
 
         stub_request(:get, url).to_return(status: 404, body: "Not Found", headers: { "Content-Type" => "text/plain" })
 
-        result = FeedFetcher.new(source: source).call
+        result = FeedFetcher.new(source: source, jitter: ->(_) { 0 }).call
 
         assert_equal :failed, result.status
         assert_kind_of FeedMonitor::Fetching::HTTPError, result.error
@@ -194,7 +194,7 @@ module FeedMonitor
 
         stub_request(:get, url).to_return(status: 200, body: "not actually a feed", headers: { "Content-Type" => "text/plain" })
 
-        result = FeedFetcher.new(source: source).call
+        result = FeedFetcher.new(source: source, jitter: ->(_) { 0 }).call
 
         assert_equal :failed, result.status
         assert_kind_of FeedMonitor::Fetching::ParsingError, result.error
@@ -212,14 +212,124 @@ module FeedMonitor
         assert_match(/parse/i, log.error_message)
       end
 
+      test "decreases fetch interval and clears backoff when feed content changes" do
+        travel_to Time.zone.parse("2024-01-01 10:00:00 UTC")
+
+        body = File.read(file_fixture("feeds/rss_sample.xml"))
+        url = "https://example.com/rss.xml"
+
+        source = build_source(name: "Adaptive", feed_url: url, fetch_interval_hours: 1.0)
+
+        stub_request(:get, url)
+          .to_return(status: 200, body:, headers: { "Content-Type" => "application/rss+xml" })
+
+        FeedFetcher.new(source: source, jitter: ->(_) { 0 }).call
+
+        source.reload
+
+        dynamic_hours = source.metadata["dynamic_fetch_interval_seconds"].to_f / 1.hour.to_f
+        assert_in_delta 0.75, dynamic_hours, 1e-6
+        assert_equal 1, source.fetch_interval_hours
+        assert_equal Time.current + 45.minutes, source.next_fetch_at
+        assert_nil source.backoff_until
+        assert source.metadata.key?("last_feed_signature")
+      ensure
+        travel_back
+      end
+
+      test "increases interval when feed content unchanged" do
+        travel_to Time.zone.parse("2024-01-01 09:00:00 UTC")
+
+        body = File.read(file_fixture("feeds/rss_sample.xml"))
+        url = "https://example.com/rss.xml"
+
+        source = build_source(name: "Adaptive", feed_url: url, fetch_interval_hours: 1.0)
+
+        stub_request(:get, url)
+          .to_return(status: 200, body:, headers: { "Content-Type" => "application/rss+xml", "ETag" => "abc" })
+
+        FeedFetcher.new(source: source, jitter: ->(_) { 0 }).call
+
+        source.reload
+        first_dynamic_hours = source.metadata["dynamic_fetch_interval_seconds"].to_f / 1.hour.to_f
+        assert_in_delta 0.75, first_dynamic_hours, 1e-6
+
+        stub_request(:get, url)
+          .to_return(status: 200, body:, headers: { "Content-Type" => "application/rss+xml", "ETag" => "abc" })
+
+        FeedFetcher.new(source: source, jitter: ->(_) { 0 }).call
+
+        source.reload
+        expected_hours = 0.75 * FeedMonitor::Fetching::FeedFetcher::INCREASE_FACTOR
+        dynamic_hours = source.metadata["dynamic_fetch_interval_seconds"].to_f / 1.hour.to_f
+        assert_in_delta expected_hours, dynamic_hours, 1e-6
+        assert_equal Time.current + expected_hours.hours, source.next_fetch_at
+      ensure
+        travel_back
+      end
+
+      test "respects min and max interval bounds" do
+        travel_to Time.zone.parse("2024-01-01 08:00:00 UTC")
+
+        url = "https://example.com/minmax.xml"
+        body = "<rss><channel><title>Test</title><item><title>One</title></item></channel></rss>"
+
+        source = build_source(name: "Min", feed_url: url, fetch_interval_hours: 1.0)
+        source.update!(metadata: { "dynamic_fetch_interval_seconds" => 60 })
+
+        stub_request(:get, url)
+          .to_return(status: 200, body:, headers: { "Content-Type" => "application/rss+xml" })
+
+        FeedFetcher.new(source: source, jitter: ->(_) { 0 }).call
+        source.reload
+
+        min_hours = FeedMonitor::Fetching::FeedFetcher::MIN_FETCH_INTERVAL / 1.hour.to_f
+        dynamic_hours = source.metadata["dynamic_fetch_interval_seconds"].to_f / 1.hour.to_f
+        assert_in_delta min_hours, dynamic_hours, 1e-6
+
+        source.update!(metadata: { "dynamic_fetch_interval_seconds" => 200.hours.to_f })
+
+        stub_request(:get, url)
+          .to_return(status: 304, headers: { "Content-Type" => "application/rss+xml" })
+
+        FeedFetcher.new(source: source, jitter: ->(_) { 0 }).call
+        source.reload
+
+        max_hours = FeedMonitor::Fetching::FeedFetcher::MAX_FETCH_INTERVAL / 1.hour.to_f
+        dynamic_hours = source.metadata["dynamic_fetch_interval_seconds"].to_f / 1.hour.to_f
+        assert_in_delta max_hours, dynamic_hours, 1e-6
+      ensure
+        travel_back
+      end
+
+      test "increases interval and sets backoff on failure" do
+        travel_to Time.zone.parse("2024-01-01 07:00:00 UTC")
+
+        url = "https://example.com/failure.xml"
+        source = build_source(name: "Failure", feed_url: url, fetch_interval_hours: 1.0)
+
+        stub_request(:get, url).to_raise(Faraday::TimeoutError.new("boom"))
+
+        FeedFetcher.new(source: source, jitter: ->(_) { 0 }).call
+
+        source.reload
+        assert_equal 1, source.failure_count
+        expected_hours = 1.0 * FeedMonitor::Fetching::FeedFetcher::FAILURE_INCREASE_FACTOR
+        dynamic_hours = source.metadata["dynamic_fetch_interval_seconds"].to_f / 1.hour.to_f
+        assert_in_delta expected_hours, dynamic_hours, 1e-6
+        assert_equal source.next_fetch_at, source.backoff_until
+      ensure
+        travel_back
+      end
+
       private
 
-      def build_source(name:, feed_url:)
+      def build_source(name:, feed_url:, fetch_interval_hours: 6)
         FeedMonitor::Source.create!(
           name: name,
           feed_url: feed_url,
           website_url: "https://#{URI.parse(feed_url).host}",
-          fetch_interval_hours: 6
+          fetch_interval_hours: fetch_interval_hours
         )
       end
     end
