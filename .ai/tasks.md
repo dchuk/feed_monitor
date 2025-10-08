@@ -7,9 +7,8 @@
 ### 01.01 Generate Mountable Engine
 
 - [x] 01.01.01 Generate Rails engine with `rails plugin new feed_monitor --mountable`
-- [ ] 01.01.02 Configure isolate_namespace in engine.rb
+- [x] 01.01.02 Configure isolate_namespace in engine.rb
 - [ ] 01.01.03 Add minimal gemspec dependencies (Rails 8)
-- [ ] 01.01.04 Create dummy app for testing (Rails 8)
 
 ### 01.02 Create Installation Generator
 
