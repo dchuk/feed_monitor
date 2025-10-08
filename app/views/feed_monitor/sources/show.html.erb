@@ -21,9 +21,10 @@
           <h2 class="text-lg font-medium">Source Details</h2>
         </div>
         <dl class="divide-y divide-slate-100">
-          <% details = {
+          <% interval_hours = number_with_precision(@source.fetch_interval_minutes / 60.0, precision: 2)
+             details = {
                "Website" => (@source.website_url.presence || "—"),
-               "Fetch interval" => "#{@source.fetch_interval_hours} hours",
+               "Fetch interval" => "#{@source.fetch_interval_minutes} minutes (~#{interval_hours} hours)",
                "Scraper" => @source.scraper_adapter,
                "Active" => @source.active? ? "Yes" : "No",
                "Scraping" => @source.scraping_enabled? ? "Enabled" : "Disabled",

@@ -9,7 +9,7 @@ module FeedMonitor
         name: "Example Source",
         feed_url: "https://example.com/feed.xml",
         website_url: "https://example.com",
-        fetch_interval_hours: 6,
+        fetch_interval_minutes: 360,
         scraper_adapter: "readability"
       )
 

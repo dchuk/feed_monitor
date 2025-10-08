@@ -354,7 +354,7 @@ module FeedMonitor
         stored = metadata["dynamic_fetch_interval_seconds"]
         return stored.to_f if stored.present?
 
-        source.fetch_interval_hours.to_f * 1.hour.to_f
+        source.fetch_interval_minutes.to_f * 60.0
       end
 
       def adjusted_interval_with_jitter(interval_seconds)

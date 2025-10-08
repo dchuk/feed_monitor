@@ -56,7 +56,7 @@ module FeedMonitor
         scraping_enabled: false,
         auto_scrape: false,
         requires_javascript: false,
-        fetch_interval_hours: 6,
+        fetch_interval_minutes: 360,
         scraper_adapter: "readability"
       }
     end
@@ -66,7 +66,7 @@ module FeedMonitor
         :name,
         :feed_url,
         :website_url,
-        :fetch_interval_hours,
+        :fetch_interval_minutes,
         :active,
         :auto_scrape,
         :scraping_enabled,

@@ -218,7 +218,7 @@ module FeedMonitor
         body = File.read(file_fixture("feeds/rss_sample.xml"))
         url = "https://example.com/rss.xml"
 
-        source = build_source(name: "Adaptive", feed_url: url, fetch_interval_hours: 1.0)
+        source = build_source(name: "Adaptive", feed_url: url, fetch_interval_minutes: 60)
 
         stub_request(:get, url)
           .to_return(status: 200, body:, headers: { "Content-Type" => "application/rss+xml" })
@@ -229,7 +229,7 @@ module FeedMonitor
 
         dynamic_hours = source.metadata["dynamic_fetch_interval_seconds"].to_f / 1.hour.to_f
         assert_in_delta 0.75, dynamic_hours, 1e-6
-        assert_equal 1, source.fetch_interval_hours
+        assert_equal 60, source.fetch_interval_minutes
         assert_equal Time.current + 45.minutes, source.next_fetch_at
         assert_nil source.backoff_until
         assert source.metadata.key?("last_feed_signature")
@@ -243,7 +243,7 @@ module FeedMonitor
         body = File.read(file_fixture("feeds/rss_sample.xml"))
         url = "https://example.com/rss.xml"
 
-        source = build_source(name: "Adaptive", feed_url: url, fetch_interval_hours: 1.0)
+        source = build_source(name: "Adaptive", feed_url: url, fetch_interval_minutes: 60)
 
         stub_request(:get, url)
           .to_return(status: 200, body:, headers: { "Content-Type" => "application/rss+xml", "ETag" => "abc" })
@@ -274,7 +274,7 @@ module FeedMonitor
         url = "https://example.com/minmax.xml"
         body = "<rss><channel><title>Test</title><item><title>One</title></item></channel></rss>"
 
-        source = build_source(name: "Min", feed_url: url, fetch_interval_hours: 1.0)
+        source = build_source(name: "Min", feed_url: url, fetch_interval_minutes: 60)
         source.update!(metadata: { "dynamic_fetch_interval_seconds" => 60 })
 
         stub_request(:get, url)
@@ -306,7 +306,7 @@ module FeedMonitor
         travel_to Time.zone.parse("2024-01-01 07:00:00 UTC")
 
         url = "https://example.com/failure.xml"
-        source = build_source(name: "Failure", feed_url: url, fetch_interval_hours: 1.0)
+        source = build_source(name: "Failure", feed_url: url, fetch_interval_minutes: 60)
 
         stub_request(:get, url).to_raise(Faraday::TimeoutError.new("boom"))
 
@@ -324,12 +324,12 @@ module FeedMonitor
 
       private
 
-      def build_source(name:, feed_url:, fetch_interval_hours: 6)
+      def build_source(name:, feed_url:, fetch_interval_minutes: 360)
         FeedMonitor::Source.create!(
           name: name,
           feed_url: feed_url,
           website_url: "https://#{URI.parse(feed_url).host}",
-          fetch_interval_hours: fetch_interval_hours
+          fetch_interval_minutes: fetch_interval_minutes
         )
       end
     end

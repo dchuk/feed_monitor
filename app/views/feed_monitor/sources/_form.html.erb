@@ -15,8 +15,9 @@
   </div>
 
   <div>
-    <%= form.label :fetch_interval_hours, class: "block text-sm font-medium text-slate-800" %>
-    <%= form.number_field :fetch_interval_hours, min: 1, class: "mt-1 block w-full rounded border border-slate-300 px-3 py-2" %>
+    <%= form.label :fetch_interval_minutes, "Fetch interval (minutes)", class: "block text-sm font-medium text-slate-800" %>
+    <%= form.number_field :fetch_interval_minutes, min: 1, step: 1, class: "mt-1 block w-full rounded border border-slate-300 px-3 py-2" %>
+    <p class="mt-1 text-xs text-slate-500">Minimum 5 minutes recommended.</p>
   </div>
 
   <div>

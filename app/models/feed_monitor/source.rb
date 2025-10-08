@@ -28,11 +28,25 @@ module FeedMonitor
 
     validates :name, presence: true
     validates :feed_url, presence: true, uniqueness: { case_sensitive: false }
-    validates :fetch_interval_hours, numericality: { greater_than: 0 }
+    validates :fetch_interval_minutes, numericality: { greater_than: 0 }
     validates :scraper_adapter, presence: true
 
     validate :feed_url_must_be_http_or_https
     validate :website_url_must_be_http_or_https
+
+    def fetch_interval_minutes=(value)
+      self[:fetch_interval_minutes] = value.presence && value.to_i
+    end
+
+    def fetch_interval_hours=(value)
+      self.fetch_interval_minutes = (value.to_f * 60).round if value.present?
+    end
+
+    def fetch_interval_hours
+      return 0 unless fetch_interval_minutes
+
+      fetch_interval_minutes.to_f / 60.0
+    end
 
     private
 

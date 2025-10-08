@@ -36,7 +36,10 @@
                           end %>
               <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold <%= status[:classes] %>"><%= status[:label] %></span>
             </td>
-            <td class="px-6 py-4 text-sm"><%= source.fetch_interval_hours %>h</td>
+            <td class="px-6 py-4 text-sm">
+              <%= "#{source.fetch_interval_minutes} min" %>
+              <span class="text-xs text-slate-500">(~<%= number_with_precision(source.fetch_interval_minutes / 60.0, precision: 2) %> h)</span>
+            </td>
             <td class="px-6 py-4 text-sm"><%= source.items_count %></td>
             <td class="px-6 py-4 text-xs text-slate-500">
               <%= source.last_fetched_at ? source.last_fetched_at.strftime("%b %d, %H:%M") : "Never" %>
