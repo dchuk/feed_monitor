@@ -96,10 +96,10 @@
 
 ### 04.01 Setup Tailwind CSS
 
-- [ ] 04.01.01 Add tailwindcss-rails to gemspec
-- [ ] 04.01.02 Generate Tailwind configuration for engine
-- [ ] 04.01.03 Scope CSS to .fm-admin namespace
-- [ ] 04.01.04 Create base layout with navigation
+- [x] 04.01.01 Add tailwindcss-rails to gemspec
+- [x] 04.01.02 Generate Tailwind configuration for engine
+- [x] 04.01.03 Scope CSS to .fm-admin namespace
+- [x] 04.01.04 Create base layout with navigation
 
 ### 04.02 Create Dashboard
 

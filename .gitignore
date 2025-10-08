@@ -8,3 +8,5 @@
 /test/dummy/log/*.log
 /test/dummy/storage/
 /test/dummy/tmp/
+/app/assets/builds/*
+!/app/assets/builds/.keep

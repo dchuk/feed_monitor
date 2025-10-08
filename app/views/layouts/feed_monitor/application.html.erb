@@ -1,17 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Feed monitor</title>
+  <title><%= content_for?(:title) ? yield(:title) : "Feed Monitor" %></title>
   <%= csrf_meta_tags %>
   <%= csp_meta_tag %>
 
   <%= yield :head %>
 
-  <%= stylesheet_link_tag    "feed_monitor/application", media: "all" %>
+  <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
 </head>
-<body>
+<body class="fm-admin">
+  <div class="flex min-h-screen flex-col">
+    <header class="bg-slate-800 text-white shadow">
+      <div class="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
+        <div class="text-lg font-semibold tracking-tight">Feed Monitor</div>
+        <% nav_items = [
+          ["Dashboard", feed_monitor.root_path],
+          ["New Source", feed_monitor.new_source_path]
+        ] %>
+        <nav class="flex gap-2">
+          <% nav_items.each do |label, path| %>
+            <% active = current_page?(path) %>
+            <%= link_to label, path, class: [
+              "fm-admin-nav-link",
+              active ? "fm-admin-nav-link--active" : "fm-admin-nav-link--inactive"
+            ].join(" ") %>
+          <% end %>
+        </nav>
+      </div>
+    </header>
 
-<%= yield %>
+    <main class="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-8">
+      <% if flash.any? %>
+        <div class="mb-6 space-y-3">
+          <% flash.each do |type, message| %>
+            <div class="rounded-md border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm">
+              <%= message %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
 
+      <%= yield %>
+    </main>
+
+    <footer class="bg-slate-900 py-4">
+      <div class="mx-auto flex w-full max-w-6xl justify-between px-6 text-xs text-slate-300">
+        <span>&copy; <%= Time.current.year %> Feed Monitor</span>
+        <span>v<%= FeedMonitor::VERSION %></span>
+      </div>
+    </footer>
+  </div>
 </body>
 </html>
