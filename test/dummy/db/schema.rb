@@ -10,9 +10,49 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2024_10_08_120000) do
+ActiveRecord::Schema[8.0].define(version: 2024_10_08_121000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "feed_monitor_items", force: :cascade do |t|
+    t.bigint "source_id", null: false
+    t.string "guid"
+    t.string "content_fingerprint"
+    t.string "title"
+    t.string "url"
+    t.string "canonical_url"
+    t.string "author"
+    t.jsonb "authors", default: [], null: false
+    t.text "summary"
+    t.text "content"
+    t.text "scraped_html"
+    t.text "scraped_content"
+    t.datetime "scraped_at"
+    t.string "scrape_status"
+    t.datetime "published_at"
+    t.datetime "updated_at_source"
+    t.jsonb "categories", default: [], null: false
+    t.jsonb "tags", default: [], null: false
+    t.jsonb "keywords", default: [], null: false
+    t.jsonb "enclosures", default: [], null: false
+    t.string "media_thumbnail_url"
+    t.jsonb "media_content", default: [], null: false
+    t.string "language"
+    t.string "copyright"
+    t.string "comments_url"
+    t.integer "comments_count", default: 0, null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["content_fingerprint"], name: "index_feed_monitor_items_on_content_fingerprint"
+    t.index ["guid"], name: "index_feed_monitor_items_on_guid"
+    t.index ["published_at"], name: "index_feed_monitor_items_on_published_at"
+    t.index ["scrape_status"], name: "index_feed_monitor_items_on_scrape_status"
+    t.index ["source_id", "content_fingerprint"], name: "index_feed_monitor_items_on_source_id_and_content_fingerprint", unique: true
+    t.index ["source_id", "guid"], name: "index_feed_monitor_items_on_source_id_and_guid", unique: true
+    t.index ["source_id"], name: "index_feed_monitor_items_on_source_id"
+    t.index ["url"], name: "index_feed_monitor_items_on_url"
+  end
 
   create_table "feed_monitor_sources", force: :cascade do |t|
     t.string "name", null: false
@@ -47,4 +87,6 @@ ActiveRecord::Schema[8.0].define(version: 2024_10_08_120000) do
     t.index ["feed_url"], name: "index_feed_monitor_sources_on_feed_url", unique: true
     t.index ["next_fetch_at"], name: "index_feed_monitor_sources_on_next_fetch_at"
   end
+
+  add_foreign_key "feed_monitor_items", "feed_monitor_sources", column: "source_id"
 end

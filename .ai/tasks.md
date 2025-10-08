@@ -65,11 +65,11 @@
 
 ### 03.02 Create Item Model & Migration
 
-- [ ] 03.02.01 Create items migration with all fields: source_id (references/indexed/fk), guid (indexed), content_fingerprint (indexed SHA256), title, url (indexed), canonical_url, author, authors (jsonb), summary (text), content (text), scraped_html (text), scraped_content (text), scraped_at, scrape_status (indexed), published_at (indexed), updated_at_source, categories (jsonb), tags (jsonb), keywords (jsonb), enclosures (jsonb), media_thumbnail_url, media_content (jsonb), language, copyright, comments_url, comments_count, metadata (jsonb), timestamps; add unique constraints on (source_id, guid) and (source_id, content_fingerprint)
-- [ ] 03.02.02 Create FeedMonitor::Item model
-- [ ] 03.02.03 Add associations to Source
-- [ ] 03.02.04 Add validations and scopes
-- [ ] 03.02.05 Test creating items programmatically
+- [x] 03.02.01 Create items migration with all fields: source_id (references/indexed/fk), guid (indexed), content_fingerprint (indexed SHA256), title, url (indexed), canonical_url, author, authors (jsonb), summary (text), content (text), scraped_html (text), scraped_content (text), scraped_at, scrape_status (indexed), published_at (indexed), updated_at_source, categories (jsonb), tags (jsonb), keywords (jsonb), enclosures (jsonb), media_thumbnail_url, media_content (jsonb), language, copyright, comments_url, comments_count, metadata (jsonb), timestamps; add unique constraints on (source_id, guid) and (source_id, content_fingerprint)
+- [x] 03.02.02 Create FeedMonitor::Item model
+- [x] 03.02.03 Add associations to Source
+- [x] 03.02.04 Add validations and scopes
+- [x] 03.02.05 Test creating items programmatically
 
 ### 03.03 Create FetchLog Model & Migration
 

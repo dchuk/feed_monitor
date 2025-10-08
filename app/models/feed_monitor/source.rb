@@ -4,6 +4,8 @@ require "uri"
 
 module FeedMonitor
   class Source < ApplicationRecord
+    has_many :items, class_name: "FeedMonitor::Item", inverse_of: :source, dependent: :destroy
+
     # Scopes for common source states
     scope :active, -> { where(active: true) }
     scope :due_for_fetch, lambda {

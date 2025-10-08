@@ -1,0 +1,81 @@
+# frozen_string_literal: true
+
+require "test_helper"
+
+module FeedMonitor
+  class ItemTest < ActiveSupport::TestCase
+    setup do
+      @source = Source.create!(name: "Example", feed_url: "https://example.com/feed")
+    end
+
+    test "is valid with minimal attributes" do
+      item = Item.new(source: @source, guid: "abc-123", url: "HTTPS://Example.com/article")
+
+      assert item.valid?
+      assert_equal "https://example.com/article", item.url
+    end
+
+    test "normalizes optional URLs" do
+      item = Item.create!(
+        source: @source,
+        guid: "abc-124",
+        url: "http://Example.com/article",
+        canonical_url: "HTTPS://Example.com/article",
+        comments_url: "https://Example.com/comments"
+      )
+
+      assert_equal "http://example.com/article", item.reload.url
+      assert_equal "https://example.com/article", item.canonical_url
+      assert_equal "https://example.com/comments", item.comments_url
+    end
+
+    test "requires guid uniqueness per source" do
+      Item.create!(source: @source, guid: "duplicate", url: "https://example.com/one")
+
+      duplicate = Item.new(source: @source, guid: "duplicate", url: "https://example.com/two")
+
+      assert_not duplicate.valid?
+      assert_includes duplicate.errors[:guid], "has already been taken"
+
+      other_source = Source.create!(name: "Another", feed_url: "https://example.com/feed-two")
+      different = Item.new(source: other_source, guid: "duplicate", url: "https://example.com/three")
+
+      assert different.valid?
+    end
+
+    test "scopes provide expected subsets" do
+      recent = Item.create!(source: @source, guid: "recent", url: "https://example.com/recent", published_at: 1.minute.ago)
+      unpublished = Item.create!(source: @source, guid: "draft", url: "https://example.com/draft")
+      failed = Item.create!(source: @source, guid: "failed", url: "https://example.com/failed", scrape_status: "failed", scraped_at: 2.minutes.ago)
+
+      assert_includes Item.published, recent
+      assert_not_includes Item.published, unpublished
+
+      assert_includes Item.pending_scrape, unpublished
+      assert_not_includes Item.pending_scrape, failed
+
+      assert_includes Item.failed_scrape, failed
+
+      assert_equal [recent, failed, unpublished], Item.recent.to_a
+    end
+
+    test "increments counter cache when created" do
+      assert_difference("@source.reload.items_count", 1) do
+        Item.create!(source: @source, guid: "counter", url: "https://example.com/counter")
+      end
+    end
+
+    test "prevents invalid URLs" do
+      item = Item.new(source: @source, guid: "bad-url", url: "ftp://example.com/article")
+
+      assert_not item.valid?
+      assert_includes item.errors[:url], "must be a valid HTTP(S) URL"
+
+      item.url = "https://example.com/article"
+      item.comments_url = "mailto:info@example.com"
+
+      assert_not item.valid?
+      assert_includes item.errors[:comments_url], "must be a valid HTTP(S) URL"
+    end
+  end
+end
