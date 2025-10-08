@@ -8,7 +8,7 @@ module FeedMonitor
       visit feed_monitor.sources_path
 
       assert_difference("FeedMonitor::Source.count", 1) do
-        click_link "New Source"
+        click_link "New Source", match: :first
 
         fill_in "Name", with: "UI Source"
         fill_in "Feed url", with: "https://example.com/feed"
@@ -23,6 +23,21 @@ module FeedMonitor
       assert_text "Source created successfully"
 
       source = FeedMonitor::Source.last
+
+      FeedMonitor::Item.create!(
+        source: source,
+        guid: "ui-item-1",
+        title: "UI Item Article",
+        url: "https://example.com/articles/ui",
+        summary: "Monitoring summary for UI validations.",
+        scrape_status: "success",
+        published_at: Time.current
+      )
+
+      visit feed_monitor.source_path(source)
+
+      assert_selector "[data-testid='source-items-table']"
+      assert_text "UI Item Article"
 
       click_link "Edit"
       fill_in "Name", with: "Updated Source"

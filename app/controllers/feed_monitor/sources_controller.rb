@@ -11,6 +11,7 @@ module FeedMonitor
     def show
       @recent_fetch_logs = @source.fetch_logs.order(started_at: :desc).limit(5)
       @recent_scrape_logs = @source.scrape_logs.order(started_at: :desc).limit(5)
+      @items = @source.items.recent.limit(10)
     end
 
     def new

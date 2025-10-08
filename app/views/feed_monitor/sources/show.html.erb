@@ -14,36 +14,36 @@
     </div>
   </div>
 
-  <div class="grid gap-6 lg:grid-cols-2">
-    <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div class="border-b border-slate-200 px-5 py-4">
-        <h2 class="text-lg font-medium">Source Details</h2>
+  <div class="grid gap-6 lg:grid-cols-3 lg:items-start">
+    <div class="space-y-6 lg:col-span-1">
+      <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-5 py-4">
+          <h2 class="text-lg font-medium">Source Details</h2>
+        </div>
+        <dl class="divide-y divide-slate-100">
+          <% details = {
+               "Website" => (@source.website_url.presence || "—"),
+               "Fetch interval" => "#{@source.fetch_interval_hours} hours",
+               "Scraper" => @source.scraper_adapter,
+               "Active" => @source.active? ? "Yes" : "No",
+               "Scraping" => @source.scraping_enabled? ? "Enabled" : "Disabled",
+               "Auto scrape" => @source.auto_scrape? ? "Enabled" : "Disabled",
+               "Requires JS" => @source.requires_javascript? ? "Yes" : "No",
+               "Failure count" => @source.failure_count,
+               "Last error" => @source.last_error.presence || "None",
+               "Items count" => @source.items_count,
+               "Retention days" => @source.items_retention_days || "—",
+               "Max items" => @source.max_items || "—"
+             } %>
+          <% details.each do |label, value| %>
+            <div class="flex items-center justify-between px-5 py-3">
+              <dt class="text-sm font-medium text-slate-600"><%= label %></dt>
+              <dd class="text-sm text-slate-900"><%= value %></dd>
+            </div>
+          <% end %>
+        </dl>
       </div>
-      <dl class="divide-y divide-slate-100">
-        <% details = {
-             "Website" => (@source.website_url.presence || "—"),
-             "Fetch interval" => "#{@source.fetch_interval_hours} hours",
-             "Scraper" => @source.scraper_adapter,
-             "Active" => @source.active? ? "Yes" : "No",
-             "Scraping" => @source.scraping_enabled? ? "Enabled" : "Disabled",
-             "Auto scrape" => @source.auto_scrape? ? "Enabled" : "Disabled",
-             "Requires JS" => @source.requires_javascript? ? "Yes" : "No",
-             "Failure count" => @source.failure_count,
-             "Last error" => @source.last_error.presence || "None",
-             "Items count" => @source.items_count,
-             "Retention days" => @source.items_retention_days || "—",
-             "Max items" => @source.max_items || "—"
-           } %>
-        <% details.each do |label, value| %>
-          <div class="flex items-center justify-between px-5 py-3">
-            <dt class="text-sm font-medium text-slate-600"><%= label %></dt>
-            <dd class="text-sm text-slate-900"><%= value %></dd>
-          </div>
-        <% end %>
-      </dl>
-    </div>
 
-    <div class="space-y-6">
       <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-200 px-5 py-4">
           <h2 class="text-lg font-medium">Recent Fetches</h2>
@@ -88,6 +88,66 @@
             <div class="px-5 py-4 text-sm text-slate-500">No scrape history yet.</div>
           <% end %>
         </div>
+      </div>
+    </div>
+
+    <div class="lg:col-span-2">
+      <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+          <h2 class="text-lg font-medium">Items</h2>
+          <%= link_to "View all items", feed_monitor.items_path, class: "text-sm font-medium text-blue-600 hover:text-blue-500" %>
+        </div>
+        <% if @items.any? %>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-left text-sm" data-testid="source-items-table">
+              <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th scope="col" class="px-5 py-3">Title</th>
+                  <th scope="col" class="px-5 py-3">Published</th>
+                  <th scope="col" class="px-5 py-3">Scrape Status</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700">
+                <% @items.each do |item| %>
+                  <tr class="hover:bg-slate-50">
+                    <td class="px-5 py-4">
+                      <div class="font-medium text-slate-900">
+                        <%= link_to item.title.presence || "(untitled)", feed_monitor.item_path(item), class: "hover:text-blue-600" %>
+                      </div>
+                      <% if item.summary.present? %>
+                        <div class="mt-1 text-xs text-slate-500"><%= item.summary %></div>
+                      <% end %>
+                    </td>
+                    <td class="px-5 py-4 text-xs text-slate-500">
+                      <%= item.published_at ? item.published_at.strftime("%b %d, %Y %H:%M") : "Unpublished" %>
+                    </td>
+                    <td class="px-5 py-4 text-xs">
+                      <% status_label, status_classes =
+                           case item.scrape_status
+                           when "success"
+                             ["Scraped", "bg-green-100 text-green-700"]
+                           when "failed"
+                             ["Failed", "bg-rose-100 text-rose-700"]
+                           when "pending"
+                             ["Pending", "bg-amber-100 text-amber-700"]
+                           else
+                             ["Not Scraped", "bg-slate-100 text-slate-600"]
+                           end %>
+                      <span class="inline-flex items-center rounded-full px-3 py-1 font-semibold <%= status_classes %>"><%= status_label %></span>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+          <div class="border-t border-slate-200 px-5 py-3 text-xs text-slate-500">
+            Showing up to 10 most recent items.
+          </div>
+        <% else %>
+          <div class="px-5 py-6 text-sm text-slate-500">
+            No items for this source yet.
+          </div>
+        <% end %>
       </div>
     </div>
   </div>
