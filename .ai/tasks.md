@@ -34,10 +34,10 @@
 
 ### 02.01 Setup Test Framework
 
-- [ ] 02.01.01 Configure MiniTest with Rails system tests
-- [ ] 02.01.02 Add WebMock and VCR for HTTP stubbing
-- [ ] 02.01.03 Create RSS, Atom, JSON Feed fixtures
-- [ ] 02.01.04 Add edge case fixtures (no GUID, malformed dates)
+- [x] 02.01.01 Configure MiniTest with Rails system tests
+- [x] 02.01.02 Add WebMock and VCR for HTTP stubbing
+- [x] 02.01.03 Create RSS, Atom, JSON Feed fixtures
+- [x] 02.01.04 Add edge case fixtures (no GUID, malformed dates)
 
 ### 02.02 Add Observability
 
@@ -45,13 +45,6 @@
 - [ ] 02.02.02 Add feed_monitor.fetch.start/finish events
 - [ ] 02.02.03 Create /health endpoint
 - [ ] 02.02.04 Add basic metrics collection module
-
-### 02.03 Configure CI
-
-- [ ] 02.03.01 Setup GitHub Actions workflow for Rails 8
-- [ ] 02.03.02 Add code coverage tracking
-- [ ] 02.03.03 Configure dependency caching
-- [ ] 02.03.04 Add matrix testing for different Ruby versions
 
 **Deliverable: Comprehensive testing and observability from day one**
 **Test: Run test suite and visit /health endpoint**

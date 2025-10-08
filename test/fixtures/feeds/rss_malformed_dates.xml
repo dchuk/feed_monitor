@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Malformed Dates Feed</title>
+    <link>https://example.com/malformed-dates</link>
+    <description>Feed containing invalid date formats.</description>
+    <item>
+      <title>Bad Date Item</title>
+      <link>https://example.com/posts/bad-date</link>
+      <guid isPermaLink="false">bad-date</guid>
+      <pubDate>Not a real date</pubDate>
+      <description>Item with malformed pubDate value.</description>
+    </item>
+  </channel>
+</rss>

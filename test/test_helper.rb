@@ -5,11 +5,25 @@ require_relative "../test/dummy/config/environment"
 ActiveRecord::Migrator.migrations_paths = [ File.expand_path("../test/dummy/db/migrate", __dir__) ]
 ActiveRecord::Migrator.migrations_paths << File.expand_path("../db/migrate", __dir__)
 require "rails/test_help"
+require "webmock/minitest"
+require "vcr"
+
+require "capybara/rails"
+require "capybara/minitest"
 
 # Load fixtures from the engine
 if ActiveSupport::TestCase.respond_to?(:fixture_paths=)
-  ActiveSupport::TestCase.fixture_paths = [ File.expand_path("fixtures", __dir__) ]
+  fixtures_root = File.expand_path("fixtures", __dir__)
+  ActiveSupport::TestCase.fixture_paths = [ fixtures_root ]
   ActionDispatch::IntegrationTest.fixture_paths = ActiveSupport::TestCase.fixture_paths
-  ActiveSupport::TestCase.file_fixture_path = File.expand_path("fixtures", __dir__) + "/files"
+  ActiveSupport::TestCase.file_fixture_path = fixtures_root
   ActiveSupport::TestCase.fixtures :all
 end
+
+VCR.configure do |config|
+  config.cassette_library_dir = File.expand_path("vcr_cassettes", __dir__)
+  config.hook_into :webmock
+  config.ignore_localhost = true
+end
+
+WebMock.disable_net_connect!(allow_localhost: true)

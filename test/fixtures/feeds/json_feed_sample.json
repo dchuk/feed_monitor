@@ -1,0 +1,15 @@
+{
+  "version": "https://jsonfeed.org/version/1.1",
+  "title": "Example JSON Feed",
+  "home_page_url": "https://example.com",
+  "feed_url": "https://example.com/json-feed",
+  "items": [
+    {
+      "id": "json-1",
+      "url": "https://example.com/posts/json-1",
+      "title": "JSON Entry",
+      "content_text": "JSON feed content.",
+      "date_published": "2025-10-06T12:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>No GUID Feed</title>
+    <link>https://example.com/no-guid</link>
+    <description>Item intentionally missing GUID element.</description>
+    <item>
+      <title>Missing GUID Item</title>
+      <link>https://example.com/posts/no-guid</link>
+      <pubDate>Mon, 06 Oct 2025 12:00:00 GMT</pubDate>
+      <description>Item without GUID for edge case testing.</description>
+    </item>
+  </channel>
+</rss>
