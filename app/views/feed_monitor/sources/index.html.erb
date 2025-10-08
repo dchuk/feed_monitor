@@ -1,0 +1,62 @@
+<div class="space-y-6">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h1 class="text-3xl font-semibold text-slate-900">Sources</h1>
+      <p class="mt-1 text-sm text-slate-500">Manage feed endpoints and scraping settings.</p>
+    </div>
+    <%= link_to "New Source", feed_monitor.new_source_path, class: "inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-500" %>
+  </div>
+
+  <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+    <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+      <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <tr>
+          <th scope="col" class="px-6 py-3">Source</th>
+          <th scope="col" class="px-6 py-3">Status</th>
+          <th scope="col" class="px-6 py-3">Fetch Interval</th>
+          <th scope="col" class="px-6 py-3">Items</th>
+          <th scope="col" class="px-6 py-3">Last Fetch</th>
+          <th scope="col" class="px-6 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 text-slate-700">
+        <% @sources.each do |source| %>
+          <tr class="hover:bg-slate-50">
+            <td class="px-6 py-4">
+              <div class="font-medium text-slate-900"><%= source.name %></div>
+              <div class="text-xs text-slate-500 truncate max-w-xs"><%= source.feed_url %></div>
+            </td>
+            <td class="px-6 py-4">
+              <% status = if !source.active?
+                            { label: "Paused", classes: "bg-amber-100 text-amber-700" }
+                          elsif source.failure_count.positive? || source.last_error.present?
+                            { label: "Needs Attention", classes: "bg-rose-100 text-rose-700" }
+                          else
+                            { label: "Healthy", classes: "bg-green-100 text-green-700" }
+                          end %>
+              <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold <%= status[:classes] %>"><%= status[:label] %></span>
+            </td>
+            <td class="px-6 py-4 text-sm"><%= source.fetch_interval_hours %>h</td>
+            <td class="px-6 py-4 text-sm"><%= source.items_count %></td>
+            <td class="px-6 py-4 text-xs text-slate-500">
+              <%= source.last_fetched_at ? source.last_fetched_at.strftime("%b %d, %H:%M") : "Never" %>
+            </td>
+            <td class="px-6 py-4 text-right text-sm">
+              <%= link_to "View", feed_monitor.source_path(source), class: "text-blue-600 hover:text-blue-500" %>
+              <span class="mx-2 text-slate-300">|</span>
+              <%= link_to "Edit", feed_monitor.edit_source_path(source), class: "text-slate-600 hover:text-slate-500" %>
+            </td>
+          </tr>
+        <% end %>
+
+        <% if @sources.blank? %>
+          <tr>
+            <td colspan="6" class="px-6 py-6 text-center text-sm text-slate-500">
+              No sources yet. <%= link_to "Create the first source", feed_monitor.new_source_path, class: "text-blue-600 hover:text-blue-500" %>.
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,94 @@
+<div class="space-y-8">
+  <div class="flex items-start justify-between">
+    <div>
+      <h1 class="text-3xl font-semibold text-slate-900"><%= @source.name %></h1>
+      <p class="mt-1 text-sm text-slate-500">Feed URL: <%= @source.feed_url %></p>
+    </div>
+    <div class="flex gap-3">
+      <%= link_to "Edit", feed_monitor.edit_source_path(@source), class: "inline-flex items-center rounded-md bg-slate-800 px-3 py-2 text-sm font-medium text-white shadow hover:bg-slate-700" %>
+      <%= form_with url: feed_monitor.source_path(@source), method: :delete, data: { turbo_confirm: "Delete this source?" }, class: "inline" do %>
+        <button type="submit" class="inline-flex items-center rounded-md border border-rose-400 px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50">
+          Delete
+        </button>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-2">
+    <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div class="border-b border-slate-200 px-5 py-4">
+        <h2 class="text-lg font-medium">Source Details</h2>
+      </div>
+      <dl class="divide-y divide-slate-100">
+        <% details = {
+             "Website" => (@source.website_url.presence || "—"),
+             "Fetch interval" => "#{@source.fetch_interval_hours} hours",
+             "Scraper" => @source.scraper_adapter,
+             "Active" => @source.active? ? "Yes" : "No",
+             "Scraping" => @source.scraping_enabled? ? "Enabled" : "Disabled",
+             "Auto scrape" => @source.auto_scrape? ? "Enabled" : "Disabled",
+             "Requires JS" => @source.requires_javascript? ? "Yes" : "No",
+             "Failure count" => @source.failure_count,
+             "Last error" => @source.last_error.presence || "None",
+             "Items count" => @source.items_count,
+             "Retention days" => @source.items_retention_days || "—",
+             "Max items" => @source.max_items || "—"
+           } %>
+        <% details.each do |label, value| %>
+          <div class="flex items-center justify-between px-5 py-3">
+            <dt class="text-sm font-medium text-slate-600"><%= label %></dt>
+            <dd class="text-sm text-slate-900"><%= value %></dd>
+          </div>
+        <% end %>
+      </dl>
+    </div>
+
+    <div class="space-y-6">
+      <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-5 py-4">
+          <h2 class="text-lg font-medium">Recent Fetches</h2>
+        </div>
+        <div class="divide-y divide-slate-100">
+          <% if @recent_fetch_logs.any? %>
+            <% @recent_fetch_logs.each do |log| %>
+              <div class="px-5 py-3 text-sm text-slate-700">
+                <div class="flex items-center justify-between">
+                  <span>Started <%= log.started_at&.strftime("%b %d, %H:%M") || "Unknown" %></span>
+                  <span class="ml-4 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold <%= log.success? ? "bg-green-100 text-green-700" : "bg-rose-100 text-rose-700" %>">
+                    <%= log.success? ? "Success" : "Failure" %>
+                  </span>
+                </div>
+                <p class="mt-1 text-xs text-slate-500"><%= log.items_created %> created · <%= log.items_updated %> updated · <%= log.items_failed %> failed</p>
+              </div>
+            <% end %>
+          <% else %>
+            <div class="px-5 py-4 text-sm text-slate-500">No fetch history yet.</div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-5 py-4">
+          <h2 class="text-lg font-medium">Recent Scrapes</h2>
+        </div>
+        <div class="divide-y divide-slate-100">
+          <% if @recent_scrape_logs.any? %>
+            <% @recent_scrape_logs.each do |log| %>
+              <div class="px-5 py-3 text-sm text-slate-700">
+                <div class="flex items-center justify-between">
+                  <span>Started <%= log.started_at&.strftime("%b %d, %H:%M") || "Unknown" %></span>
+                  <span class="ml-4 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold <%= log.success? ? "bg-green-100 text-green-700" : "bg-rose-100 text-rose-700" %>">
+                    <%= log.success? ? "Success" : "Failure" %>
+                  </span>
+                </div>
+                <p class="mt-1 text-xs text-slate-500"><%= log.scraper_adapter || "—" %></p>
+              </div>
+            <% end %>
+          <% else %>
+            <div class="px-5 py-4 text-sm text-slate-500">No scrape history yet.</div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

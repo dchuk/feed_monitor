@@ -4,9 +4,11 @@ require "application_system_test_case"
 
 module FeedMonitor
   class SourcesTest < ApplicationSystemTestCase
-    test "creating a source via the UI" do
+    test "managing a source end to end" do
+      visit feed_monitor.sources_path
+
       assert_difference("FeedMonitor::Source.count", 1) do
-        visit feed_monitor.new_source_path
+        click_link "New Source"
 
         fill_in "Name", with: "UI Source"
         fill_in "Feed url", with: "https://example.com/feed"
@@ -17,8 +19,33 @@ module FeedMonitor
         click_button "Create Source"
       end
 
-      assert_current_path feed_monitor.root_path
-      assert FeedMonitor::Source.exists?(feed_url: "https://example.com/feed")
+      assert_current_path feed_monitor.source_path(FeedMonitor::Source.last)
+      assert_text "Source created successfully"
+
+      source = FeedMonitor::Source.last
+
+      click_link "Edit"
+      fill_in "Name", with: "Updated Source"
+      uncheck "Active"
+      click_button "Update Source"
+
+      assert_current_path feed_monitor.source_path(source)
+      assert_text "Source updated successfully"
+      assert_text "Updated Source"
+
+      click_link "Sources"
+      assert_current_path feed_monitor.sources_path
+      assert_text "Updated Source"
+      assert_selector "span", text: "Paused"
+
+      assert_difference("FeedMonitor::Source.count", -1) do
+        visit feed_monitor.source_path(source)
+        click_button "Delete"
+      end
+
+      assert_current_path feed_monitor.sources_path
+      assert_text "Source deleted"
+      assert_no_text "Updated Source"
     end
   end
 end

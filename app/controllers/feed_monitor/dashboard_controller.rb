@@ -55,14 +55,14 @@ module FeedMonitor
           path: feed_monitor.new_source_path
         },
         {
+          label: "View Sources",
+          description: "Manage existing sources",
+          path: feed_monitor.sources_path
+        },
+        {
           label: "Check Health",
           description: "Verify engine status",
           path: feed_monitor.health_path
-        },
-        {
-          label: "Visit Welcome",
-          description: "Return to the welcome page",
-          path: feed_monitor.welcome_path
         }
       ]
     end

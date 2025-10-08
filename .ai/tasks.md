@@ -111,11 +111,11 @@
 
 ### 04.03 Build Source Management
 
-- [ ] 04.03.01 Create SourcesController with full CRUD
-- [ ] 04.03.02 Build index view with status indicators
-- [ ] 04.03.03 Create form partial for new/edit
-- [ ] 04.03.04 Add show view with source details
-- [ ] 04.03.05 Test complete source lifecycle
+- [x] 04.03.01 Create SourcesController with full CRUD
+- [x] 04.03.02 Build index view with status indicators
+- [x] 04.03.03 Create form partial for new/edit
+- [x] 04.03.04 Add show view with source details
+- [x] 04.03.05 Test complete source lifecycle
 
 ### 04.04 Add Item Browser
 

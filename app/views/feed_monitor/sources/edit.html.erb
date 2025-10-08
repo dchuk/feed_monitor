@@ -1,5 +1,5 @@
 <div class="mx-auto max-w-2xl py-10">
-  <h1 class="text-3xl font-semibold">New Source</h1>
+  <h1 class="text-3xl font-semibold">Edit Source</h1>
 
   <% if @source.errors.any? %>
     <div class="mt-4 rounded border border-red-300 bg-red-50 p-4">
@@ -16,7 +16,12 @@
     <%= render "form", source: @source %>
   </div>
 
-  <div class="mt-6">
-    <%= link_to "Back", feed_monitor.sources_path, class: "text-blue-600 hover:underline" %>
+  <div class="mt-6 flex items-center gap-4">
+    <%= link_to "Back", feed_monitor.source_path(@source), class: "text-blue-600 hover:underline" %>
+    <%= form_with url: feed_monitor.source_path(@source), method: :delete, data: { turbo_confirm: "Delete this source?" }, class: "inline" do %>
+      <button type="submit" class="text-rose-600 hover:text-rose-500">
+        Delete
+      </button>
+    <% end %>
   </div>
 </div>
