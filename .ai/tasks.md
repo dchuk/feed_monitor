@@ -185,11 +185,11 @@
 
 ### 06.01 Build Item Creator Service
 
-- [ ] 06.01.01 Write tests for item creation using Feedjira entry objects
-- [ ] 06.01.02 Generate content fingerprints from title+url+content
-- [ ] 06.01.03 Normalize and canonicalize URLs
-- [ ] 06.01.04 Handle missing GUIDs gracefully
-- [ ] 06.01.05 Test item creation with Feedjira across various feed formats
+- [x] 06.01.01 Write tests for item creation using Feedjira entry objects
+- [x] 06.01.02 Generate content fingerprints from title+url+content
+- [x] 06.01.03 Normalize and canonicalize URLs
+- [x] 06.01.04 Handle missing GUIDs gracefully
+- [x] 06.01.05 Test item creation with Feedjira across various feed formats
 
 ### 06.02 Extract All Metadata Fields
 
