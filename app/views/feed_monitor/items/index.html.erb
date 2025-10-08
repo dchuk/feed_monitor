@@ -1,0 +1,105 @@
+<div class="space-y-6">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h1 class="text-3xl font-semibold text-slate-900">Items</h1>
+      <p class="mt-1 text-sm text-slate-500">Browse recently ingested entries across all sources.</p>
+    </div>
+    <%= form_with url: feed_monitor.items_path, method: :get, local: true, html: { class: "w-full max-w-sm sm:w-auto" } do |form| %>
+      <%= form.label :search, "Search items", class: "sr-only" %>
+      <div class="flex rounded-md shadow-sm">
+        <%= form.text_field :search, value: @search, placeholder: "Search title…", class: "w-full rounded-l-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" %>
+        <%= form.submit "Search", class: "rounded-r-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500" %>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @search.present? %>
+    <div class="rounded-md border border-blue-100 bg-blue-50 px-4 py-2 text-xs text-blue-700">
+      Showing results for “<%= @search %>”.
+      <%= link_to "Clear search", feed_monitor.items_path, class: "ml-2 font-medium text-blue-600 hover:text-blue-500" %>
+    </div>
+  <% end %>
+
+  <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+    <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+      <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <tr>
+          <th scope="col" class="px-6 py-3">Title</th>
+          <th scope="col" class="px-6 py-3">Source</th>
+          <th scope="col" class="px-6 py-3">Published</th>
+          <th scope="col" class="px-6 py-3">Scrape Status</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100 text-slate-700">
+        <% @items.each do |item| %>
+          <tr class="hover:bg-slate-50">
+            <td class="px-6 py-4">
+              <div class="font-medium text-slate-900">
+                <%= link_to item.title.presence || "(untitled)", feed_monitor.item_path(item), class: "hover:text-blue-600" %>
+              </div>
+              <% if item.summary.present? %>
+                <div class="mt-1 text-xs text-slate-500"><%= item.summary %></div>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 text-sm">
+              <% if item.source %>
+                <%= link_to item.source.name, feed_monitor.source_path(item.source), class: "text-blue-600 hover:text-blue-500" %>
+              <% else %>
+                <span class="text-slate-400">—</span>
+              <% end %>
+            </td>
+            <td class="px-6 py-4 text-xs text-slate-500">
+              <%= item.published_at ? item.published_at.strftime("%b %d, %Y %H:%M") : "Unpublished" %>
+            </td>
+            <td class="px-6 py-4 text-xs">
+              <% status_label, status_classes =
+                   case item.scrape_status
+                   when "success"
+                     ["Scraped", "bg-green-100 text-green-700"]
+                   when "failed"
+                     ["Failed", "bg-rose-100 text-rose-700"]
+                   when "pending"
+                     ["Pending", "bg-amber-100 text-amber-700"]
+                   else
+                     ["Not Scraped", "bg-slate-100 text-slate-600"]
+                   end %>
+              <span class="inline-flex items-center rounded-full px-3 py-1 font-semibold <%= status_classes %>"><%= status_label %></span>
+            </td>
+          </tr>
+        <% end %>
+
+        <% if @items.blank? %>
+          <tr>
+            <td colspan="4" class="px-6 py-6 text-center text-sm text-slate-500">
+              No items found.
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
+    <div class="text-xs text-slate-500">
+      Page <%= @page %>
+    </div>
+    <div class="flex gap-2">
+      <% prev_params = { page: @page - 1 } %>
+      <% prev_params[:search] = @search if @search.present? %>
+      <% next_params = { page: @page + 1 } %>
+      <% next_params[:search] = @search if @search.present? %>
+
+      <% if @has_previous_page %>
+        <%= link_to "Previous", feed_monitor.items_path(prev_params), class: "inline-flex items-center rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" %>
+      <% else %>
+        <span class="inline-flex items-center rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-300">Previous</span>
+      <% end %>
+
+      <% if @has_next_page %>
+        <%= link_to "Next", feed_monitor.items_path(next_params), class: "inline-flex items-center rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" %>
+      <% else %>
+        <span class="inline-flex items-center rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-300">Next</span>
+      <% end %>
+    </div>
+  </div>
+</div>

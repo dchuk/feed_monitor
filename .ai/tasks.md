@@ -119,11 +119,11 @@
 
 ### 04.04 Add Item Browser
 
-- [ ] 04.04.01 Create ItemsController with index and show
-- [ ] 04.04.02 Build paginated item list view
-- [ ] 04.04.03 Create item detail view with all content versions
-- [ ] 04.04.04 Add simple search by title
-- [ ] 04.04.05 Test browsing and viewing items
+- [x] 04.04.01 Create ItemsController with index and show
+- [x] 04.04.02 Build paginated item list view
+- [x] 04.04.03 Create item detail view with all content versions
+- [x] 04.04.04 Add simple search by title
+- [x] 04.04.05 Test browsing and viewing items
 
 ### 04.05 Create Log Viewers
 
