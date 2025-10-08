@@ -8,14 +8,13 @@
 
 - [x] 01.01.01 Generate Rails engine with `rails plugin new feed_monitor --mountable`
 - [x] 01.01.02 Configure isolate_namespace in engine.rb
-- [ ] 01.01.03 Add minimal gemspec dependencies (Rails 8)
 
 ### 01.02 Create Installation Generator
 
-- [ ] 01.02.01 Write test for install generator existence
-- [ ] 01.02.02 Create basic install generator class
-- [ ] 01.02.03 Make mount path configurable (default /feed_monitor)
-- [ ] 01.02.04 Add generator usage instructions to README
+- [x] 01.02.01 Write test for install generator existence
+- [x] 01.02.02 Create basic install generator class
+- [x] 01.02.03 Make mount path configurable (default /feed_monitor)
+- [x] 01.02.04 Add generator usage instructions to README
 
 ### 01.03 Mount Engine in Host App
 

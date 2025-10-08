@@ -16,9 +16,16 @@ And then execute:
 $ bundle
 ```
 
-Or install it yourself as:
+Mount the engine inside your host application's routes with the install generator:
+
 ```bash
-$ gem install feed_monitor
+$ bin/rails generate feed_monitor:install
+```
+
+By default the engine mounts at `/feed_monitor`. Provide a custom mount point with the `--mount-path` option:
+
+```bash
+$ bin/rails generate feed_monitor:install --mount-path=/admin/feeds
 ```
 
 ## Contributing
