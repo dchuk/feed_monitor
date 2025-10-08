@@ -18,10 +18,10 @@
 
 ### 01.03 Mount Engine in Host App
 
-- [ ] 01.03.01 Write test for route mounting
-- [ ] 01.03.02 Generator adds configurable mount to host routes.rb
-- [ ] 01.03.03 Create minimal ApplicationController
-- [ ] 01.03.04 Test engine responds at mounted path
+- [x] 01.03.01 Write test for route mounting
+- [x] 01.03.02 Generator adds configurable mount to host routes.rb
+- [x] 01.03.03 Create minimal ApplicationController
+- [x] 01.03.04 Test engine responds at mounted path
 
 **Deliverable: Engine installs and mounts at configurable path in Rails 8 app**
 **Test: Visit mounted path and see welcome page**
