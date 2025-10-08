@@ -14,7 +14,9 @@ module FeedMonitor
         entry = parse_entry("feeds/rss_sample.xml")
         entry.url = "HTTPS://EXAMPLE.COM/posts/1#fragment"
 
-        item = ItemCreator.call(source: @source, entry:)
+        result = ItemCreator.call(source: @source, entry:)
+        assert result.created?, "expected item to be marked as created"
+        item = result.item
 
         assert item.persisted?, "item should be saved"
         assert_equal @source, item.source
@@ -34,7 +36,9 @@ module FeedMonitor
       test "falls back to fingerprint when entry provides no guid" do
         entry = parse_entry("feeds/rss_no_guid.xml")
 
-        item = ItemCreator.call(source: @source, entry:)
+        result = ItemCreator.call(source: @source, entry:)
+        assert result.created?
+        item = result.item
 
         assert item.persisted?
         assert_equal item.content_fingerprint, item.guid
@@ -49,7 +53,9 @@ module FeedMonitor
 
         fixtures.each_value do |fixture|
           entry = parse_entry(fixture)
-          created_item = ItemCreator.call(source: @source, entry:)
+          result = ItemCreator.call(source: @source, entry:)
+          assert result.created?
+          created_item = result.item
 
           assert created_item.persisted?
           assert created_item.guid.present?
@@ -64,7 +70,9 @@ module FeedMonitor
       test "extracts extended metadata from rss entry" do
         entry = parse_entry("feeds/rss_metadata_sample.xml")
 
-        item = ItemCreator.call(source: @source, entry:)
+        result = ItemCreator.call(source: @source, entry:)
+        assert result.created?
+        item = result.item
 
         assert_equal "John Creator", item.author
         assert_equal ["jane@example.com (Jane Author)", "John Creator"], item.authors
@@ -107,7 +115,9 @@ module FeedMonitor
       test "captures json feed authors tags and attachments" do
         entry = parse_entry("feeds/json_feed_sample.json")
 
-        item = ItemCreator.call(source: @source, entry:)
+        result = ItemCreator.call(source: @source, entry:)
+        assert result.created?
+        item = result.item
 
         assert_equal "JSON Primary Author", item.author
         assert_equal ["JSON Primary Author", "JSON Secondary Author"], item.authors
@@ -134,18 +144,23 @@ module FeedMonitor
 
       test "deduplicates entries by guid and updates existing records" do
         entry = parse_entry("feeds/rss_sample.xml")
-        original_item = ItemCreator.call(source: @source, entry:)
+        original_result = ItemCreator.call(source: @source, entry:)
+        assert original_result.created?
+        original_item = original_result.item
 
         updated_entry = parse_entry("feeds/rss_sample.xml")
         updated_entry.summary = "Updated summary"
 
         duplicate_events = []
-        duplicate_item = ActiveSupport::Notifications.subscribed(
+        duplicate_result = ActiveSupport::Notifications.subscribed(
           ->(_name, _start, _finish, _id, payload) { duplicate_events << payload },
           FeedMonitor::Instrumentation::ITEM_DUPLICATE_EVENT
         ) do
           ItemCreator.call(source: @source, entry: updated_entry)
         end
+
+        assert duplicate_result.updated?, "expected duplicate entry to be treated as updated"
+        duplicate_item = duplicate_result.item
 
         assert_equal 1, FeedMonitor::Item.count
         assert_equal original_item.id, duplicate_item.id
@@ -160,17 +175,22 @@ module FeedMonitor
 
       test "deduplicates entries without guid using content fingerprint" do
         entry = parse_entry("feeds/rss_no_guid.xml")
-        created_item = ItemCreator.call(source: @source, entry:)
+        created_result = ItemCreator.call(source: @source, entry:)
+        assert created_result.created?
+        created_item = created_result.item
 
         duplicate_entry = parse_entry("feeds/rss_no_guid.xml")
 
         duplicate_events = []
-        duplicate_item = ActiveSupport::Notifications.subscribed(
+        duplicate_result = ActiveSupport::Notifications.subscribed(
           ->(_name, _start, _finish, _id, payload) { duplicate_events << payload },
           FeedMonitor::Instrumentation::ITEM_DUPLICATE_EVENT
         ) do
           ItemCreator.call(source: @source, entry: duplicate_entry)
         end
+
+        assert duplicate_result.updated?
+        duplicate_item = duplicate_result.item
 
         assert_equal 1, FeedMonitor::Item.count
         assert_equal created_item.id, duplicate_item.id

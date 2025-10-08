@@ -4,11 +4,13 @@ require "time"
 require "digest"
 require "feed_monitor/http"
 require "feed_monitor/fetching/fetch_error"
+require "feed_monitor/items/item_creator"
 
 module FeedMonitor
   module Fetching
     class FeedFetcher
-      Result = Struct.new(:status, :feed, :response, :body, :error, keyword_init: true)
+      Result = Struct.new(:status, :feed, :response, :body, :error, :item_processing, keyword_init: true)
+      EntryProcessingResult = Struct.new(:created, :updated, :failed, :items, :errors, keyword_init: true)
       ResponseWrapper = Struct.new(:status, :headers, :body, keyword_init: true)
 
       MIN_FETCH_INTERVAL = 5.minutes.to_f
@@ -106,6 +108,7 @@ module FeedMonitor
         duration_ms = elapsed_ms(started_at)
         body = response.body
         feed = parse_feed(body, response)
+        processing = process_feed_entries(feed)
 
         feed_body_signature = body_digest(body)
         update_source_for_success(response, duration_ms, feed, feed_body_signature)
@@ -116,15 +119,22 @@ module FeedMonitor
           feed: feed,
           success: true,
           body: body,
-          feed_signature: feed_body_signature
+          feed_signature: feed_body_signature,
+          items_created: processing.created,
+          items_updated: processing.updated,
+          items_failed: processing.failed,
+          item_errors: processing.errors
         )
 
         instrumentation_payload[:success] = true
         instrumentation_payload[:status] = :fetched
         instrumentation_payload[:http_status] = response.status
         instrumentation_payload[:parser] = feed.class.name if feed
+        instrumentation_payload[:items_created] = processing.created
+        instrumentation_payload[:items_updated] = processing.updated
+        instrumentation_payload[:items_failed] = processing.failed
 
-        Result.new(status: :fetched, feed:, response:, body:)
+        Result.new(status: :fetched, feed:, response:, body:, item_processing: processing)
       end
 
       def handle_not_modified(response, started_at, instrumentation_payload)
@@ -141,8 +151,16 @@ module FeedMonitor
         instrumentation_payload[:success] = true
         instrumentation_payload[:status] = :not_modified
         instrumentation_payload[:http_status] = response.status
+        instrumentation_payload[:items_created] = 0
+        instrumentation_payload[:items_updated] = 0
+        instrumentation_payload[:items_failed] = 0
 
-        Result.new(status: :not_modified, response:, body: nil)
+        Result.new(
+          status: :not_modified,
+          response: response,
+          body: nil,
+          item_processing: EntryProcessingResult.new(created: 0, updated: 0, failed: 0, items: [], errors: [])
+        )
       end
 
       def parse_feed(body, response)
@@ -173,6 +191,7 @@ module FeedMonitor
 
         interval_seconds = apply_adaptive_interval!(attributes, content_changed: feed_signature_changed?(feed_signature))
         persist_adaptive_metadata!(interval_seconds:, feed_signature: feed_signature)
+        attributes[:metadata] = source.metadata
         source.update!(attributes)
       end
 
@@ -197,6 +216,7 @@ module FeedMonitor
 
         interval_seconds = apply_adaptive_interval!(attributes, content_changed: false)
         persist_adaptive_metadata!(interval_seconds:)
+        attributes[:metadata] = source.metadata
         source.update!(attributes)
       end
 
@@ -213,10 +233,12 @@ module FeedMonitor
 
         interval_seconds = apply_adaptive_interval!(attrs, content_changed: false, failure: true)
         persist_adaptive_metadata!(interval_seconds:)
+        attrs[:metadata] = source.metadata
         source.update!(attrs)
       end
 
-      def create_fetch_log(response:, duration_ms:, started_at:, success:, feed: nil, error: nil, body: nil, feed_signature: nil)
+      def create_fetch_log(response:, duration_ms:, started_at:, success:, feed: nil, error: nil, body: nil, feed_signature: nil,
+                           items_created: 0, items_updated: 0, items_failed: 0, item_errors: [])
         source.fetch_logs.create!(
           success:,
           started_at: started_at,
@@ -226,10 +248,13 @@ module FeedMonitor
           http_response_headers: normalized_headers(response&.headers),
           feed_size_bytes: body&.bytesize,
           items_in_feed: feed&.respond_to?(:entries) ? feed.entries.size : nil,
+          items_created: items_created,
+          items_updated: items_updated,
+          items_failed: items_failed,
           error_class: error&.class&.name,
           error_message: error&.message,
           error_backtrace: error_backtrace(error),
-          metadata: feed_metadata(feed, error: error, feed_signature: feed_signature)
+          metadata: feed_metadata(feed, error: error, feed_signature: feed_signature, item_errors: item_errors)
         )
       end
 
@@ -239,11 +264,12 @@ module FeedMonitor
         feed.class.name.split("::").last.underscore
       end
 
-      def feed_metadata(feed, error: nil, feed_signature: nil)
+      def feed_metadata(feed, error: nil, feed_signature: nil, item_errors: [])
         metadata = {}
         metadata[:parser] = feed.class.name if feed
         metadata[:error_code] = error.code if error&.respond_to?(:code)
         metadata[:feed_signature] = feed_signature if feed_signature
+        metadata[:item_errors] = item_errors if item_errors.present?
         metadata
       end
 
@@ -292,8 +318,17 @@ module FeedMonitor
         instrumentation_payload[:error_message] = error.message
         instrumentation_payload[:http_status] = error.http_status if error.http_status
         instrumentation_payload[:error_code] = error.code if error.respond_to?(:code)
+        instrumentation_payload[:items_created] = 0
+        instrumentation_payload[:items_updated] = 0
+        instrumentation_payload[:items_failed] = 0
 
-        Result.new(status: :failed, response: response, body: body, error: error)
+        Result.new(
+          status: :failed,
+          response: response,
+          body: body,
+          error: error,
+          item_processing: EntryProcessingResult.new(created: 0, updated: 0, failed: 0, items: [], errors: [])
+        )
       end
 
       def build_http_error_from_faraday(error)
@@ -378,6 +413,56 @@ module FeedMonitor
         return if body.blank?
 
         Digest::SHA256.hexdigest(body)
+      end
+
+      def process_feed_entries(feed)
+        return EntryProcessingResult.new(created: 0, updated: 0, failed: 0, items: [], errors: []) unless feed.respond_to?(:entries)
+
+        created = 0
+        updated = 0
+        failed = 0
+        items = []
+        errors = []
+
+        Array(feed.entries).each do |entry|
+          begin
+            result = FeedMonitor::Items::ItemCreator.call(source:, entry:)
+            items << result.item
+            if result.created?
+              created += 1
+            else
+              updated += 1
+            end
+          rescue StandardError => error
+            failed += 1
+            errors << normalize_item_error(entry, error)
+          end
+        end
+
+        EntryProcessingResult.new(created:, updated:, failed:, items:, errors: errors.compact)
+      end
+
+      def normalize_item_error(entry, error)
+        {
+          guid: safe_entry_guid(entry),
+          title: safe_entry_title(entry),
+          error_class: error.class.name,
+          error_message: error.message
+        }
+      rescue StandardError
+        { error_class: error.class.name, error_message: error.message }
+      end
+
+      def safe_entry_guid(entry)
+        if entry.respond_to?(:entry_id)
+          entry.entry_id
+        elsif entry.respond_to?(:id)
+          entry.id
+        end
+      end
+
+      def safe_entry_title(entry)
+        entry.title if entry.respond_to?(:title)
       end
     end
   end

@@ -5,5 +5,7 @@ FeedMonitor::Engine.routes.draw do
   resources :fetch_logs, only: %i[index show]
   resources :scrape_logs, only: %i[index show]
   resources :items, only: %i[index show]
-  resources :sources
+  resources :sources do
+    post :fetch, on: :member
+  end
 end

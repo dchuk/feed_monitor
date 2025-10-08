@@ -5,6 +5,9 @@
       <p class="mt-1 text-sm text-slate-500">Feed URL: <%= @source.feed_url %></p>
     </div>
     <div class="flex gap-3">
+      <%= button_to "Fetch Now", feed_monitor.fetch_source_path(@source), method: :post,
+            class: "inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow hover:bg-blue-500",
+            form: { class: "inline" } %>
       <%= link_to "Edit", feed_monitor.edit_source_path(@source), class: "inline-flex items-center rounded-md bg-slate-800 px-3 py-2 text-sm font-medium text-white shadow hover:bg-slate-700" %>
       <%= form_with url: feed_monitor.source_path(@source), method: :delete, data: { turbo_confirm: "Delete this source?" }, class: "inline" do %>
         <button type="submit" class="inline-flex items-center rounded-md border border-rose-400 px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50">

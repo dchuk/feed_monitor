@@ -13,7 +13,7 @@ module FeedMonitor
         fill_in "Name", with: "UI Source"
         fill_in "Feed url", with: "https://example.com/feed"
         fill_in "Website url", with: "https://example.com"
-        fill_in "Fetch interval hours", with: "4"
+        fill_in "Fetch interval (minutes)", with: "240"
         fill_in "Scraper adapter", with: "readability"
 
         click_button "Create Source"
@@ -61,6 +61,36 @@ module FeedMonitor
       assert_current_path feed_monitor.sources_path
       assert_text "Source deleted"
       assert_no_text "Updated Source"
+    end
+
+    test "manually fetching a source" do
+      FeedMonitor::Item.delete_all
+      FeedMonitor::Source.delete_all
+
+      source = FeedMonitor::Source.create!(
+        name: "Fetchable Source",
+        feed_url: "https://www.ruby-lang.org/en/feeds/news.rss",
+        website_url: "https://example.com",
+        fetch_interval_minutes: 60,
+        scraper_adapter: "readability"
+      )
+
+      visit feed_monitor.source_path(source)
+
+      VCR.use_cassette("feed_monitor/fetching/rss_success") do
+        click_button "Fetch Now"
+      end
+
+      assert_text "Fetch completed"
+      assert_selector "[data-testid='source-items-table'] tbody tr", minimum: 1
+
+      source.reload
+      assert source.items_count.positive?, "expected items_count to increase"
+
+      log = source.fetch_logs.order(:created_at).last
+      total_processed = log.items_created + log.items_updated
+      assert_equal source.items_count, total_processed
+      assert_equal 0, log.items_failed
     end
   end
 end

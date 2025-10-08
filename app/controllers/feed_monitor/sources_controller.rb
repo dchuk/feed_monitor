@@ -2,7 +2,7 @@
 
 module FeedMonitor
   class SourcesController < ApplicationController
-    before_action :set_source, only: %i[show edit update destroy]
+    before_action :set_source, only: %i[show edit update destroy fetch]
 
     def index
       @sources = Source.order(created_at: :desc)
@@ -44,10 +44,45 @@ module FeedMonitor
       redirect_to feed_monitor.sources_path, notice: "Source deleted"
     end
 
+    def fetch
+      result = FeedMonitor::Fetching::FeedFetcher.new(source: @source).call
+      case result.status
+      when :fetched
+        processing = result.item_processing
+        message = build_fetch_summary(processing)
+        redirect_to feed_monitor.source_path(@source), notice: message
+      when :not_modified
+        redirect_to feed_monitor.source_path(@source), notice: "Source is already up to date"
+      else
+        message = result.error&.message || "Unknown error"
+        redirect_to feed_monitor.source_path(@source), alert: "Fetch failed: #{message}"
+      end
+    rescue StandardError => error
+      redirect_to feed_monitor.source_path(@source), alert: "Fetch failed: #{error.message}"
+    end
+
     private
 
     def set_source
       @source = Source.find(params[:id])
+    end
+
+    def build_fetch_summary(processing)
+      created = processing&.created.to_i
+      updated = processing&.updated.to_i
+      failed = processing&.failed.to_i
+
+      parts = []
+      parts << pluralize_count(created, "item created", "items created") if created.positive?
+      parts << pluralize_count(updated, "item updated", "items updated") if updated.positive?
+      parts << pluralize_count(failed, "item failed", "items failed") if failed.positive?
+
+      summary = parts.presence || ["no changes"]
+      "Fetch completed: #{summary.join(', ')}."
+    end
+
+    def pluralize_count(count, singular, plural)
+      view_context.pluralize(count, singular, plural)
     end
 
     def default_attributes

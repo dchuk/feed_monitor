@@ -6,7 +6,57 @@ module FeedMonitor
     class FeedFetcherTest < ActiveSupport::TestCase
       setup do
         FeedMonitor::FetchLog.delete_all
+        FeedMonitor::Item.delete_all
         FeedMonitor::Source.delete_all
+      end
+
+      test "continues processing when an item creation fails" do
+        source = build_source(
+          name: "RSS Sample with failure",
+          feed_url: "https://www.ruby-lang.org/en/feeds/news.rss"
+        )
+
+        singleton = FeedMonitor::Items::ItemCreator.singleton_class
+        call_count = 0
+        error_message = "forced failure"
+        result = nil
+
+        singleton.alias_method :call_without_stub, :call
+        singleton.define_method(:call) do |source:, entry:|
+          call_count += 1
+          if call_count == 1
+            raise StandardError, error_message
+          else
+            call_without_stub(source:, entry:)
+          end
+        end
+
+        begin
+          VCR.use_cassette("feed_monitor/fetching/rss_success") do
+            result = FeedFetcher.new(source: source, jitter: ->(_) { 0 }).call
+          end
+        ensure
+          singleton.alias_method :call, :call_without_stub
+          singleton.remove_method :call_without_stub
+        end
+
+        assert_equal :fetched, result.status
+        processing = result.item_processing
+        assert_equal 1, processing.failed
+        assert processing.created.positive?
+        assert_equal call_count - 1, processing.created
+        assert_equal 0, processing.updated
+
+        source.reload
+        assert_equal call_count - 1, source.items_count
+
+        log = source.fetch_logs.order(:created_at).last
+        assert_equal call_count - 1, log.items_created
+        assert_equal 0, log.items_updated
+        assert_equal 1, log.items_failed
+        assert log.metadata["item_errors"].present?
+        error_entry = log.metadata["item_errors"].first
+        assert_equal error_message, error_entry["error_message"]
       end
 
       test "fetches an RSS feed and records log entries" do
@@ -28,6 +78,14 @@ module FeedMonitor
 
         assert_equal :fetched, result.status
         assert_kind_of Feedjira::Parser::RSS, result.feed
+        processing = result.item_processing
+        refute_nil processing
+        assert_equal result.feed.entries.size, processing.created
+        assert_equal 0, processing.updated
+        assert_equal 0, processing.failed
+
+        assert_equal result.feed.entries.size, FeedMonitor::Item.where(source: source).count
+        assert_equal result.feed.entries.size, source.reload.items_count
 
         source.reload
         assert_equal 200, source.last_http_status
@@ -40,6 +98,10 @@ module FeedMonitor
         assert log.feed_size_bytes.positive?
         assert_equal result.feed.entries.size, log.items_in_feed
         assert_equal Feedjira::Parser::RSS.name, log.metadata["parser"]
+        assert_equal result.feed.entries.size, log.items_created
+        assert_equal 0, log.items_updated
+        assert_equal 0, log.items_failed
+        assert_nil log.metadata["item_errors"]
 
         finish_payload = finish_payloads.last
         assert finish_payload[:success]
@@ -47,6 +109,9 @@ module FeedMonitor
         assert_equal 200, finish_payload[:http_status]
         assert_equal source.id, finish_payload[:source_id]
         assert_equal Feedjira::Parser::RSS.name, finish_payload[:parser]
+        assert_equal result.feed.entries.size, finish_payload[:items_created]
+        assert_equal 0, finish_payload[:items_updated]
+        assert_equal 0, finish_payload[:items_failed]
       end
 
       test "reuses etag and handles 304 not modified responses" do
@@ -67,6 +132,7 @@ module FeedMonitor
 
         result = FeedFetcher.new(source: source, jitter: ->(_) { 0 }).call
         assert_equal :fetched, result.status
+        assert_equal result.feed.entries.size, result.item_processing.created
 
         source.reload
         assert_equal '"abcd1234"', source.etag
@@ -78,6 +144,10 @@ module FeedMonitor
         second_result = FeedFetcher.new(source: source, jitter: ->(_) { 0 }).call
 
         assert_equal :not_modified, second_result.status
+        refute_nil second_result.item_processing
+        assert_equal 0, second_result.item_processing.created
+        assert_equal 0, second_result.item_processing.updated
+        assert_equal 0, second_result.item_processing.failed
 
         source.reload
         assert_equal 304, source.last_http_status
@@ -87,6 +157,9 @@ module FeedMonitor
         assert log.success
         assert_equal 304, log.http_status
         assert_nil log.items_in_feed
+        assert_equal 0, log.items_created
+        assert_equal 0, log.items_updated
+        assert_equal 0, log.items_failed
 
         source.reload
         assert_equal 0, source.failure_count
@@ -272,7 +345,7 @@ module FeedMonitor
         travel_to Time.zone.parse("2024-01-01 08:00:00 UTC")
 
         url = "https://example.com/minmax.xml"
-        body = "<rss><channel><title>Test</title><item><title>One</title></item></channel></rss>"
+        body = "<rss><channel><title>Test</title><item><title>One</title><link>https://example.com/items/1</link><guid>1</guid></item></channel></rss>"
 
         source = build_source(name: "Min", feed_url: url, fetch_interval_minutes: 60)
         source.update!(metadata: { "dynamic_fetch_interval_seconds" => 60 })

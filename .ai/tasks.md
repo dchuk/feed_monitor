@@ -212,11 +212,11 @@
 
 ### 06.04 Wire Up Feed Fetcher to Item Creator
 
-- [ ] 06.04.01 Integrate FeedFetcher with ItemCreator
-- [ ] 06.04.02 Update items_count counter cache
-- [ ] 06.04.03 Log items created/updated/failed
-- [ ] 06.04.04 Test end-to-end fetch and item creation
-- [ ] 06.04.05 Add manual fetch button in admin UI
+- [x] 06.04.01 Integrate FeedFetcher with ItemCreator
+- [x] 06.04.02 Update items_count counter cache
+- [x] 06.04.03 Log items created/updated/failed
+- [x] 06.04.04 Test end-to-end fetch and item creation
+- [x] 06.04.05 Add manual fetch button in admin UI
 
 **Deliverable: Complete item metadata extraction and storage via Feedjira**
 **Test: Fetch feed via admin UI, verify Feedjira-driven items have complete metadata**

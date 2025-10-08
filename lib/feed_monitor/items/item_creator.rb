@@ -9,14 +9,20 @@ require "feed_monitor/instrumentation"
 module FeedMonitor
   module Items
     class ItemCreator
+      Result = Struct.new(:item, :status, :matched_by, keyword_init: true) do
+        def created?
+          status == :created
+        end
+
+        def updated?
+          status == :updated
+        end
+      end
       FINGERPRINT_SEPARATOR = "\u0000".freeze
       CONTENT_METHODS = %i[content content_encoded summary].freeze
       TIMESTAMP_METHODS = %i[published updated].freeze
       KEYWORD_SEPARATORS = /[,;]+/.freeze
       METADATA_ROOT_KEY = "feedjira_entry".freeze
-      GUID_UNIQUE_INDEX = :index_feed_monitor_items_on_source_id_and_guid
-      FINGERPRINT_UNIQUE_INDEX = :index_feed_monitor_items_on_source_id_and_content_fingerprint
-
       def self.call(source:, entry:)
         new(source:, entry:).call
       end
@@ -34,15 +40,11 @@ module FeedMonitor
         existing_item, matched_by = existing_item_for(attributes, raw_guid_present: raw_guid.present?)
 
         if existing_item
-          existing_item.assign_attributes(attributes.except(:metadata).merge(metadata: attributes[:metadata]))
-          existing_item.save!
-          instrument_duplicate(existing_item, matched_by)
-          existing_item
-        else
-          new_item = source.items.new(attributes)
-          new_item.validate!
-          upsert_new_item(new_item, raw_guid_present: raw_guid.present?, matched_by: matched_by)
+          updated_item = update_existing_item(existing_item, attributes, matched_by)
+          return Result.new(item: updated_item, status: :updated, matched_by: matched_by)
         end
+
+        create_new_item(attributes, raw_guid_present: raw_guid.present?)
       end
 
       private
@@ -78,49 +80,6 @@ module FeedMonitor
         source.items.find_by(content_fingerprint: fingerprint)
       end
 
-      def upsert_new_item(record, raw_guid_present:, matched_by:)
-        upsert_attributes = attributes_for_upsert(record)
-        unique_by = unique_index_for(matched_by:, raw_guid_present:)
-
-        result = FeedMonitor::Item.upsert_all(
-          [upsert_attributes],
-          unique_by:,
-          returning: %w[id],
-          record_timestamps: true
-        )
-
-        item_id = result.rows.first&.first || find_item_id_after_upsert(upsert_attributes, unique_by)
-        FeedMonitor::Item.find(item_id)
-      end
-
-      def find_item_id_after_upsert(attributes, unique_by)
-        case unique_by
-        when GUID_UNIQUE_INDEX
-          find_item_by_guid(attributes["guid"]).id
-        else
-          find_item_by_fingerprint(attributes["content_fingerprint"]).id
-        end
-      end
-
-      def attributes_for_upsert(record)
-        record.attributes.slice(*persistable_columns)
-      end
-
-      def persistable_columns
-        @persistable_columns ||= (FeedMonitor::Item.column_names - %w[id created_at updated_at])
-      end
-
-      def unique_index_for(matched_by:, raw_guid_present:)
-        case matched_by
-        when :guid
-          GUID_UNIQUE_INDEX
-        when :fingerprint
-          FINGERPRINT_UNIQUE_INDEX
-        else
-          raw_guid_present ? GUID_UNIQUE_INDEX : FINGERPRINT_UNIQUE_INDEX
-        end
-      end
-
       def instrument_duplicate(item, matched_by)
         return unless matched_by
 
@@ -131,6 +90,46 @@ module FeedMonitor
           content_fingerprint: item.content_fingerprint,
           matched_by: matched_by
         )
+      end
+
+      def update_existing_item(existing_item, attributes, matched_by)
+        apply_attributes(existing_item, attributes)
+        existing_item.save!
+        instrument_duplicate(existing_item, matched_by)
+        existing_item
+      end
+
+      def create_new_item(attributes, raw_guid_present:)
+        new_item = source.items.new
+        apply_attributes(new_item, attributes)
+        new_item.save!
+        Result.new(item: new_item, status: :created)
+      rescue ActiveRecord::RecordNotUnique
+        handle_concurrent_duplicate(attributes, raw_guid_present:)
+      end
+
+      def handle_concurrent_duplicate(attributes, raw_guid_present:)
+        matched_by = raw_guid_present ? :guid : :fingerprint
+        existing = find_conflicting_item(attributes, matched_by)
+        updated = update_existing_item(existing, attributes, matched_by)
+        Result.new(item: updated, status: :updated, matched_by: matched_by)
+      end
+
+      def find_conflicting_item(attributes, matched_by)
+        case matched_by
+        when :guid
+          find_item_by_guid(attributes[:guid]) || source.items.find_by!(guid: attributes[:guid])
+        else
+          fingerprint = attributes[:content_fingerprint]
+          find_item_by_fingerprint(fingerprint) || source.items.find_by!(content_fingerprint: fingerprint)
+        end
+      end
+
+      def apply_attributes(record, attributes)
+        attributes = attributes.dup
+        metadata = attributes.delete(:metadata)
+        record.assign_attributes(attributes)
+        record.metadata = metadata if metadata
       end
 
       def build_attributes
