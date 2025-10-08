@@ -41,10 +41,10 @@
 
 ### 02.02 Add Observability
 
-- [ ] 02.02.01 Setup ActiveSupport::Notifications events
-- [ ] 02.02.02 Add feed_monitor.fetch.start/finish events
-- [ ] 02.02.03 Create /health endpoint
-- [ ] 02.02.04 Add basic metrics collection module
+- [x] 02.02.01 Setup ActiveSupport::Notifications events
+- [x] 02.02.02 Add feed_monitor.fetch.start/finish events
+- [x] 02.02.03 Create /health endpoint
+- [x] 02.02.04 Add basic metrics collection module
 
 **Deliverable: Comprehensive testing and observability from day one**
 **Test: Run test suite and visit /health endpoint**
