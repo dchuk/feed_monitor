@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2024_10_08_122000) do
+ActiveRecord::Schema[8.0].define(version: 2024_10_08_123000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -81,6 +81,27 @@ ActiveRecord::Schema[8.0].define(version: 2024_10_08_122000) do
     t.index ["url"], name: "index_feed_monitor_items_on_url"
   end
 
+  create_table "feed_monitor_scrape_logs", force: :cascade do |t|
+    t.bigint "item_id", null: false
+    t.bigint "source_id", null: false
+    t.boolean "success"
+    t.datetime "started_at", null: false
+    t.datetime "completed_at"
+    t.integer "duration_ms"
+    t.integer "http_status"
+    t.string "scraper_adapter"
+    t.integer "content_length"
+    t.string "error_class"
+    t.text "error_message"
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_feed_monitor_scrape_logs_on_created_at"
+    t.index ["item_id"], name: "index_feed_monitor_scrape_logs_on_item_id"
+    t.index ["source_id"], name: "index_feed_monitor_scrape_logs_on_source_id"
+    t.index ["success"], name: "index_feed_monitor_scrape_logs_on_success"
+  end
+
   create_table "feed_monitor_sources", force: :cascade do |t|
     t.string "name", null: false
     t.string "feed_url", null: false
@@ -117,4 +138,6 @@ ActiveRecord::Schema[8.0].define(version: 2024_10_08_122000) do
 
   add_foreign_key "feed_monitor_fetch_logs", "feed_monitor_sources", column: "source_id"
   add_foreign_key "feed_monitor_items", "feed_monitor_sources", column: "source_id"
+  add_foreign_key "feed_monitor_scrape_logs", "feed_monitor_items", column: "item_id"
+  add_foreign_key "feed_monitor_scrape_logs", "feed_monitor_sources", column: "source_id"
 end

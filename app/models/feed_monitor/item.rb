@@ -7,6 +7,7 @@ module FeedMonitor
     self.table_name = "feed_monitor_items"
 
     belongs_to :source, class_name: "FeedMonitor::Source", inverse_of: :items, counter_cache: true
+    has_many :scrape_logs, class_name: "FeedMonitor::ScrapeLog", inverse_of: :item, dependent: :destroy
 
     before_validation :normalize_urls
 

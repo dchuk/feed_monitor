@@ -80,10 +80,10 @@
 
 ### 03.04 Create ScrapeLog Model & Migration
 
-- [ ] 03.04.01 Create scrape_logs migration with all fields: item_id (references/indexed/fk), source_id (references/indexed/fk), success (indexed), started_at, completed_at, duration_ms, http_status, scraper_adapter, content_length, error_class, error_message (text), metadata (jsonb), created_at (indexed)
-- [ ] 03.04.02 Create FeedMonitor::ScrapeLog model
-- [ ] 03.04.03 Add associations
-- [ ] 03.04.04 Test scrape log tracking
+- [x] 03.04.01 Create scrape_logs migration with all fields: item_id (references/indexed/fk), source_id (references/indexed/fk), success (indexed), started_at, completed_at, duration_ms, http_status, scraper_adapter, content_length, error_class, error_message (text), metadata (jsonb), created_at (indexed)
+- [x] 03.04.02 Create FeedMonitor::ScrapeLog model
+- [x] 03.04.03 Add associations
+- [x] 03.04.04 Test scrape log tracking
 
 **Deliverable: Complete, production-ready data model with all necessary fields**
 **Test: Create all models via console, verify constraints and associations work**
