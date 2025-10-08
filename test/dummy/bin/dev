@@ -1,2 +1,63 @@
 #!/usr/bin/env ruby
-exec "./bin/rails", "server", *ARGV
+
+require "English"
+
+ENGINE_ROOT = File.expand_path("../../..", __dir__)
+DUMMY_ROOT  = File.expand_path("..", __dir__)
+
+tailwind_command = [
+  "bundle", "exec", "tailwindcss",
+  "-i", "app/assets/tailwind/application.css",
+  "-o", "app/assets/builds/tailwind.css",
+  "--watch"
+]
+
+server_command = [
+  "bundle", "exec", "rails", "server", *ARGV
+]
+
+commands = [
+  { name: "css",     dir: ENGINE_ROOT, env: {}, command: tailwind_command },
+  { name: "web",     dir: DUMMY_ROOT,  env: {}, command: server_command }
+]
+
+pids = {}
+
+commands.each do |entry|
+  env      = { "BUNDLE_GEMFILE" => File.join(ENGINE_ROOT, "Gemfile") }.merge(entry[:env])
+  cmd      = entry[:command]
+  dir      = entry[:dir]
+  label    = entry[:name]
+
+  $stdout.puts "Starting #{label}: #{cmd.join(' ')} (chdir=#{dir})"
+  pid = Process.spawn(env, *cmd, chdir: dir, out: $stdout, err: $stderr)
+  pids[label] = pid
+end
+
+stop = lambda do
+  pids.each_value do |pid|
+    begin
+      Process.kill("INT", pid)
+    rescue Errno::ESRCH
+      next
+    end
+  end
+end
+
+trap("INT") { stop.call }
+trap("TERM") { stop.call }
+
+begin
+  Process.waitall
+rescue Interrupt
+  stop.call
+  Process.waitall rescue nil
+ensure
+  pids.each_value do |pid|
+    begin
+      Process.kill("TERM", pid)
+    rescue Errno::ESRCH
+      next
+    end
+  end
+end

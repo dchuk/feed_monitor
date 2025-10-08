@@ -103,11 +103,11 @@
 
 ### 04.02 Create Dashboard
 
-- [ ] 04.02.01 Create DashboardController with index action
-- [ ] 04.02.02 Build stats partial showing source counts
-- [ ] 04.02.03 Add recent activity feed (latest logs)
-- [ ] 04.02.04 Display quick action buttons
-- [ ] 04.02.05 Test dashboard loads and shows data
+- [x] 04.02.01 Create DashboardController with index action
+- [x] 04.02.02 Build stats partial showing source counts
+- [x] 04.02.03 Add recent activity feed (latest logs)
+- [x] 04.02.04 Display quick action buttons
+- [x] 04.02.05 Test dashboard loads and shows data
 
 ### 04.03 Build Source Management
 
