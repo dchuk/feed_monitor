@@ -144,11 +144,11 @@
 
 ### 05.01 Setup Faraday HTTP Client & Feedjira
 
-- [ ] 05.01.01 Add feedjira, faraday, and faraday-retry to gemspec
-- [ ] 05.01.02 Configure Feedjira global options (parser order, whitespace)
-- [ ] 05.01.03 Configure timeouts, redirects, compression
-- [ ] 05.01.04 Add retry middleware with exponential backoff and proxy support
-- [ ] 05.01.05 Smoke-test HTTP + Feedjira configuration against sample feeds
+- [x] 05.01.01 Add feedjira, faraday, and faraday-retry to gemspec
+- [x] 05.01.02 Configure Feedjira global options (parser order, whitespace)
+- [x] 05.01.03 Configure timeouts, redirects, compression
+- [x] 05.01.04 Add retry middleware with exponential backoff and proxy support
+- [x] 05.01.05 Smoke-test HTTP + Feedjira configuration against sample feeds
 
 ### 05.02 Build Feed Fetcher with Feedjira & Conditional GET
 

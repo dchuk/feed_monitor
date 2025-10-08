@@ -24,4 +24,9 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "rails", ">= 8.0.2.1"
   spec.add_dependency "tailwindcss-rails"
+  spec.add_dependency "feedjira", "~> 3.2"
+  spec.add_dependency "faraday", "~> 2.9"
+  spec.add_dependency "faraday-retry", "~> 2.2"
+  spec.add_dependency "faraday-follow_redirects", "~> 0.4"
+  spec.add_dependency "faraday-gzip", "~> 3.0"
 end
