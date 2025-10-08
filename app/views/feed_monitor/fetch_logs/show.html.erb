@@ -1,0 +1,90 @@
+<div class="space-y-6">
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-semibold text-slate-900">Fetch Log</h1>
+      <p class="mt-1 text-sm text-slate-500">
+        Started <%= @log.started_at&.strftime("%b %d, %Y %H:%M:%S %Z") || "Unknown" %> ·
+        <%= @log.success? ? "Success" : "Failure" %>
+      </p>
+    </div>
+    <div class="flex gap-3">
+      <%= link_to "Back to Fetch Logs", feed_monitor.fetch_logs_path, class: "inline-flex items-center rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" %>
+      <%= link_to "View Source", feed_monitor.source_path(@log.source), class: "inline-flex items-center rounded-md bg-slate-800 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
+    </div>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-2">
+    <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div class="border-b border-slate-200 px-5 py-4">
+        <h2 class="text-lg font-medium">Summary</h2>
+      </div>
+      <dl class="divide-y divide-slate-100">
+        <% summary = {
+             "Source" => link_to(@log.source.name, feed_monitor.source_path(@log.source)),
+             "HTTP Status" => @log.http_status || "—",
+             "Success" => @log.success? ? "Yes" : "No",
+             "Duration (ms)" => @log.duration_ms || "—",
+             "Items Created" => @log.items_created,
+             "Items Updated" => @log.items_updated,
+             "Items Failed" => @log.items_failed,
+             "Started At" => @log.started_at&.strftime("%b %d, %Y %H:%M:%S %Z") || "—",
+             "Completed At" => @log.completed_at&.strftime("%b %d, %Y %H:%M:%S %Z") || "—",
+             "Job ID" => @log.job_id || "—"
+           } %>
+        <% summary.each do |label, value| %>
+          <div class="flex items-center justify-between px-5 py-3">
+            <dt class="text-sm font-medium text-slate-600"><%= label %></dt>
+            <dd class="text-sm text-slate-900 text-right"><%= value %></dd>
+          </div>
+        <% end %>
+      </dl>
+    </div>
+
+    <div class="space-y-6">
+      <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-5 py-4">
+          <h2 class="text-lg font-medium">Error Details</h2>
+        </div>
+        <div class="px-5 py-4 text-sm text-slate-700">
+          <% if @log.success? %>
+            <p class="text-slate-500">No errors recorded.</p>
+          <% else %>
+            <% if @log.error_class.present? %>
+              <p class="font-medium text-rose-600"><%= @log.error_class %></p>
+            <% end %>
+            <p class="mt-2 whitespace-pre-wrap break-words text-xs text-slate-600"><%= @log.error_message.presence || "No error message captured." %></p>
+            <% if @log.error_backtrace.present? %>
+              <pre class="mt-3 whitespace-pre-wrap break-words text-[11px] leading-relaxed text-slate-600"><%= @log.error_backtrace %></pre>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-5 py-4">
+          <h2 class="text-lg font-medium">HTTP Headers</h2>
+        </div>
+        <div class="px-5 py-4 text-sm text-slate-700">
+          <% if @log.http_response_headers.present? %>
+            <pre class="whitespace-pre-wrap break-words text-xs text-slate-600"><%= JSON.pretty_generate(@log.http_response_headers) %></pre>
+          <% else %>
+            <p class="text-slate-500">No response headers recorded.</p>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-5 py-4">
+          <h2 class="text-lg font-medium">Metadata</h2>
+        </div>
+        <div class="px-5 py-4 text-sm text-slate-700">
+          <% if @log.metadata.present? %>
+            <pre class="whitespace-pre-wrap break-words text-xs text-slate-600"><%= JSON.pretty_generate(@log.metadata) %></pre>
+          <% else %>
+            <p class="text-slate-500">No metadata recorded.</p>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

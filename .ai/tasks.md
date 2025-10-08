@@ -127,11 +127,11 @@
 
 ### 04.05 Create Log Viewers
 
-- [ ] 04.05.01 Create FetchLogsController with index and show
-- [ ] 04.05.02 Build log list view with filtering
-- [ ] 04.05.03 Create log detail view showing all data
-- [ ] 04.05.04 Add scrape logs view
-- [ ] 04.05.05 Test viewing success and failure logs
+- [x] 04.05.01 Create FetchLogsController with index and show
+- [x] 04.05.02 Build log list view with filtering
+- [x] 04.05.03 Create log detail view showing all data
+- [x] 04.05.04 Add scrape logs view
+- [x] 04.05.05 Test viewing success and failure logs
 
 **Deliverable: Complete functional admin UI using Rails + Tailwind only**
 **Test: Navigate through all admin pages, perform CRUD operations**
@@ -140,23 +140,23 @@
 
 ## Phase 05: Modern HTTP Stack & Feed Fetching
 
-**Goal: Reliable feed fetching with logging**
+**Goal: Reliable feed fetching with logging using Feedjira**
 
-### 05.01 Setup Faraday HTTP Client
+### 05.01 Setup Faraday HTTP Client & Feedjira
 
-- [ ] 05.01.01 Add faraday and faraday-retry to gemspec
-- [ ] 05.01.02 Configure timeouts, redirects, compression
-- [ ] 05.01.03 Add retry middleware with exponential backoff
-- [ ] 05.01.04 Setup proxy support configuration
-- [ ] 05.01.05 Test HTTP client configuration
+- [ ] 05.01.01 Add feedjira, faraday, and faraday-retry to gemspec
+- [ ] 05.01.02 Configure Feedjira global options (parser order, whitespace)
+- [ ] 05.01.03 Configure timeouts, redirects, compression
+- [ ] 05.01.04 Add retry middleware with exponential backoff and proxy support
+- [ ] 05.01.05 Smoke-test HTTP + Feedjira configuration against sample feeds
 
-### 05.02 Build Feed Fetcher with Conditional GET
+### 05.02 Build Feed Fetcher with Feedjira & Conditional GET
 
-- [ ] 05.02.01 Write FeedFetcher service tests with VCR cassettes
+- [ ] 05.02.01 Write FeedFetcher service tests with VCR using Feedjira.parse
 - [ ] 05.02.02 Implement ETag and Last-Modified support
 - [ ] 05.02.03 Handle 304 Not Modified responses
-- [ ] 05.02.04 Auto-detect feed format (RSS/Atom/JSON)
-- [ ] 05.02.05 Test fetching various feed types
+- [ ] 05.02.04 Leverage Feedjira auto-detection for RSS/Atom/JSON parsing
+- [ ] 05.02.05 Validate Feedjira parser coverage across varied feed types
 
 ### 05.03 Add Structured Error Handling
 
@@ -174,33 +174,33 @@
 - [ ] 05.04.04 Update failure_count on errors
 - [ ] 05.04.05 Test rate limiting behavior
 
-**Deliverable: Production-grade fetching with proper HTTP handling**
-**Test: Fetch real feeds via console, verify conditional GET works**
+**Deliverable: Production-grade fetching with Feedjira-backed parsing**
+**Test: Fetch real feeds via console, verify Feedjira parsing and conditional GET**
 
 ---
 
 ## Phase 06: Item Processing with Complete Metadata
 
-**Goal: Extract and store all feed item data**
+**Goal: Extract and store all feed item data via Feedjira entries**
 
 ### 06.01 Build Item Creator Service
 
-- [ ] 06.01.01 Write tests for item creation with all fields
+- [ ] 06.01.01 Write tests for item creation using Feedjira entry objects
 - [ ] 06.01.02 Generate content fingerprints from title+url+content
 - [ ] 06.01.03 Normalize and canonicalize URLs
 - [ ] 06.01.04 Handle missing GUIDs gracefully
-- [ ] 06.01.05 Test item creation with various feed formats
+- [ ] 06.01.05 Test item creation with Feedjira across various feed formats
 
 ### 06.02 Extract All Metadata Fields
 
-- [ ] 06.02.01 Parse standard fields: title, url, guid, author, content
-- [ ] 06.02.02 Extract authors array and handle DC creator
-- [ ] 06.02.03 Parse categories, tags, keywords from multiple namespaces
+- [ ] 06.02.01 Map Feedjira fields: title, url, guid, author, content
+- [ ] 06.02.02 Extract authors array and handle DC creator via Feedjira APIs
+- [ ] 06.02.03 Extend Feedjira parsers to expose categories, tags, keywords
 - [ ] 06.02.04 Extract enclosures for media (podcasts/videos)
 - [ ] 06.02.05 Parse media:thumbnail and media:content
-- [ ] 06.02.06 Store comments URL and count
+- [ ] 06.02.06 Expose comments URL and count via Feedjira parser extensions
 - [ ] 06.02.07 Capture all other fields in metadata JSONB
-- [ ] 06.02.08 Test metadata extraction with real feeds
+- [ ] 06.02.08 Test metadata extraction with real feeds through Feedjira
 
 ### 06.03 Implement Deduplication Logic
 
@@ -218,14 +218,14 @@
 - [ ] 06.04.04 Test end-to-end fetch and item creation
 - [ ] 06.04.05 Add manual fetch button in admin UI
 
-**Deliverable: Complete item metadata extraction and storage**
-**Test: Fetch feed via admin UI, verify all items created with complete metadata**
+**Deliverable: Complete item metadata extraction and storage via Feedjira**
+**Test: Fetch feed via admin UI, verify Feedjira-driven items have complete metadata**
 
 ---
 
 ## Phase 07: Content Scraping with Multiple Storage Layers
 
-**Goal: Store raw HTML and extracted content separately**
+**Goal: Store raw HTML and extracted content complementing Feedjira data**
 
 ### 07.01 Create Scraper Adapter Interface
 
@@ -248,18 +248,18 @@
 - [ ] 07.03.02 Save extracted content to scraped_content
 - [ ] 07.03.03 Update scrape_status and scraped_at
 - [ ] 07.03.04 Create ScrapeLog entry for each attempt
-- [ ] 07.03.05 Test storing all content versions
+- [ ] 07.03.05 Test storing all content versions alongside Feedjira content
 
 ### 07.04 Add Scraping UI Controls
 
 - [ ] 07.04.01 Add scraping configuration form to source edit
 - [ ] 07.04.02 Add manual scrape button on item detail page
-- [ ] 07.04.03 Display all content versions in item view
+- [ ] 07.04.03 Display all content versions in item view with Feedjira comparison
 - [ ] 07.04.04 Show scraping status and errors
 - [ ] 07.04.05 Test manual scraping workflow
 
-**Deliverable: Multi-layer content storage with raw and processed versions**
-**Test: Scrape article via admin UI, verify all content layers saved**
+**Deliverable: Multi-layer content storage aligned with Feedjira base content**
+**Test: Scrape article via admin UI, verify scraped layers against Feedjira fields**
 
 ---
 
