@@ -10,9 +10,36 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2024_10_08_121000) do
+ActiveRecord::Schema[8.0].define(version: 2024_10_08_122000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "feed_monitor_fetch_logs", force: :cascade do |t|
+    t.bigint "source_id", null: false
+    t.boolean "success"
+    t.integer "items_created", default: 0, null: false
+    t.integer "items_updated", default: 0, null: false
+    t.integer "items_failed", default: 0, null: false
+    t.datetime "started_at", null: false
+    t.datetime "completed_at"
+    t.integer "duration_ms"
+    t.integer "http_status"
+    t.jsonb "http_response_headers", default: {}, null: false
+    t.string "error_class"
+    t.text "error_message"
+    t.text "error_backtrace"
+    t.integer "feed_size_bytes"
+    t.integer "items_in_feed"
+    t.string "job_id"
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_feed_monitor_fetch_logs_on_created_at"
+    t.index ["job_id"], name: "index_feed_monitor_fetch_logs_on_job_id"
+    t.index ["source_id"], name: "index_feed_monitor_fetch_logs_on_source_id"
+    t.index ["started_at"], name: "index_feed_monitor_fetch_logs_on_started_at"
+    t.index ["success"], name: "index_feed_monitor_fetch_logs_on_success"
+  end
 
   create_table "feed_monitor_items", force: :cascade do |t|
     t.bigint "source_id", null: false
@@ -88,5 +115,6 @@ ActiveRecord::Schema[8.0].define(version: 2024_10_08_121000) do
     t.index ["next_fetch_at"], name: "index_feed_monitor_sources_on_next_fetch_at"
   end
 
+  add_foreign_key "feed_monitor_fetch_logs", "feed_monitor_sources", column: "source_id"
   add_foreign_key "feed_monitor_items", "feed_monitor_sources", column: "source_id"
 end

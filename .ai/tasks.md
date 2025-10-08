@@ -73,10 +73,10 @@
 
 ### 03.03 Create FetchLog Model & Migration
 
-- [ ] 03.03.01 Create fetch_logs migration with all fields: source_id (references/indexed/fk), success (indexed), items_created (default 0), items_updated (default 0), items_failed (default 0), started_at (indexed), completed_at, duration_ms, http_status, http_response_headers (jsonb), error_class, error_message (text), error_backtrace (text), feed_size_bytes, items_in_feed, job_id (indexed), metadata (jsonb), created_at (indexed)
-- [ ] 03.03.02 Create FeedMonitor::FetchLog model
-- [ ] 03.03.03 Add associations and scopes
-- [ ] 03.03.04 Test log creation with various scenarios
+- [x] 03.03.01 Create fetch_logs migration with all fields: source_id (references/indexed/fk), success (indexed), items_created (default 0), items_updated (default 0), items_failed (default 0), started_at (indexed), completed_at, duration_ms, http_status, http_response_headers (jsonb), error_class, error_message (text), error_backtrace (text), feed_size_bytes, items_in_feed, job_id (indexed), metadata (jsonb), created_at (indexed)
+- [x] 03.03.02 Create FeedMonitor::FetchLog model
+- [x] 03.03.03 Add associations and scopes
+- [x] 03.03.04 Test log creation with various scenarios
 
 ### 03.04 Create ScrapeLog Model & Migration
 
