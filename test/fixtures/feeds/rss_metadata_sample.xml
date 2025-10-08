@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:media="http://search.yahoo.com/mrss/"
+     xmlns:slash="http://purl.org/rss/1.0/modules/slash/">
+  <channel>
+    <title>Example RSS Feed</title>
+    <link>https://example.com</link>
+    <description>Sample RSS feed with metadata.</description>
+    <item>
+      <title>Rich Hello World</title>
+      <link>https://example.com/posts/1</link>
+      <guid isPermaLink="false">post-1</guid>
+      <pubDate>Mon, 06 Oct 2025 12:00:00 GMT</pubDate>
+      <author>jane@example.com (Jane Author)</author>
+      <dc:creator>John Creator</dc:creator>
+      <description><![CDATA[First item content.]]></description>
+      <content:encoded><![CDATA[<p>First item content.</p>]]></content:encoded>
+      <category><![CDATA[Technology]]></category>
+      <category><![CDATA[Ruby]]></category>
+      <media:keywords>feed monitoring, rss</media:keywords>
+      <media:thumbnail url="https://example.com/assets/thumb.jpg" />
+      <media:content url="https://example.com/assets/video.mp4" type="video/mp4" fileSize="12345" />
+      <enclosure url="https://example.com/assets/audio.mp3" type="audio/mpeg" length="67890" />
+      <comments>https://example.com/posts/1#comments</comments>
+      <slash:comments>12</slash:comments>
+    </item>
+  </channel>
+</rss>

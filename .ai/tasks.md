@@ -193,14 +193,14 @@
 
 ### 06.02 Extract All Metadata Fields
 
-- [ ] 06.02.01 Map Feedjira fields: title, url, guid, author, content
-- [ ] 06.02.02 Extract authors array and handle DC creator via Feedjira APIs
-- [ ] 06.02.03 Extend Feedjira parsers to expose categories, tags, keywords
-- [ ] 06.02.04 Extract enclosures for media (podcasts/videos)
-- [ ] 06.02.05 Parse media:thumbnail and media:content
-- [ ] 06.02.06 Expose comments URL and count via Feedjira parser extensions
-- [ ] 06.02.07 Capture all other fields in metadata JSONB
-- [ ] 06.02.08 Test metadata extraction with real feeds through Feedjira
+- [x] 06.02.01 Map Feedjira fields: title, url, guid, author, content
+- [x] 06.02.02 Extract authors array and handle DC creator via Feedjira APIs
+- [x] 06.02.03 Extend Feedjira parsers to expose categories, tags, keywords
+- [x] 06.02.04 Extract enclosures for media (podcasts/videos)
+- [x] 06.02.05 Parse media:thumbnail and media:content
+- [x] 06.02.06 Expose comments URL and count via Feedjira parser extensions
+- [x] 06.02.07 Capture all other fields in metadata JSONB
+- [x] 06.02.08 Test metadata extraction with real feeds through Feedjira
 
 ### 06.03 Implement Deduplication Logic
 

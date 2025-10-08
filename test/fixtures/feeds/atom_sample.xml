@@ -6,9 +6,19 @@
   <id>tag:example.com,2025:feed</id>
   <entry>
     <title>Atom Entry</title>
-    <link href="https://example.com/posts/atom-entry" />
+    <link rel="alternate" type="text/html" href="https://example.com/posts/atom-entry" />
+    <link rel="enclosure" type="audio/mpeg" href="https://example.com/media/atom-podcast.mp3" length="1024" />
     <id>tag:example.com,2025:atom-entry</id>
     <updated>2025-10-06T12:00:00Z</updated>
     <summary>This is an atom entry.</summary>
+    <author>
+      <name>Atom Primary Author</name>
+      <email>primary@example.com</email>
+    </author>
+    <author>
+      <name>Atom Secondary Author</name>
+    </author>
+    <category term="Technology" />
+    <category term="Atom" />
   </entry>
 </feed>
