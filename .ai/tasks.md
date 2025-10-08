@@ -152,11 +152,11 @@
 
 ### 05.02 Build Feed Fetcher with Feedjira & Conditional GET
 
-- [ ] 05.02.01 Write FeedFetcher service tests with VCR using Feedjira.parse
-- [ ] 05.02.02 Implement ETag and Last-Modified support
-- [ ] 05.02.03 Handle 304 Not Modified responses
-- [ ] 05.02.04 Leverage Feedjira auto-detection for RSS/Atom/JSON parsing
-- [ ] 05.02.05 Validate Feedjira parser coverage across varied feed types
+- [x] 05.02.01 Write FeedFetcher service tests with VCR using Feedjira.parse
+- [x] 05.02.02 Implement ETag and Last-Modified support
+- [x] 05.02.03 Handle 304 Not Modified responses
+- [x] 05.02.04 Leverage Feedjira auto-detection for RSS/Atom/JSON parsing
+- [x] 05.02.05 Validate Feedjira parser coverage across varied feed types
 
 ### 05.03 Add Structured Error Handling
 

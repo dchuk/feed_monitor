@@ -48,7 +48,7 @@ module FeedMonitor
         {
           "User-Agent" => DEFAULT_USER_AGENT,
           "Accept" => "application/rss+xml, application/atom+xml, application/json;q=0.9, text/xml;q=0.8",
-          "Accept-Encoding" => "gzip,deflate,br"
+          "Accept-Encoding" => "gzip,deflate"
         }
       end
     end

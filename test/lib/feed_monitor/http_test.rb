@@ -48,7 +48,7 @@ module FeedMonitor
 
       assert_equal "FeedMonitor/Test", custom.headers["User-Agent"]
       assert_equal "application/rss+xml, application/atom+xml, application/json;q=0.9, text/xml;q=0.8", custom.headers["Accept"]
-      assert_equal "gzip,deflate,br", custom.headers["Accept-Encoding"]
+      assert_equal "gzip,deflate", custom.headers["Accept-Encoding"]
     end
 
     test "fetches and parses gzipped feeds" do
