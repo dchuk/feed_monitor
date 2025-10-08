@@ -57,11 +57,11 @@
 
 ### 03.01 Create Source Model & Migration
 
-- [ ] 03.01.01 Create sources migration with all fields: name, feed_url (unique/indexed), website_url, active (default true/indexed), feed_format, fetch_interval_hours (default 6), next_fetch_at (indexed), last_fetched_at, last_fetch_duration_ms, last_http_status, last_error (text), last_error_at, etag, last_modified, failure_count (default 0), backoff_until, items_count (counter cache), scraping_enabled (default false), auto_scrape (default false), scrape_settings (jsonb), scraper_adapter (default 'readability'), requires_javascript (default false), custom_headers (jsonb), items_retention_days, max_items, metadata (jsonb), timestamps
-- [ ] 03.01.02 Create FeedMonitor::Source model with validations
-- [ ] 03.01.03 Add URL validation and normalization
-- [ ] 03.01.04 Add scopes for active, due_for_fetch, failed, healthy
-- [ ] 03.01.05 Test creating source via console and UI form
+- [x] 03.01.01 Create sources migration with all fields: name, feed_url (unique/indexed), website_url, active (default true/indexed), feed_format, fetch_interval_hours (default 6), next_fetch_at (indexed), last_fetched_at, last_fetch_duration_ms, last_http_status, last_error (text), last_error_at, etag, last_modified, failure_count (default 0), backoff_until, items_count (counter cache), scraping_enabled (default false), auto_scrape (default false), scrape_settings (jsonb), scraper_adapter (default 'readability'), requires_javascript (default false), custom_headers (jsonb), items_retention_days, max_items, metadata (jsonb), timestamps
+- [x] 03.01.02 Create FeedMonitor::Source model with validations
+- [x] 03.01.03 Add URL validation and normalization
+- [x] 03.01.04 Add scopes for active, due_for_fetch, failed, healthy
+- [x] 03.01.05 Test creating source via console and UI form
 
 ### 03.02 Create Item Model & Migration
 

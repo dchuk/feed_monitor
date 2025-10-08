@@ -1,0 +1,52 @@
+<%= form_with model: @source, url: sources_path, class: "space-y-6" do |form| %>
+  <div>
+    <%= form.label :name, class: "block text-sm font-medium text-gray-800" %>
+    <%= form.text_field :name, class: "mt-1 block w-full rounded border border-gray-300 px-3 py-2" %>
+  </div>
+
+  <div>
+    <%= form.label :feed_url, class: "block text-sm font-medium text-gray-800" %>
+    <%= form.url_field :feed_url, class: "mt-1 block w-full rounded border border-gray-300 px-3 py-2" %>
+  </div>
+
+  <div>
+    <%= form.label :website_url, class: "block text-sm font-medium text-gray-800" %>
+    <%= form.url_field :website_url, class: "mt-1 block w-full rounded border border-gray-300 px-3 py-2" %>
+  </div>
+
+  <div>
+    <%= form.label :fetch_interval_hours, class: "block text-sm font-medium text-gray-800" %>
+    <%= form.number_field :fetch_interval_hours, min: 1, class: "mt-1 block w-full rounded border border-gray-300 px-3 py-2" %>
+  </div>
+
+  <div>
+    <%= form.label :scraper_adapter, class: "block text-sm font-medium text-gray-800" %>
+    <%= form.text_field :scraper_adapter, class: "mt-1 block w-full rounded border border-gray-300 px-3 py-2" %>
+  </div>
+
+  <div class="grid gap-2 sm:grid-cols-2">
+    <label class="inline-flex items-center space-x-2">
+      <%= form.check_box :active %>
+      <span>Active</span>
+    </label>
+
+    <label class="inline-flex items-center space-x-2">
+      <%= form.check_box :scraping_enabled %>
+      <span>Scraping enabled</span>
+    </label>
+
+    <label class="inline-flex items-center space-x-2">
+      <%= form.check_box :auto_scrape %>
+      <span>Auto scrape</span>
+    </label>
+
+    <label class="inline-flex items-center space-x-2">
+      <%= form.check_box :requires_javascript %>
+      <span>Requires JavaScript</span>
+    </label>
+  </div>
+
+  <div>
+    <%= form.submit "Create Source", class: "inline-flex items-center rounded bg-blue-600 px-4 py-2 text-white" %>
+  </div>
+<% end %>
