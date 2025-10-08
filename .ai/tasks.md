@@ -204,11 +204,11 @@
 
 ### 06.03 Implement Deduplication Logic
 
-- [ ] 06.03.01 Check GUID uniqueness first
-- [ ] 06.03.02 Fall back to content fingerprint
-- [ ] 06.03.03 Use upsert for idempotent creation
-- [ ] 06.03.04 Track duplicate attempts in logs
-- [ ] 06.03.05 Test deduplication with repeated fetches
+- [x] 06.03.01 Check GUID uniqueness first
+- [x] 06.03.02 Fall back to content fingerprint
+- [x] 06.03.03 Use upsert for idempotent creation
+- [x] 06.03.04 Track duplicate attempts in logs
+- [x] 06.03.05 Test deduplication with repeated fetches
 
 ### 06.04 Wire Up Feed Fetcher to Item Creator
 

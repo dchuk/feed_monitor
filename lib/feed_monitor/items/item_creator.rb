@@ -4,6 +4,7 @@ require "digest"
 require "json"
 require "active_support/core_ext/object/blank"
 require "active_support/core_ext/time"
+require "feed_monitor/instrumentation"
 
 module FeedMonitor
   module Items
@@ -13,6 +14,8 @@ module FeedMonitor
       TIMESTAMP_METHODS = %i[published updated].freeze
       KEYWORD_SEPARATORS = /[,;]+/.freeze
       METADATA_ROOT_KEY = "feedjira_entry".freeze
+      GUID_UNIQUE_INDEX = :index_feed_monitor_items_on_source_id_and_guid
+      FINGERPRINT_UNIQUE_INDEX = :index_feed_monitor_items_on_source_id_and_content_fingerprint
 
       def self.call(source:, entry:)
         new(source:, entry:).call
@@ -25,14 +28,110 @@ module FeedMonitor
 
       def call
         attributes = build_attributes
-        attributes[:guid] = attributes[:guid].presence || attributes[:content_fingerprint]
+        raw_guid = attributes[:guid]
+        attributes[:guid] = raw_guid.presence || attributes[:content_fingerprint]
 
-        source.items.create!(attributes)
+        existing_item, matched_by = existing_item_for(attributes, raw_guid_present: raw_guid.present?)
+
+        if existing_item
+          existing_item.assign_attributes(attributes.except(:metadata).merge(metadata: attributes[:metadata]))
+          existing_item.save!
+          instrument_duplicate(existing_item, matched_by)
+          existing_item
+        else
+          new_item = source.items.new(attributes)
+          new_item.validate!
+          upsert_new_item(new_item, raw_guid_present: raw_guid.present?, matched_by: matched_by)
+        end
       end
 
       private
 
       attr_reader :source, :entry
+
+      def existing_item_for(attributes, raw_guid_present:)
+        guid = attributes[:guid]
+        fingerprint = attributes[:content_fingerprint]
+
+        if raw_guid_present
+          existing = find_item_by_guid(guid)
+          return [existing, :guid] if existing
+        end
+
+        if fingerprint.present?
+          existing = find_item_by_fingerprint(fingerprint)
+          return [existing, :fingerprint] if existing
+        end
+
+        [nil, nil]
+      end
+
+      def find_item_by_guid(guid)
+        return if guid.blank?
+
+        source.items.where("LOWER(guid) = ?", guid.downcase).first
+      end
+
+      def find_item_by_fingerprint(fingerprint)
+        return if fingerprint.blank?
+
+        source.items.find_by(content_fingerprint: fingerprint)
+      end
+
+      def upsert_new_item(record, raw_guid_present:, matched_by:)
+        upsert_attributes = attributes_for_upsert(record)
+        unique_by = unique_index_for(matched_by:, raw_guid_present:)
+
+        result = FeedMonitor::Item.upsert_all(
+          [upsert_attributes],
+          unique_by:,
+          returning: %w[id],
+          record_timestamps: true
+        )
+
+        item_id = result.rows.first&.first || find_item_id_after_upsert(upsert_attributes, unique_by)
+        FeedMonitor::Item.find(item_id)
+      end
+
+      def find_item_id_after_upsert(attributes, unique_by)
+        case unique_by
+        when GUID_UNIQUE_INDEX
+          find_item_by_guid(attributes["guid"]).id
+        else
+          find_item_by_fingerprint(attributes["content_fingerprint"]).id
+        end
+      end
+
+      def attributes_for_upsert(record)
+        record.attributes.slice(*persistable_columns)
+      end
+
+      def persistable_columns
+        @persistable_columns ||= (FeedMonitor::Item.column_names - %w[id created_at updated_at])
+      end
+
+      def unique_index_for(matched_by:, raw_guid_present:)
+        case matched_by
+        when :guid
+          GUID_UNIQUE_INDEX
+        when :fingerprint
+          FINGERPRINT_UNIQUE_INDEX
+        else
+          raw_guid_present ? GUID_UNIQUE_INDEX : FINGERPRINT_UNIQUE_INDEX
+        end
+      end
+
+      def instrument_duplicate(item, matched_by)
+        return unless matched_by
+
+        FeedMonitor::Instrumentation.item_duplicate(
+          source_id: source.id,
+          item_id: item.id,
+          guid: item.guid,
+          content_fingerprint: item.content_fingerprint,
+          matched_by: matched_by
+        )
+      end
 
       def build_attributes
         url = extract_url

@@ -6,6 +6,7 @@ module FeedMonitor
   module Instrumentation
     FETCH_START_EVENT = "feed_monitor.fetch.start".freeze
     FETCH_FINISH_EVENT = "feed_monitor.fetch.finish".freeze
+    ITEM_DUPLICATE_EVENT = "feed_monitor.items.duplicate".freeze
 
     module_function
 
@@ -27,6 +28,10 @@ module FeedMonitor
 
     def fetch_finish(payload = {})
       instrument(FETCH_FINISH_EVENT, payload)
+    end
+
+    def item_duplicate(payload = {})
+      instrument(ITEM_DUPLICATE_EVENT, payload)
     end
 
     def instrument(event_name, payload = {})

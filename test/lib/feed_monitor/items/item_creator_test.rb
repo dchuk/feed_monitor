@@ -132,6 +132,56 @@ module FeedMonitor
         assert_equal "Copyright 2025 Example", item.copyright
       end
 
+      test "deduplicates entries by guid and updates existing records" do
+        entry = parse_entry("feeds/rss_sample.xml")
+        original_item = ItemCreator.call(source: @source, entry:)
+
+        updated_entry = parse_entry("feeds/rss_sample.xml")
+        updated_entry.summary = "Updated summary"
+
+        duplicate_events = []
+        duplicate_item = ActiveSupport::Notifications.subscribed(
+          ->(_name, _start, _finish, _id, payload) { duplicate_events << payload },
+          FeedMonitor::Instrumentation::ITEM_DUPLICATE_EVENT
+        ) do
+          ItemCreator.call(source: @source, entry: updated_entry)
+        end
+
+        assert_equal 1, FeedMonitor::Item.count
+        assert_equal original_item.id, duplicate_item.id
+        assert_equal "Updated summary", duplicate_item.reload.summary
+
+        assert_equal 1, duplicate_events.size
+        payload = duplicate_events.first
+        assert_equal :guid, payload[:matched_by]
+        assert_equal @source.id, payload[:source_id]
+        assert_equal duplicate_item.id, payload[:item_id]
+      end
+
+      test "deduplicates entries without guid using content fingerprint" do
+        entry = parse_entry("feeds/rss_no_guid.xml")
+        created_item = ItemCreator.call(source: @source, entry:)
+
+        duplicate_entry = parse_entry("feeds/rss_no_guid.xml")
+
+        duplicate_events = []
+        duplicate_item = ActiveSupport::Notifications.subscribed(
+          ->(_name, _start, _finish, _id, payload) { duplicate_events << payload },
+          FeedMonitor::Instrumentation::ITEM_DUPLICATE_EVENT
+        ) do
+          ItemCreator.call(source: @source, entry: duplicate_entry)
+        end
+
+        assert_equal 1, FeedMonitor::Item.count
+        assert_equal created_item.id, duplicate_item.id
+        assert_equal created_item.guid, duplicate_item.guid
+
+        assert_equal 1, duplicate_events.size
+        payload = duplicate_events.first
+        assert_equal :fingerprint, payload[:matched_by]
+        assert_equal created_item.content_fingerprint, payload[:content_fingerprint]
+      end
+
       private
 
       def build_source
