@@ -1,0 +1,7 @@
+source "https://rubygems.org"
+
+# Pull in the engine’s dependencies
+eval_gemfile "../../Gemfile"
+
+# Dummy‑only gems live below this line
+gem "mission_control-jobs", "~> 1.1"

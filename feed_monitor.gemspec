@@ -5,7 +5,7 @@ Gem::Specification.new do |spec|
   spec.version     = FeedMonitor::VERSION
   spec.authors     = [ "dchuk" ]
   spec.email       = [ "darrindemchuk@gmail.com" ]
-  spec.homepage    = "TODO"
+  spec.homepage    = "https://github.com/darrindemchuk/feed_monitor"
   spec.summary     = "TODO: Summary of FeedMonitor."
   spec.description = "TODO: Description of FeedMonitor."
   spec.license     = "MIT"

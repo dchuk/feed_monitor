@@ -17,8 +17,13 @@ server_command = [
 ]
 
 commands = [
-  { name: "css",     dir: ENGINE_ROOT, env: {}, command: tailwind_command },
-  { name: "web",     dir: DUMMY_ROOT,  env: {}, command: server_command }
+  { name: "css", dir: ENGINE_ROOT, env: {}, command: tailwind_command },
+  {
+    name: "web",
+    dir: DUMMY_ROOT,
+    env: { "BUNDLE_GEMFILE" => File.join(DUMMY_ROOT, "Gemfile") },
+    command: server_command
+  }
 ]
 
 pids = {}
