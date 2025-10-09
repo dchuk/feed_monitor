@@ -87,6 +87,8 @@ module FeedMonitor
       end
 
       def normalize_settings(value)
+        return value if value.nil?
+
         case value
         when Hash
           value.each_with_object({}) do |(key, val), memo|
@@ -94,8 +96,6 @@ module FeedMonitor
           end
         when Array
           value.map { |element| normalize_settings(element) }
-        when nil
-          {}
         else
           value
         end

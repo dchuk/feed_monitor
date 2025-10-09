@@ -44,3 +44,4 @@ Store secrets (API keys, webhook tokens) in `config/credentials/` and never comm
 ## Agent Notes (2025-10-09)
 
 - Introduced `FeedMonitor::Scrapers::Base`, establishing the scraper adapter contract and Result object. Subclasses merge default, source, and invocation settings (HashWithIndifferentAccess) and must return a Result with status/html/content/metadata. Use `FeedMonitor::Scrapers::Base.call(item:, source:, settings:, http:)` to execute adapters.
+- Added Readability scraper adapter leveraging FeedMonitor::HTTP, Nokolexbor, and ruby-readability. Supports override selectors via `scrape_settings[:selectors]`, records extraction metadata including strategy and inferred status, and returns structured failure results on HTTP errors.

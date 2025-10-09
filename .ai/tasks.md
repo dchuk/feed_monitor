@@ -236,11 +236,11 @@
 
 ### 07.02 Implement Readability Scraper
 
-- [ ] 07.02.01 Add nokolexbor for fast HTML parsing
-- [ ] 07.02.02 Add ruby-readability for extraction
-- [ ] 07.02.03 Create Scrapers::Readability adapter
-- [ ] 07.02.04 Support custom CSS selectors via scrape_settings
-- [ ] 07.02.05 Test scraper with various article pages
+- [x] 07.02.01 Add nokolexbor for fast HTML parsing
+- [x] 07.02.02 Add ruby-readability for extraction
+- [x] 07.02.03 Create Scrapers::Readability adapter
+- [x] 07.02.04 Support custom CSS selectors via scrape_settings
+- [x] 07.02.05 Test scraper with various article pages
 
 ### 07.03 Persist Scraped Content Separately
 
@@ -265,7 +265,7 @@
 
 ## Phase 08: Background Jobs with Solid Queue
 
-**Goal: Queue processing with Rails 8 defaults**
+**Goal: Queue processing with Rails 8 defaults, leveraging Solid Queue and Postgres**
 
 ### 08.01 Setup Solid Queue
 

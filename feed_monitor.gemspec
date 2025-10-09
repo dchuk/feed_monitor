@@ -29,4 +29,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "faraday-retry", "~> 2.2"
   spec.add_dependency "faraday-follow_redirects", "~> 0.4"
   spec.add_dependency "faraday-gzip", "~> 3.0"
+  spec.add_dependency "nokolexbor", "~> 0.5"
+  spec.add_dependency "ruby-readability", "~> 0.7"
 end
