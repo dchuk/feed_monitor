@@ -41,6 +41,22 @@
     </div>
   </div>
 
+  <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
+    <div class="border-b border-slate-200 px-5 py-4">
+      <h2 class="text-lg font-medium">Feed Content Processing</h2>
+      <p class="mt-1 text-xs text-slate-500">Control whether feed-supplied content is cleaned with Readability before storing items.</p>
+    </div>
+    <div class="space-y-4 px-5 py-5">
+      <label class="inline-flex items-center space-x-2">
+        <%= form.check_box :feed_content_readability_enabled %>
+        <span>Process feed content with Readability</span>
+      </label>
+      <p class="text-xs text-slate-500">
+        When enabled, the raw feed HTML is passed through Readability. Scraping configuration below remains independent, so you can mix-and-match feed content and scraping strategies.
+      </p>
+    </div>
+  </div>
+
   <% scrape_settings = (source.scrape_settings || {}).with_indifferent_access %>
   <% selectors = scrape_settings[:selectors] || {} %>
 

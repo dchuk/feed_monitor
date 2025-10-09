@@ -29,6 +29,7 @@
                "Website" => (@source.website_url.presence || "—"),
                "Fetch interval" => "#{@source.fetch_interval_minutes} minutes (~#{interval_hours} hours)",
                "Scraper" => @source.scraper_adapter,
+               "Feed content" => @source.feed_content_readability_enabled? ? "Readability" : "Raw",
                "Active" => @source.active? ? "Yes" : "No",
                "Scraping" => @source.scraping_enabled? ? "Enabled" : "Disabled",
                "Auto scrape" => @source.auto_scrape? ? "Enabled" : "Disabled",

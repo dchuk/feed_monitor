@@ -1,5 +1,6 @@
 require "test_helper"
 require "digest"
+require "securerandom"
 
 module FeedMonitor
   module Items
@@ -65,6 +66,34 @@ module FeedMonitor
           assert_includes [Time, ActiveSupport::TimeWithZone, DateTime, NilClass], created_item.published_at.class
           assert created_item.metadata.present?, "metadata should include feedjira entry snapshot"
         end
+      end
+
+      test "processes feed content with readability when enabled" do
+        source = build_source(feed_content_readability_enabled: true)
+        entry = parse_entry("feeds/rss_readability_content.xml")
+
+        result = ItemCreator.call(source: source, entry: entry)
+        assert result.created?, "expected item to be created when processing readability content"
+
+        item = result.item
+        assert_includes item.content, "The first paragraph", "expected readability-processed content to be stored"
+
+        processing_metadata = item.metadata["feed_content_processing"]
+        assert processing_metadata.present?, "expected feed content processing metadata to be stored"
+        assert_equal "readability", processing_metadata["strategy"]
+        assert_equal true, processing_metadata["applied"]
+      end
+
+      test "preserves raw feed content when readability disabled" do
+        source = build_source(feed_content_readability_enabled: false)
+        entry = parse_entry("feeds/rss_readability_content.xml")
+
+        result = ItemCreator.call(source: source, entry: entry)
+        assert result.created?
+
+        item = result.item
+        assert_includes item.content, "The first paragraph", "expected raw feed content to remain"
+        assert_nil item.metadata["feed_content_processing"], "expected no processing metadata when readability disabled"
       end
 
       test "extracts extended metadata from rss entry" do
@@ -204,13 +233,15 @@ module FeedMonitor
 
       private
 
-      def build_source
-        FeedMonitor::Source.create!(
+      def build_source(attributes = {})
+        defaults = {
           name: "Example Source",
-          feed_url: "https://example.com/feed.xml",
+          feed_url: "https://example.com/feed-#{SecureRandom.hex(8)}.xml",
           website_url: "https://example.com",
           fetch_interval_minutes: 60
-        )
+        }
+
+        FeedMonitor::Source.create!(defaults.merge(attributes))
       end
 
       def parse_entry(fixture)

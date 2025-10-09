@@ -2,9 +2,11 @@
 
 require "digest"
 require "json"
+require "cgi"
 require "active_support/core_ext/object/blank"
 require "active_support/core_ext/time"
 require "feed_monitor/instrumentation"
+require "feed_monitor/scrapers/readability"
 
 module FeedMonitor
   module Items
@@ -132,13 +134,102 @@ module FeedMonitor
         record.metadata = metadata if metadata
       end
 
+      def process_feed_content(raw_content, title:)
+        return [raw_content, nil] unless should_process_feed_content?(raw_content)
+
+        parser = feed_content_parser_class.new
+        html = wrap_content_for_readability(raw_content, title: title)
+        result = parser.parse(html: html, readability: default_feed_readability_options)
+
+        processed_content = result.content.presence || raw_content
+        metadata = build_feed_content_metadata(result: result, raw_content: raw_content, processed_content: processed_content)
+
+        [processed_content, metadata.presence]
+      rescue StandardError => error
+        metadata = {
+          "status" => "failed",
+          "strategy" => "readability",
+          "applied" => false,
+          "changed" => false,
+          "error_class" => error.class.name,
+          "error_message" => error.message
+        }
+        [raw_content, metadata]
+      end
+
+      def should_process_feed_content?(raw_content)
+        source.respond_to?(:feed_content_readability_enabled?) &&
+          source.feed_content_readability_enabled? &&
+          raw_content.present? &&
+          html_fragment?(raw_content)
+      end
+
+      def feed_content_parser_class
+        FeedMonitor::Scrapers::Parsers::ReadabilityParser
+      end
+
+      def wrap_content_for_readability(content, title:)
+        safe_title = title.present? ? CGI.escapeHTML(title) : "Feed Entry"
+        <<~HTML
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <title>#{safe_title}</title>
+            </head>
+            <body>
+              #{content}
+            </body>
+          </html>
+        HTML
+      end
+
+      def default_feed_readability_options
+        default = FeedMonitor::Scrapers::Readability.default_settings[:readability]
+        return {} unless default
+
+        if default.respond_to?(:deep_dup)
+          default.deep_dup
+        else
+          Marshal.load(Marshal.dump(default))
+        end
+      rescue TypeError
+        default.dup
+      end
+
+      def build_feed_content_metadata(result:, raw_content:, processed_content:)
+        metadata = {
+          "strategy" => result.strategy&.to_s,
+          "status" => result.status&.to_s,
+          "applied" => result.content.present?,
+          "changed" => processed_content != raw_content
+        }
+
+        if result.metadata && result.metadata[:readability_text_length]
+          metadata["readability_text_length"] = result.metadata[:readability_text_length]
+        end
+
+        metadata["title"] = result.title if result.title.present?
+        metadata.compact
+      end
+
+      def html_fragment?(value)
+        value.to_s.match?(/<\s*\w+/)
+      end
+
       def build_attributes
         url = extract_url
         title = string_or_nil(entry.title) if entry.respond_to?(:title)
-        content = extract_content
+        raw_content = extract_content
+        content, content_processing_metadata = process_feed_content(raw_content, title: title)
         fingerprint = generate_fingerprint(title, url, content)
         published_at = extract_timestamp
         updated_at_source = extract_updated_timestamp
+
+        metadata = extract_metadata
+        if content_processing_metadata.present?
+          metadata = metadata.merge("feed_content_processing" => content_processing_metadata)
+        end
 
         {
           guid: extract_guid,
@@ -161,7 +252,7 @@ module FeedMonitor
           copyright: extract_copyright,
           comments_url: extract_comments_url,
           comments_count: extract_comments_count,
-          metadata: extract_metadata,
+          metadata: metadata,
           content_fingerprint: fingerprint
         }.compact
       end

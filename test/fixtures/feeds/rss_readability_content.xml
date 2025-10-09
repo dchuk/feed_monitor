@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Readability Feed</title>
+    <link>https://example.com</link>
+    <description>Feed with full HTML content for readability processing.</description>
+    <item>
+      <title>Readable Article</title>
+      <link>https://example.com/posts/readable-article</link>
+      <guid isPermaLink="false">readable-article</guid>
+      <pubDate>Tue, 07 Oct 2025 08:00:00 GMT</pubDate>
+      <description><![CDATA[<p>Summary paragraph for readability test.</p>]]></description>
+      <content:encoded><![CDATA[
+        <div class="page">
+          <header><h1>Readable Article</h1></header>
+          <main>
+            <article>
+              <p>The first paragraph of the readable article.</p>
+              <p>Another paragraph with <strong>bold text</strong> to keep.</p>
+            </article>
+          </main>
+          <aside class="sidebar">Sidebar links</aside>
+        </div>
+      ]]></content:encoded>
+    </item>
+  </channel>
+</rss>

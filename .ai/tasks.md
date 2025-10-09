@@ -299,6 +299,10 @@
 - [x] 08.04.04 Expose optional Mission Control links/documentation when the host app enables it
 - [x] 08.04.05 Add system/integration tests ensuring manual actions enqueue the proper jobs and display status
 
+### 08.05 Separate readability from scraper configuration settings for sources
+
+- [x] 08.05.01 Ensure that a source has independent settings for enabling or disabling using readability on the feed's Content (from the rss feed), separate of using readability on the html scraping method (if enabled for a feed) (so a feed can have its content ingested raw (no readability), content processed with readability, or site scraped with readability enabled))
+
 **Deliverable: Production-ready background processing that keeps manual and async flows in sync**
 **Test: Trigger fetch/scrape from UI and scheduler, confirm shared logic enqueues jobs and surfaces status**
 

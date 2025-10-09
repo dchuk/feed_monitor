@@ -63,6 +63,7 @@ module FeedMonitor
         scraping_enabled: false,
         auto_scrape: false,
         requires_javascript: false,
+        feed_content_readability_enabled: false,
         fetch_interval_minutes: 360,
         scraper_adapter: "readability"
       }
@@ -78,6 +79,7 @@ module FeedMonitor
         :auto_scrape,
         :scraping_enabled,
         :requires_javascript,
+        :feed_content_readability_enabled,
         :scraper_adapter,
         :items_retention_days,
         :max_items,

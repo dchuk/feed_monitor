@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_09_090000) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_09_103000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -138,6 +138,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_09_090000) do
     t.jsonb "metadata", default: {}, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "feed_content_readability_enabled", default: false, null: false
     t.index ["active"], name: "index_feed_monitor_sources_on_active"
     t.index ["feed_url"], name: "index_feed_monitor_sources_on_feed_url", unique: true
     t.index ["next_fetch_at"], name: "index_feed_monitor_sources_on_next_fetch_at"
