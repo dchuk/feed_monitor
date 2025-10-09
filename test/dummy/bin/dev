@@ -23,6 +23,12 @@ commands = [
     dir: DUMMY_ROOT,
     env: { "BUNDLE_GEMFILE" => File.join(DUMMY_ROOT, "Gemfile") },
     command: server_command
+  },
+  {
+    name: "jobs",
+    dir: DUMMY_ROOT,
+    env: { "BUNDLE_GEMFILE" => File.join(DUMMY_ROOT, "Gemfile") },
+    command: ["bin/jobs", "start"]
   }
 ]
 

@@ -19,6 +19,29 @@ module FeedMonitor
           ActiveJob::Base.queue_adapter = :solid_queue
         end
 
+        if defined?(MissionControl::Jobs)
+          adapters = MissionControl::Jobs.adapters
+          if adapters.respond_to?(:add)
+            adapters.add(:solid_queue)
+            adapters.delete(:async)
+          elsif adapters.respond_to?(:<<)
+            adapters << :solid_queue unless adapters.include?(:solid_queue)
+            adapters.delete(:async) if adapters.respond_to?(:delete)
+          end
+
+          if defined?(ActiveJob::QueueAdapters::SolidQueueExt) &&
+              !(ActiveJob::QueueAdapters::SolidQueueAdapter < ActiveJob::QueueAdapters::SolidQueueExt)
+            ActiveJob::QueueAdapters::SolidQueueAdapter.prepend ActiveJob::QueueAdapters::SolidQueueExt
+          end
+
+          MissionControl::Jobs.applications.each do |application|
+            next if application.servers.any? { |server| server.queue_adapter_name == :solid_queue }
+
+            solid_queue_adapter = ActiveJob::QueueAdapters.lookup(:solid_queue).new
+            application.add_servers(solid_queue: solid_queue_adapter)
+          end
+        end
+
         app.config.after_initialize do
           FeedMonitor::Jobs::Visibility.setup!
         end

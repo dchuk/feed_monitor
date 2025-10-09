@@ -1,3 +1,9 @@
+begin
+  require "solid_queue"
+rescue LoadError
+  # Solid Queue is optional if the host app supplies a different Active Job backend.
+end
+
 require "feed_monitor/version"
 require "feed_monitor/engine"
 require "feed_monitor/configuration"

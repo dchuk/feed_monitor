@@ -23,6 +23,7 @@ Run `bin/setup` to install gems, prepare the dummy database, and compile Tailwin
 - FeedMonitor ensures Solid Queue is the default adapter when the host app is still using the async adapter, but respects any explicit `ActiveJob` configuration already in place. Override queues/concurrency via `FeedMonitor.configure`.
 - Queue names are namespaced (`feed_monitor_fetch`/`feed_monitor_scrape` by default) and automatically honor host `queue_name_prefix`. Use `FeedMonitor.queue_name(:fetch)` helpers inside jobs.
 - Job lifecycle metrics are captured through `FeedMonitor::Jobs::Visibility`; they surface queue depth and last-run timestamps without requiring Mission Control. Host apps can opt into Mission Control independently if desired.
+- The dummy host keeps Solid Queue tables in the primary database via `20251009140000_create_solid_queue_tables.rb`. Real apps can either reuse that migration or run `rails solid_queue:install` to manage a dedicated queue database—Mission Control expects one of those setups before it can surface data.
 
 ## Coding Style & Naming Conventions
 

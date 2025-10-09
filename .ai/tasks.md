@@ -320,13 +320,13 @@
 - [x] 09.01.04 Enqueue FetchFeedJob for each due source
 - [x] 09.01.05 Test scheduler finds and enqueues jobs
 
-### 09.02 Add Scheduling Strategies
+### 09.02 Restore Mission Control Dashboard
 
-- [ ] 09.02.01 Implement fixed interval scheduling
-- [ ] 09.02.02 Add adaptive scheduling based on posting frequency
-- [ ] 09.02.03 Implement exponential backoff for failures
-- [ ] 09.02.04 Add source pause/resume functionality
-- [ ] 09.02.05 Test different scheduling strategies
+- [x] 09.02.01 Ensure Solid Queue is eagerly loaded and becomes the default Active Job adapter unless the host overrides it
+- [x] 09.02.02 Install and run Solid Queue migrations for the dummy app so Mission Control can read queue data
+- [x] 09.02.03 Override the Mission Control layout to force the light theme and load bundled assets correctly
+- [x] 09.02.04 Verify Mission Control shows queue metrics/sections once Solid Queue is configured and a worker is running
+- [x] 09.02.05 Capture the configuration updates in docs/notes so host apps understand the setup requirements
 
 ### 09.03 Create Rake Task for Invocation
 
@@ -335,6 +335,8 @@
 - [ ] 09.03.03 Add manual trigger from dashboard
 - [ ] 09.03.04 Document cron/systemd setup options
 - [ ] 09.03.05 Test scheduler invocation methods
+
+### 09.04 Refactor Job Queues card on dashboard to pull data directly from solid queue db tables, not from event metrics
 
 **Deliverable: Robust scheduling that works with standard Rails tools**
 **Test: Run scheduler via rake task, verify jobs enqueued for due sources**
