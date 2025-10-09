@@ -44,10 +44,28 @@ module FeedMonitor
     end
 
     def mission_control_dashboard_path
-      path = config.mission_control_dashboard_path
-      path.respond_to?(:call) ? path.call : path
+      raw_path = config.mission_control_dashboard_path
+      resolved = resolve_callable(raw_path)
+      return if resolved.blank?
+
+      valid_dashboard_path?(resolved) ? resolved : nil
     rescue StandardError
       nil
+    end
+
+    private
+
+    def resolve_callable(value)
+      value.respond_to?(:call) ? value.call : value
+    end
+
+    def valid_dashboard_path?(value)
+      return true if value.to_s.match?(%r{\Ahttps?://})
+
+      Rails.application.routes.recognize_path(value, method: :get)
+      true
+    rescue ActionController::RoutingError
+      false
     end
   end
 end

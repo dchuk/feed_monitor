@@ -18,7 +18,7 @@ module FeedMonitor
     test "dashboard displays stats, job metrics, and quick actions" do
       FeedMonitor.configure do |config|
         config.mission_control_enabled = true
-        config.mission_control_dashboard_path = "/mission_control"
+        config.mission_control_dashboard_path = -> { FeedMonitor::Engine.routes.url_helpers.root_path }
       end
 
       source = Source.create!(name: "Example", feed_url: "https://example.com/feed", next_fetch_at: 1.hour.from_now)

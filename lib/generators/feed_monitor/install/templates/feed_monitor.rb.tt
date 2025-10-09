@@ -31,8 +31,13 @@ FeedMonitor.configure do |config|
   config.mission_control_enabled = false
 
   # Provide a String path ("/mission_control"), a route helper
-  # (-> { Rails.application.routes.url_helpers.mission_control_path }),
+  # (-> { Rails.application.routes.url_helpers.mission_control_jobs_path }),
   # or nil if you prefer not to link directly. This is only referenced when
-  # mission_control_enabled is true.
+  # mission_control_enabled is true. Ensure the host routes mount Mission
+  # Control when supplying a path, for example:
+  #   # Gemfile: gem "mission_control-jobs"
+  #   # config/routes.rb:
+  #   #   mount MissionControl::Jobs::Engine, at: "/mission_control"
+  #   # config.mission_control_dashboard_path = "/mission_control"
   config.mission_control_dashboard_path = nil
 end
