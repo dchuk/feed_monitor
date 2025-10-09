@@ -34,6 +34,42 @@ Adopt imperative commit messages in the format `scope: action`, e.g., `sources: 
 
 Store secrets (API keys, webhook tokens) in `config/credentials/` and never commit plain-text values. When adding HTTP endpoints or webhooks, default to Solid Queue middleware for retries and respect the allowlist in `config/feed_monitor.yml`. Document new environment variables in `config/application.yml.sample` and call out any migrations that impact host apps.
 
+# Clean coding guidelines
+
+Object Orientated Design: You should write code that embraces change. Here’s how…
+
+SRP: A class should do the smallest possible useful thing; it should have a single responsibility. A class that has more than one responsibility is difficult to reuse. SRP requires that a class be cohesive, that everything the class does be highly related to its purpose. A class that is easy to reuse will make the application easier to change.
+
+Methods, like classes, should have a single responsibility. All of the same reasons apply, having just one responsibility makes them easy to change and easy to reuse.
+
+DRY: DRY code tolerates change because any change in behaviour can be made by changing code in just one place.
+
+Depend on behaviour not data:
+
+Hide instance variables by wrapping them in a method, an attr_reader. The method changes a variable from data ( which is referenced all over) to behaviour (which is defined once). This means if you need to adjust the data you only have to make a change in one place.
+
+Hide data structures using the Struct class.
+
+Minimise Dependencies: An object depends on another object if, when one object changes, the other might be forced to change in turn. An object has a dependency when it knows:
+
+The name of another class.
+
+The name of a message that it intends to send to someone other than self.
+
+The arguments that a message requires.
+
+The order of those arguments.
+
+Dependency Injection: Addresses the first dependency. It decouples two objects by moving the creation of object_A outside of object_B eg:
+
+object_A.new(1,2,object_B.new)
+
+Encapsulation: Addresses the second dependency. Create wrapper methods so that external messages are isolated in one place. The wrapper method is called throughout the class, rather than sending messages externally.
+
+Use hashes for initialization arguments: this addresses the final dependencies.
+
+Depend on things that change less often than you do
+
 ## Agent Notes (2025-10-08)
 
 - Finished roadmap section 05.03 (structured fetch error handling). Added `FeedMonitor::Fetching::FetchError` hierarchy, expanded `FeedFetcher` error handling, and ensured instrumentation payloads include success/error context.
@@ -44,4 +80,6 @@ Store secrets (API keys, webhook tokens) in `config/credentials/` and never comm
 ## Agent Notes (2025-10-09)
 
 - Introduced `FeedMonitor::Scrapers::Base`, establishing the scraper adapter contract and Result object. Subclasses merge default, source, and invocation settings (HashWithIndifferentAccess) and must return a Result with status/html/content/metadata. Use `FeedMonitor::Scrapers::Base.call(item:, source:, settings:, http:)` to execute adapters.
+- Added Readability scraper adapter leveraging FeedMonitor::HTTP, Nokolexbor, and ruby-readability. Supports override selectors via `scrape_settings[:selectors]`, records extraction metadata including strategy and inferred status, and returns structured failure results on HTTP errors.
+- Extracted scraper HTTP fetching and parsing into dedicated collaborators (`FeedMonitor::Scrapers::Fetchers::HttpFetcher` and `FeedMonitor::Scrapers::Parsers::ReadabilityParser`). The adapter now orchestrates these services, simplifying future parser additions while keeping failure metadata consistent.
 - Added Readability scraper adapter leveraging FeedMonitor::HTTP, Nokolexbor, and ruby-readability. Supports override selectors via `scrape_settings[:selectors]`, records extraction metadata including strategy and inferred status, and returns structured failure results on HTTP errors.

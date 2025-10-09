@@ -1,13 +1,16 @@
 # frozen_string_literal: true
 
-require "readability"
-require "nokolexbor"
-require "active_support/core_ext/hash/keys"
+require "active_support/core_ext/object/blank"
+
+require "feed_monitor/scrapers/fetchers/http_fetcher"
+require "feed_monitor/scrapers/parsers/readability_parser"
 
 module FeedMonitor
   module Scrapers
     class Readability < Base
       DEFAULT_ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+      FETCHER_CLASS = FeedMonitor::Scrapers::Fetchers::HttpFetcher
+      PARSER_CLASS = FeedMonitor::Scrapers::Parsers::ReadabilityParser
 
       def self.default_settings
         {
@@ -37,18 +40,22 @@ module FeedMonitor
         url = preferred_url
         return failure_result("missing_url", "No URL available for scraping", url:) if url.blank?
 
-        response = fetch_response(url)
-        return response if response.is_a?(Result)
+        fetch_result = fetcher.fetch(url:, settings: settings[:http])
+        return build_fetch_failure(fetch_result, url) if fetch_result.status == :failed
 
-        html = response.body.to_s
-        document = ::Nokolexbor::HTML(html)
-        extraction = extract_content(document, html)
+        parser_result = parser.parse(
+          html: fetch_result.body.to_s,
+          selectors: settings[:selectors],
+          readability: settings[:readability]
+        )
+
+        return build_parser_failure(parser_result, fetch_result, url) if parser_result.status == :failed
 
         Result.new(
-          status: extraction[:status],
-          html: html,
-          content: extraction[:content],
-          metadata: build_metadata(response:, url:, document:, extraction:)
+          status: parser_result.status,
+          html: fetch_result.body,
+          content: parser_result.content,
+          metadata: build_metadata(fetch_result:, parser_result:, url:)
         )
       rescue StandardError => error
         failure_result(error.class.name, error.message, url: url)
@@ -60,147 +67,89 @@ module FeedMonitor
         item.canonical_url.presence || item.url
       end
 
-      def fetch_response(url)
-        response = connection.get(url)
-        return response if success_status?(response.status)
-
-        failure_result("http_error", "Non-success HTTP status", url:, http_status: response.status)
-      rescue Faraday::ClientError => error
-        status = extract_status_from(error)
-        failure_result(error.class.name, error.message, url: url, http_status: status)
-      rescue Faraday::Error => error
-        failure_result(error.class.name, error.message, url: url)
+      def fetcher
+        @fetcher ||= FETCHER_CLASS.new(http: http)
       end
 
-      def connection
-        @connection ||= begin
-          http_settings = settings[:http] || {}
-          client_options = {
-            headers: http_settings[:headers].to_h,
-            timeout: http_settings[:timeout] || FeedMonitor::HTTP::DEFAULT_TIMEOUT,
-            open_timeout: http_settings[:open_timeout] || FeedMonitor::HTTP::DEFAULT_OPEN_TIMEOUT
-          }
-
-          proxy = http_settings[:proxy]
-          client_options[:proxy] = proxy if proxy.present?
-
-          http.client(**client_options)
-        end
+      def parser
+        @parser ||= PARSER_CLASS.new
       end
 
-      def extract_content(document, html)
-        selectors = settings.dig(:selectors, :content)
-        if selectors.present?
-          content_html = extract_with_selectors(document, selectors)
-          return { status: :success, content: content_html, strategy: :selectors } if content_html.present?
-        end
-
-        readability_doc = build_readability_document(html)
-        content_html = readability_doc.content&.strip
-        status = content_html.present? ? :success : :partial
-
-        { status:, content: content_html.presence, strategy: :readability, readability: readability_doc }
+      def build_fetch_failure(fetch_result, url)
+        failure_result(
+          fetch_result.error || "fetch_error",
+          fetch_result.message || "Failed to fetch URL",
+          url: url,
+          http_status: fetch_result.http_status
+        )
       end
 
-      def extract_with_selectors(document, selectors)
-        fragments = Array(selectors).filter_map do |selector|
-          next if selector.blank?
+      def build_parser_failure(parser_result, fetch_result, url)
+        metadata = {
+          error: parser_result.metadata&.[](:error) || "parser_error",
+          message: parser_result.metadata&.[](:message) || "Failed to parse content",
+          url: url,
+          http_status: fetch_result.http_status
+        }.compact
 
-          nodes = document.css(selector.to_s)
-          next if nodes.empty?
-
-          nodes.map(&:to_html).join("\n")
-        end
-
-        return if fragments.empty?
-
-        fragments.join("\n")
+        Result.new(status: :failed, html: fetch_result.body, content: nil, metadata: metadata)
       end
 
-      def build_readability_document(html)
-        options = (settings[:readability] || {}).to_h.deep_symbolize_keys
-        ::Readability::Document.new(html, options)
-      end
+      def build_metadata(fetch_result:, parser_result:, url:)
+        headers = fetch_result.headers || {}
+        content_type = headers["content-type"] || headers["Content-Type"]
 
-      def build_metadata(response:, url:, document:, extraction:)
         metadata = {
           url: url,
-          http_status: response.status,
-          extraction_strategy: extraction[:strategy],
-          content_type: response.headers["content-type"],
-          settings: settings.deep_dup
-        }
+          http_status: fetch_result.http_status,
+          content_type: content_type,
+          extraction_strategy: parser_result.strategy,
+          title: parser_result.title,
+          settings: deep_duplicate(settings)
+        }.compact
 
-        metadata[:title] = extract_title(document, extraction)
-        metadata[:readability_text_length] = extraction.dig(:readability, :content_length) if extraction[:readability].respond_to?(:content_length)
+        if parser_result.metadata && parser_result.metadata[:readability_text_length]
+          metadata[:readability_text_length] = parser_result.metadata[:readability_text_length]
+        end
 
         metadata
       end
 
-      def extract_title(document, extraction)
-        title_selector = settings.dig(:selectors, :title)
-        if title_selector.present?
-          Array(title_selector).each do |selector|
-            node = document.at_css(selector.to_s)
-            return node.text.strip if node&.text.present?
-          end
-        end
-
-        readability = extraction[:readability]
-        if readability.respond_to?(:title)
-          return readability.title&.strip if readability.title.present?
-        end
-
-        document.at_css("title")&.text&.strip
-      end
-
-      def success_status?(status)
-        status >= 200 && status < 300
-      end
-
       def failure_result(error, message, url:, http_status: nil)
-        metadata = {
-          error: error,
-          message: message,
-          url: url,
-          http_status: http_status
-        }
-
-        if metadata[:http_status].nil? && message
-          if (match = message.match(/status\s+(\d{3})/))
-            metadata[:http_status] = match[1].to_i
-          end
-        end
-
         Result.new(
           status: :failed,
           html: nil,
           content: nil,
-          metadata: metadata.compact
+          metadata: {
+            error: error,
+            message: message,
+            url: url,
+            http_status: derive_status(message, http_status)
+          }.compact
         )
       end
 
-      def extract_status_from(error)
-        if error.respond_to?(:response_status)
-          status = error.response_status
-          return status if status
-        end
+      def derive_status(message, explicit_status)
+        return explicit_status if explicit_status
 
-        if error.respond_to?(:response)
-          response = error.response
-          if response.respond_to?(:[]) && response[:status]
-            return response[:status]
-          elsif response.is_a?(Hash)
-            return response["status"] || response[:status]
+        return unless message
+
+        if (match = message.match(/status\s+(\d{3})/))
+          match[1].to_i
+        end
+      end
+
+      def deep_duplicate(value)
+        case value
+        when Hash
+          value.each_with_object({}) do |(key, val), memo|
+            memo[key] = deep_duplicate(val)
           end
+        when Array
+          value.map { |element| deep_duplicate(element) }
+        else
+          value
         end
-
-        if error.respond_to?(:message)
-          match = error.message.match(/status\s+(\d{3})/)
-          return match[1].to_i if match
-        end
-
-        nil
       end
     end
   end
