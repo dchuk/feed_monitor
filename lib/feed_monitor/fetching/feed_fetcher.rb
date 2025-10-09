@@ -10,7 +10,16 @@ module FeedMonitor
   module Fetching
     class FeedFetcher
       Result = Struct.new(:status, :feed, :response, :body, :error, :item_processing, keyword_init: true)
-      EntryProcessingResult = Struct.new(:created, :updated, :failed, :items, :errors, keyword_init: true)
+      EntryProcessingResult = Struct.new(
+        :created,
+        :updated,
+        :failed,
+        :items,
+        :errors,
+        :created_items,
+        :updated_items,
+        keyword_init: true
+      )
       ResponseWrapper = Struct.new(:status, :headers, :body, keyword_init: true)
 
       MIN_FETCH_INTERVAL = 5.minutes.to_f
@@ -159,7 +168,15 @@ module FeedMonitor
           status: :not_modified,
           response: response,
           body: nil,
-          item_processing: EntryProcessingResult.new(created: 0, updated: 0, failed: 0, items: [], errors: [])
+          item_processing: EntryProcessingResult.new(
+            created: 0,
+            updated: 0,
+            failed: 0,
+            items: [],
+            errors: [],
+            created_items: [],
+            updated_items: []
+          )
         )
       end
 
@@ -327,7 +344,15 @@ module FeedMonitor
           response: response,
           body: body,
           error: error,
-          item_processing: EntryProcessingResult.new(created: 0, updated: 0, failed: 0, items: [], errors: [])
+          item_processing: EntryProcessingResult.new(
+            created: 0,
+            updated: 0,
+            failed: 0,
+            items: [],
+            errors: [],
+            created_items: [],
+            updated_items: []
+          )
         )
       end
 
@@ -416,12 +441,22 @@ module FeedMonitor
       end
 
       def process_feed_entries(feed)
-        return EntryProcessingResult.new(created: 0, updated: 0, failed: 0, items: [], errors: []) unless feed.respond_to?(:entries)
+        return EntryProcessingResult.new(
+          created: 0,
+          updated: 0,
+          failed: 0,
+          items: [],
+          errors: [],
+          created_items: [],
+          updated_items: []
+        ) unless feed.respond_to?(:entries)
 
         created = 0
         updated = 0
         failed = 0
         items = []
+        created_items = []
+        updated_items = []
         errors = []
 
         Array(feed.entries).each do |entry|
@@ -430,8 +465,10 @@ module FeedMonitor
             items << result.item
             if result.created?
               created += 1
+              created_items << result.item
             else
               updated += 1
+              updated_items << result.item
             end
           rescue StandardError => error
             failed += 1
@@ -439,7 +476,15 @@ module FeedMonitor
           end
         end
 
-        EntryProcessingResult.new(created:, updated:, failed:, items:, errors: errors.compact)
+        EntryProcessingResult.new(
+          created:,
+          updated:,
+          failed:,
+          items:,
+          errors: errors.compact,
+          created_items:,
+          updated_items:
+        )
       end
 
       def normalize_item_error(entry, error)

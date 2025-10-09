@@ -277,11 +277,11 @@
 
 ### 08.02 Implement FetchFeedJob Pipeline
 
-- [ ] 08.02.01 Create `FetchFeedJob` as the canonical entry point for fetching, delegating to existing fetch orchestration logic
-- [ ] 08.02.02 Extract a shared fetch runner/enqueuer used by both the job and manual “Fetch Now” UI to prevent duplicated code paths
-- [ ] 08.02.03 Guard concurrent fetches via advisory locking or equivalent coordination
-- [ ] 08.02.04 After processing, enqueue `ScrapeItemJob` instances for any new items flagged for scraping via the shared enqueuer
-- [ ] 08.02.05 Add tests covering job execution, retry behavior, and automatic follow-up scraping
+- [x] 08.02.01 Create `FetchFeedJob` as the canonical entry point for fetching, delegating to existing fetch orchestration logic
+- [x] 08.02.02 Extract a shared fetch runner/enqueuer used by both the job and manual “Fetch Now” UI to prevent duplicated code paths
+- [x] 08.02.03 Guard concurrent fetches via advisory locking or equivalent coordination
+- [x] 08.02.04 After processing, enqueue `ScrapeItemJob` instances for any new items flagged for scraping via the shared enqueuer
+- [x] 08.02.05 Add tests covering job execution, retry behavior, and automatic follow-up scraping
 
 ### 08.03 Implement ScrapeItemJob Pipeline
 

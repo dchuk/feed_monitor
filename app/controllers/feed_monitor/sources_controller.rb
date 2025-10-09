@@ -45,7 +45,8 @@ module FeedMonitor
     end
 
     def fetch
-      result = FeedMonitor::Fetching::FeedFetcher.new(source: @source).call
+      runner = FeedMonitor::Fetching::FetchRunner.new(source: @source)
+      result = runner.run
       case result.status
       when :fetched
         processing = result.item_processing
@@ -57,6 +58,8 @@ module FeedMonitor
         message = result.error&.message || "Unknown error"
         redirect_to feed_monitor.source_path(@source), alert: "Fetch failed: #{message}"
       end
+    rescue FeedMonitor::Fetching::FetchRunner::ConcurrencyError
+      redirect_to feed_monitor.source_path(@source), alert: "Fetch already in progress for this source."
     rescue StandardError => error
       redirect_to feed_monitor.source_path(@source), alert: "Fetch failed: #{error.message}"
     end
