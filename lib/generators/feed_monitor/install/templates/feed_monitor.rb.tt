@@ -21,6 +21,11 @@ FeedMonitor.configure do |config|
   config.fetch_queue_concurrency = 2
   config.scrape_queue_concurrency = 2
 
+  # Solid Queue executes recurring "command" tasks via a job class. Override
+  # this when host apps need additional context or instrumentation around
+  # recurring commands.
+  # config.recurring_command_job_class = "MyRecurringCommandJob"
+
   # Feed Monitor assumes Solid Queue handles persistence. Run
   # `bin/rails solid_queue:install` (dedicated queue database) or copy the
   # engine's Solid Queue migration into your app so Mission Control and the

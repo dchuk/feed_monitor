@@ -7,6 +7,7 @@ module FeedMonitor
       :scrape_queue_name,
       :fetch_queue_concurrency,
       :scrape_queue_concurrency,
+      :recurring_command_job_class,
       :job_metrics_enabled,
       :mission_control_enabled,
       :mission_control_dashboard_path
@@ -19,6 +20,7 @@ module FeedMonitor
       @scrape_queue_name = "#{DEFAULT_QUEUE_NAMESPACE}_scrape"
       @fetch_queue_concurrency = 2
       @scrape_queue_concurrency = 2
+      @recurring_command_job_class = nil
       @job_metrics_enabled = true
       @mission_control_enabled = false
       @mission_control_dashboard_path = nil

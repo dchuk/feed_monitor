@@ -24,6 +24,8 @@ Run `bin/setup` to install gems, prepare the dummy database, and compile Tailwin
 - Queue names are namespaced (`feed_monitor_fetch`/`feed_monitor_scrape` by default) and automatically honor host `queue_name_prefix`. Use `FeedMonitor.queue_name(:fetch)` helpers inside jobs.
 - Job lifecycle metrics are captured through `FeedMonitor::Jobs::Visibility`; they surface queue depth and last-run timestamps without requiring Mission Control. Host apps can opt into Mission Control independently if desired.
 - The dummy host keeps Solid Queue tables in the primary database via `20251009140000_create_solid_queue_tables.rb`. Real apps can either reuse that migration or run `rails solid_queue:install` to manage a dedicated queue database—Mission Control expects one of those setups before it can surface data.
+- Recurring schedules live in `config/recurring.yml`, scheduling `FeedMonitor::ScheduleFetchesJob` each minute plus the scraping scheduler every two minutes. Override the schedule path with `bin/jobs --recurring_schedule_file=...` (or `SOLID_QUEUE_RECURRING_SCHEDULE_FILE`) and disable recurring runners with `SOLID_QUEUE_SKIP_RECURRING=true` or `bin/jobs --skip-recurring`.
+- Hosts that need to wrap Solid Queue command execution can set `config.recurring_command_job_class` in the generated initializer to point at their custom job class.
 
 ## Coding Style & Naming Conventions
 

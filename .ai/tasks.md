@@ -328,15 +328,25 @@
 - [x] 09.02.04 Verify Mission Control shows queue metrics/sections once Solid Queue is configured and a worker is running
 - [x] 09.02.05 Capture the configuration updates in docs/notes so host apps understand the setup requirements
 
-### 09.03 Create Rake Task for Invocation
+### 09.03 Configure Solid Queue Recurring Tasks
 
-- [ ] 09.03.01 Add rake task feed_monitor:schedule
-- [ ] 09.03.02 Support recurring jobs via Solid Queue
-- [ ] 09.03.03 Add manual trigger from dashboard
-- [ ] 09.03.04 Document cron/systemd setup options
-- [ ] 09.03.05 Test scheduler invocation methods
+- [x] 09.03.01 Define recurring fetch/scrape jobs in `config/recurring.yml` using Solid Queue schedule syntax (class/args/command).
+- [x] 09.03.02 Ensure `bin/jobs` loads the recurring schedule and document overriding it with `--recurring_schedule_file`.
+- [x] 09.03.03 Explain how to disable recurring execution via `SOLID_QUEUE_SKIP_RECURRING` or `bin/jobs --skip-recurring`.
+- [x] 09.03.04 Provide a hook to swap the default recurring job class for host-specific command execution.
+- [x] 09.03.05 Verify recurring tasks enqueue expected jobs (integration/system coverage or supervised run script).
 
 ### 09.04 Refactor Job Queues card on dashboard to pull data directly from solid queue db tables, not from event metrics
+
+- [ ] 09.04.01 Implement a service/query that aggregates counts from Solid Queue job tables (ready, scheduled, failed, recurring).
+- [ ] 09.04.02 Update the dashboard card to render database-driven metrics and handle empty/paused queue states gracefully.
+- [ ] 09.04.03 Add automated coverage (unit + system) confirming the dashboard shows the new metrics.
+- [ ] 09.04.04 Document the metrics source change and required Solid Queue configuration/migrations for host apps.
+
+## 09.05 Sources analytics
+
+- [ ] 09.05.01 add a heatmap histogram table visual showing how many sources have fetch intervals in which timespan buckets (5-30 minutes, 30-60, 60-120, 120-240, 240-480, 480+)
+- [ ] 09.05.02 Add a column to source index table showing new item rate per day to see how active different sources are
 
 **Deliverable: Robust scheduling that works with standard Rails tools**
 **Test: Run scheduler via rake task, verify jobs enqueued for due sources**

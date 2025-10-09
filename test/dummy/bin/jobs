@@ -1,6 +1,18 @@
 #!/usr/bin/env ruby
 
+require "pathname"
 require_relative "../config/environment"
 require "solid_queue/cli"
 
-SolidQueue::Cli.start(ARGV)
+app_root = Pathname.new(__dir__).join("..").expand_path
+default_schedule = app_root.join("config/recurring.yml")
+
+args = ARGV.dup
+
+unless ENV["SOLID_QUEUE_SKIP_RECURRING"]&.casecmp("true")&.zero? ||
+    ENV["SOLID_QUEUE_RECURRING_SCHEDULE_FILE"].present? ||
+    args.any? { |argument| argument == "--skip-recurring" || argument.start_with?("--recurring_schedule_file") }
+  args += ["--recurring_schedule_file=#{default_schedule}"] if default_schedule.exist?
+end
+
+SolidQueue::Cli.start(args)

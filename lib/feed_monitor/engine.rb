@@ -19,6 +19,14 @@ module FeedMonitor
           ActiveJob::Base.queue_adapter = :solid_queue
         end
 
+        if defined?(::SolidQueue::RecurringTask)
+          job_class_config = FeedMonitor.config.recurring_command_job_class
+          if job_class_config.present?
+            resolved_class = job_class_config.is_a?(String) ? job_class_config.constantize : job_class_config
+            SolidQueue::RecurringTask.default_job_class = resolved_class
+          end
+        end
+
         if defined?(MissionControl::Jobs)
           adapters = MissionControl::Jobs.adapters
           if adapters.respond_to?(:add)
