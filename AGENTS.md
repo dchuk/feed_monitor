@@ -40,3 +40,7 @@ Store secrets (API keys, webhook tokens) in `config/credentials/` and never comm
 - Fetch attempts now always create `FetchLog` records and update `Source` failure state; added MiniTest coverage for timeout, HTTP 404, and malformed feed scenarios.
 - Relevant tests: `bundle exec rails test test/lib/feed_monitor/fetching/feed_fetcher_test.rb` and full suite via `bundle exec rails test` (both passing).
 - Next roadmap item is 05.04 (not started). Untracked tmp dir `test/lib/tmp` can be safely ignored if it reappears.
+
+## Agent Notes (2025-10-09)
+
+- Introduced `FeedMonitor::Scrapers::Base`, establishing the scraper adapter contract and Result object. Subclasses merge default, source, and invocation settings (HashWithIndifferentAccess) and must return a Result with status/html/content/metadata. Use `FeedMonitor::Scrapers::Base.call(item:, source:, settings:, http:)` to execute adapters.

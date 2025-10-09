@@ -225,14 +225,14 @@
 
 ## Phase 07: Content Scraping with Multiple Storage Layers
 
-**Goal: Store raw HTML and extracted content complementing Feedjira data**
+**Goal: Store raw HTML and extracted content in a dedicated table while complementing Feedjira data**
 
 ### 07.01 Create Scraper Adapter Interface
 
-- [ ] 07.01.01 Define Scrapers::Base abstract class
-- [ ] 07.01.02 Create contract tests for adapter interface
-- [ ] 07.01.03 Add settings parameter support
-- [ ] 07.01.04 Document adapter requirements
+- [x] 07.01.01 Define Scrapers::Base abstract class
+- [x] 07.01.02 Create contract tests for adapter interface
+- [x] 07.01.03 Add settings parameter support
+- [x] 07.01.04 Document adapter requirements
 
 ### 07.02 Implement Readability Scraper
 
@@ -242,13 +242,13 @@
 - [ ] 07.02.04 Support custom CSS selectors via scrape_settings
 - [ ] 07.02.05 Test scraper with various article pages
 
-### 07.03 Store Scraped Content
+### 07.03 Persist Scraped Content Separately
 
-- [ ] 07.03.01 Save raw HTML to scraped_html field
-- [ ] 07.03.02 Save extracted content to scraped_content
-- [ ] 07.03.03 Update scrape_status and scraped_at
-- [ ] 07.03.04 Create ScrapeLog entry for each attempt
-- [ ] 07.03.05 Test storing all content versions alongside Feedjira content
+- [ ] 07.03.01 Create dedicated table (e.g. item_contents) with scraped_html and scraped_content columns
+- [ ] 07.03.02 Add has_one association from Item and migrate existing data
+- [ ] 07.03.03 Update scraping pipeline to write to the associated content record
+- [ ] 07.03.04 Ensure Items table drops scraped_html and scraped_content columns while keeping status fields
+- [ ] 07.03.05 Test persistence using the separate table alongside Feedjira content
 
 ### 07.04 Add Scraping UI Controls
 
@@ -258,8 +258,8 @@
 - [ ] 07.04.04 Show scraping status and errors
 - [ ] 07.04.05 Test manual scraping workflow
 
-**Deliverable: Multi-layer content storage aligned with Feedjira base content**
-**Test: Scrape article via admin UI, verify scraped layers against Feedjira fields**
+**Deliverable: Multi-layer content storage aligned with Feedjira base content and smaller Items table**
+**Test: Scrape article via admin UI, verify scraped layers stored via associated content record**
 
 ---
 
