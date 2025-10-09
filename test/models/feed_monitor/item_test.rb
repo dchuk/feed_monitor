@@ -65,6 +65,39 @@ module FeedMonitor
       end
     end
 
+    test "persists scraped html and content via associated record" do
+      item = Item.create!(source: @source, guid: "scraped", url: "https://example.com/scraped")
+
+      assert_difference("FeedMonitor::ItemContent.count", 1) do
+        item.update!(scraped_html: "<article>Content</article>", scraped_content: "Content")
+      end
+
+      item.reload
+      assert item.item_content.present?
+      assert_equal "<article>Content</article>", item.scraped_html
+      assert_equal "Content", item.scraped_content
+    end
+
+    test "removes associated content when both fields cleared" do
+      item = Item.create!(
+        source: @source,
+        guid: "scraped-cleared",
+        url: "https://example.com/scraped-cleared",
+        scraped_html: "<div>html</div>",
+        scraped_content: "plain"
+      )
+
+      assert item.item_content.persisted?
+
+      assert_difference("FeedMonitor::ItemContent.count", -1) do
+        item.update!(scraped_html: nil, scraped_content: nil)
+      end
+
+      item.reload
+      assert_nil item.scraped_html
+      assert_nil item.scraped_content
+    end
+
     test "prevents invalid URLs" do
       item = Item.new(source: @source, guid: "bad-url", url: "ftp://example.com/article")
 

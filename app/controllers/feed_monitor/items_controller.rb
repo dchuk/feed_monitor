@@ -25,7 +25,7 @@ module FeedMonitor
     end
 
     def show
-      @item = Item.includes(:source).find(params[:id])
+      @item = Item.includes(:source, :item_content).find(params[:id])
     end
   end
 end

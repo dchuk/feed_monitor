@@ -7,6 +7,7 @@ module FeedMonitor
     self.table_name = "feed_monitor_items"
 
     belongs_to :source, class_name: "FeedMonitor::Source", inverse_of: :items, counter_cache: true
+    has_one :item_content, class_name: "FeedMonitor::ItemContent", inverse_of: :item, dependent: :destroy, autosave: true
     has_many :scrape_logs, class_name: "FeedMonitor::ScrapeLog", inverse_of: :item, dependent: :destroy
 
     before_validation :normalize_urls
@@ -25,10 +26,19 @@ module FeedMonitor
     scope :pending_scrape, -> { where(scraped_at: nil) }
     scope :failed_scrape, -> { where(scrape_status: "failed") }
 
+    delegate :scraped_html, :scraped_content, to: :item_content, allow_nil: true
+
+    def scraped_html=(value)
+      assign_content_attribute(:scraped_html, value)
+    end
+
+    def scraped_content=(value)
+      assign_content_attribute(:scraped_content, value)
+    end
+
     private
 
     URL_FIELDS = %i[url canonical_url comments_url].freeze
-
     def normalize_urls
       URL_FIELDS.each do |field|
         instance_variable_set("@invalid_#{field}", nil)
@@ -71,6 +81,26 @@ module FeedMonitor
       uri.fragment = nil
 
       uri.to_s
+    end
+
+    def assign_content_attribute(attribute, value)
+      unless item_content
+        return if value.nil?
+
+        build_item_content
+      end
+
+      item_content.public_send("#{attribute}=", value)
+
+      prune_empty_content_record if item_content.scraped_html.blank? && item_content.scraped_content.blank?
+    end
+
+    def prune_empty_content_record
+      if item_content.persisted?
+        item_content.mark_for_destruction
+      else
+        association(:item_content).reset
+      end
     end
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_08_183000) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_09_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -41,6 +41,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_08_183000) do
     t.index ["success"], name: "index_feed_monitor_fetch_logs_on_success"
   end
 
+  create_table "feed_monitor_item_contents", force: :cascade do |t|
+    t.bigint "item_id", null: false
+    t.text "scraped_html"
+    t.text "scraped_content"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["item_id"], name: "index_feed_monitor_item_contents_on_item_id", unique: true
+  end
+
   create_table "feed_monitor_items", force: :cascade do |t|
     t.bigint "source_id", null: false
     t.string "guid"
@@ -52,8 +61,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_08_183000) do
     t.jsonb "authors", default: [], null: false
     t.text "summary"
     t.text "content"
-    t.text "scraped_html"
-    t.text "scraped_content"
     t.datetime "scraped_at"
     t.string "scrape_status"
     t.datetime "published_at"
@@ -137,6 +144,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_08_183000) do
   end
 
   add_foreign_key "feed_monitor_fetch_logs", "feed_monitor_sources", column: "source_id"
+  add_foreign_key "feed_monitor_item_contents", "feed_monitor_items", column: "item_id"
   add_foreign_key "feed_monitor_items", "feed_monitor_sources", column: "source_id"
   add_foreign_key "feed_monitor_scrape_logs", "feed_monitor_items", column: "item_id"
   add_foreign_key "feed_monitor_scrape_logs", "feed_monitor_sources", column: "source_id"

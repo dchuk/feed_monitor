@@ -244,11 +244,11 @@
 
 ### 07.03 Persist Scraped Content Separately
 
-- [ ] 07.03.01 Create dedicated table (e.g. item_contents) with scraped_html and scraped_content columns
-- [ ] 07.03.02 Add has_one association from Item and migrate existing data
-- [ ] 07.03.03 Update scraping pipeline to write to the associated content record
-- [ ] 07.03.04 Ensure Items table drops scraped_html and scraped_content columns while keeping status fields
-- [ ] 07.03.05 Test persistence using the separate table alongside Feedjira content
+- [x] 07.03.01 Create dedicated table (e.g. item_contents) with scraped_html and scraped_content columns
+- [x] 07.03.02 Add has_one association from Item and migrate existing data
+- [x] 07.03.03 Update scraping pipeline to write to the associated content record
+- [x] 07.03.04 Ensure Items table drops scraped_html and scraped_content columns while keeping status fields
+- [x] 07.03.05 Test persistence using the separate table alongside Feedjira content
 
 ### 07.04 Add Scraping UI Controls
 
