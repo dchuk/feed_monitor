@@ -31,4 +31,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "faraday-gzip", "~> 3.0"
   spec.add_dependency "nokolexbor", "~> 0.5"
   spec.add_dependency "ruby-readability", "~> 0.7"
+  spec.add_dependency "solid_queue", ">= 0.3"
 end

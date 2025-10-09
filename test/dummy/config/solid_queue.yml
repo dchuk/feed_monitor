@@ -1,0 +1,20 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("SOLID_QUEUE_MAX_THREADS", ENV.fetch("RAILS_MAX_THREADS", 5)).to_i %>
+  host: <%= ENV.fetch("POSTGRES_HOST", "localhost") %>
+  port: <%= ENV.fetch("POSTGRES_PORT", 5432) %>
+  username: <%= ENV.fetch("POSTGRES_USER", "postgres") %>
+  password: <%= ENV.fetch("POSTGRES_PASSWORD", nil) %>
+
+development:
+  <<: *default
+  database: <%= ENV.fetch("SOLID_QUEUE_DB", "feed_monitor_dummy_queue_development") %>
+
+test:
+  <<: *default
+  database: <%= ENV.fetch("SOLID_QUEUE_TEST_DB", "feed_monitor_dummy_queue_test") %>
+
+production:
+  <<: *default
+  database: <%= ENV.fetch("SOLID_QUEUE_PRODUCTION_DB", "feed_monitor_dummy_queue_production") %>

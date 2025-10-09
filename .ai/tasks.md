@@ -265,42 +265,42 @@
 
 ## Phase 08: Background Jobs with Solid Queue
 
-**Goal: Queue processing with Rails 8 defaults, leveraging Solid Queue and Postgres**
+**Goal: Unified job orchestration that powers both async processing and manual actions without duplicating logic**
 
-### 08.01 Setup Solid Queue
+### 08.01 Establish Job Infrastructure
 
-- [ ] 08.01.01 Add solid_queue to gemspec (Rails 8 default)
-- [ ] 08.01.02 Create ApplicationJob base class
-- [ ] 08.01.03 Configure job queue names
-- [ ] 08.01.04 Setup mission control for job monitoring
-- [ ] 08.01.05 Test job execution
+- [x] 08.01.01 Ensure Solid Queue/Postgres are the default while allowing host apps to override ActiveJob backend if already configured
+- [x] 08.01.02 Introduce `FeedMonitor::ApplicationJob` that inherits the host `ApplicationJob` when present, falling back to `ActiveJob::Base`
+- [x] 08.01.03 Provide configurable queue names/concurrency that respect host settings and avoid namespace clashes
+- [x] 08.01.04 Add lightweight job visibility in the engine (e.g., queue depth/last run) and document optional Mission Control integration without hard dependency
+- [x] 08.01.05 Verify job execution path inside dummy app with Postgres-backed Solid Queue
 
-### 08.02 Implement FetchFeedJob
+### 08.02 Implement FetchFeedJob Pipeline
 
-- [ ] 08.02.01 Create FetchFeedJob with idempotent design
-- [ ] 08.02.02 Use advisory locks to prevent concurrent fetches
-- [ ] 08.02.03 Integrate FeedFetcher service
-- [ ] 08.02.04 Schedule next fetch after completion
-- [ ] 08.02.05 Test job execution and retry logic
+- [ ] 08.02.01 Create `FetchFeedJob` as the canonical entry point for fetching, delegating to existing fetch orchestration logic
+- [ ] 08.02.02 Extract a shared fetch runner/enqueuer used by both the job and manual “Fetch Now” UI to prevent duplicated code paths
+- [ ] 08.02.03 Guard concurrent fetches via advisory locking or equivalent coordination
+- [ ] 08.02.04 After processing, enqueue `ScrapeItemJob` instances for any new items flagged for scraping via the shared enqueuer
+- [ ] 08.02.05 Add tests covering job execution, retry behavior, and automatic follow-up scraping
 
-### 08.03 Add ScrapeItemJob
+### 08.03 Implement ScrapeItemJob Pipeline
 
-- [ ] 08.03.01 Create ScrapeItemJob with retry logic
-- [ ] 08.03.02 Respect scraping configuration per source
-- [ ] 08.03.03 Use appropriate adapter per source
-- [ ] 08.03.04 Create ScrapeLog entries
-- [ ] 08.03.05 Test scraping job workflow
+- [ ] 08.03.01 Create `ScrapeItemJob` as the canonical scraping entry point that reuses the existing scraper orchestration
+- [ ] 08.03.02 Introduce shared scraping enqueue logic invoked by both background jobs and manual UI actions
+- [ ] 08.03.03 Respect per-source scraping configuration and deduplicate in-flight jobs when queuing
+- [ ] 08.03.04 Persist `ScrapeLog` updates and propagate status/errors consistently with the manual flow
+- [ ] 08.03.05 Add tests for scraping job workflow, including cases triggered by both automatic and manual paths
 
-### 08.04 Queue Jobs from UI
+### 08.04 Unify UI and Job Queueing
 
-- [ ] 08.04.01 Wire manual fetch button to enqueue job
-- [ ] 08.04.02 Wire manual scrape button to enqueue job
-- [ ] 08.04.03 Show job status in UI
-- [ ] 08.04.04 Link to Mission Control from admin
-- [ ] 08.04.05 Test job enqueueing from UI
+- [ ] 08.04.01 Update manual fetch button to call the shared fetch enqueuer so the UI and jobs share the same foundation
+- [ ] 08.04.02 Update manual scrape actions to leverage the shared scraping enqueuer
+- [ ] 08.04.03 Surface job state/metrics in the admin dashboard using the lightweight visibility layer from 08.01
+- [ ] 08.04.04 Expose optional Mission Control links/documentation when the host app enables it
+- [ ] 08.04.05 Add system/integration tests ensuring manual actions enqueue the proper jobs and display status
 
-**Deliverable: Production-ready background processing with Rails 8 defaults**
-**Test: Trigger jobs from admin UI, monitor in Mission Control**
+**Deliverable: Production-ready background processing that keeps manual and async flows in sync**
+**Test: Trigger fetch/scrape from UI and scheduler, confirm shared logic enqueues jobs and surfaces status**
 
 ---
 
