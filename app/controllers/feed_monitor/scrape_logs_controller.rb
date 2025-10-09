@@ -15,6 +15,15 @@ module FeedMonitor
 
     def scoped_logs
       scope = ScrapeLog.includes(:item, :source).recent
+
+      if (item_id = params[:item_id].presence)
+        scope = scope.where(item_id: item_id)
+      end
+
+      if (source_id = params[:source_id].presence)
+        scope = scope.where(source_id: source_id)
+      end
+
       case @status
       when "success"
         scope.successful

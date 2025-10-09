@@ -20,30 +20,10 @@
     <p class="mt-1 text-xs text-slate-500">Minimum 5 minutes recommended.</p>
   </div>
 
-  <div>
-    <%= form.label :scraper_adapter, class: "block text-sm font-medium text-slate-800" %>
-    <%= form.text_field :scraper_adapter, class: "mt-1 block w-full rounded border border-slate-300 px-3 py-2" %>
-  </div>
-
   <div class="grid gap-3 sm:grid-cols-2">
     <label class="inline-flex items-center space-x-2">
       <%= form.check_box :active %>
       <span>Active</span>
-    </label>
-
-    <label class="inline-flex items-center space-x-2">
-      <%= form.check_box :scraping_enabled %>
-      <span>Scraping enabled</span>
-    </label>
-
-    <label class="inline-flex items-center space-x-2">
-      <%= form.check_box :auto_scrape %>
-      <span>Auto scrape</span>
-    </label>
-
-    <label class="inline-flex items-center space-x-2">
-      <%= form.check_box :requires_javascript %>
-      <span>Requires JavaScript</span>
     </label>
   </div>
 
@@ -58,6 +38,54 @@
       <%= form.label :max_items, class: "block text-sm font-medium text-slate-800" %>
       <%= form.number_field :max_items, min: 0, class: "mt-1 block w-full rounded border border-slate-300 px-3 py-2" %>
       <p class="mt-1 text-xs text-slate-500">Optional. Limit stored items per source.</p>
+    </div>
+  </div>
+
+  <% scrape_settings = (source.scrape_settings || {}).with_indifferent_access %>
+  <% selectors = scrape_settings[:selectors] || {} %>
+
+  <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
+    <div class="border-b border-slate-200 px-5 py-4">
+      <h2 class="text-lg font-medium">Scraping Configuration</h2>
+      <p class="mt-1 text-xs text-slate-500">Control how content extraction runs for this source.</p>
+    </div>
+    <div class="space-y-5 px-5 py-5">
+      <div class="grid gap-3 sm:grid-cols-2">
+        <label class="inline-flex items-center space-x-2">
+          <%= form.check_box :scraping_enabled %>
+          <span>Scraping enabled</span>
+        </label>
+
+        <label class="inline-flex items-center space-x-2">
+          <%= form.check_box :auto_scrape %>
+          <span>Auto scrape after fetch</span>
+        </label>
+
+        <label class="inline-flex items-center space-x-2">
+          <%= form.check_box :requires_javascript %>
+          <span>Requires JavaScript</span>
+        </label>
+      </div>
+
+      <div>
+        <%= form.label :scraper_adapter, "Scraper adapter", class: "block text-sm font-medium text-slate-800" %>
+        <%= form.select :scraper_adapter, [["Readability", "readability"]], {}, class: "mt-1 block w-full rounded border border-slate-300 px-3 py-2" %>
+        <p class="mt-1 text-xs text-slate-500">Additional adapters can be configured in future phases.</p>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label for="source_scrape_settings_selectors_content" class="block text-sm font-medium text-slate-800">Content CSS selector</label>
+          <%= text_field_tag "source[scrape_settings][selectors][content]", selectors[:content], id: "source_scrape_settings_selectors_content", class: "mt-1 block w-full rounded border border-slate-300 px-3 py-2", placeholder: ".article-body" %>
+          <p class="mt-1 text-xs text-slate-500">Optional. Overrides Readability extraction target.</p>
+        </div>
+
+        <div>
+          <label for="source_scrape_settings_selectors_title" class="block text-sm font-medium text-slate-800">Title CSS selector</label>
+          <%= text_field_tag "source[scrape_settings][selectors][title]", selectors[:title], id: "source_scrape_settings_selectors_title", class: "mt-1 block w-full rounded border border-slate-300 px-3 py-2", placeholder: "h1.article-title" %>
+          <p class="mt-1 text-xs text-slate-500">Optional. Leave blank to use feed-provided title.</p>
+        </div>
+      </div>
     </div>
   </div>
 

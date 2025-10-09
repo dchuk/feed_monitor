@@ -108,7 +108,10 @@ module FeedMonitor
         :requires_javascript,
         :scraper_adapter,
         :items_retention_days,
-        :max_items
+        :max_items,
+        scrape_settings: [
+          { selectors: %i[content title] }
+        ]
       )
     end
   end

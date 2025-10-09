@@ -252,11 +252,11 @@
 
 ### 07.04 Add Scraping UI Controls
 
-- [ ] 07.04.01 Add scraping configuration form to source edit
-- [ ] 07.04.02 Add manual scrape button on item detail page
-- [ ] 07.04.03 Display all content versions in item view with Feedjira comparison
-- [ ] 07.04.04 Show scraping status and errors
-- [ ] 07.04.05 Test manual scraping workflow
+- [x] 07.04.01 Add scraping configuration form to source edit
+- [x] 07.04.02 Add manual scrape button on item detail page
+- [x] 07.04.03 Display all content versions in item view with Feedjira comparison
+- [x] 07.04.04 Show scraping status and errors
+- [x] 07.04.05 Test manual scraping workflow
 
 **Deliverable: Multi-layer content storage aligned with Feedjira base content and smaller Items table**
 **Test: Scrape article via admin UI, verify scraped layers stored via associated content record**

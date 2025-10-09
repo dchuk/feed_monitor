@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "application_system_test_case"
+require "minitest/mock"
 
 module FeedMonitor
   class ItemsTest < ApplicationSystemTestCase
@@ -51,15 +52,53 @@ module FeedMonitor
       click_link "First Article"
 
       assert_current_path feed_monitor.item_path(first_item)
-      assert_text "Summary"
+      assert_text "Feed Summary"
       assert_text "Short summary about the first article."
       assert_text "Feed Content"
       assert_text "Full content body for the first article."
-      assert_text "Scraped HTML"
-      assert_text "<article><p>Scraped HTML</p></article>"
       assert_text "Scraped Content"
       assert_text "Scraped plain text content."
+      assert_text "View raw HTML"
       assert_text "word_count"
+    end
+
+    test "manually scraping an item updates content and records a log" do
+      source = FeedMonitor::Source.create!(
+        name: "Manual Source",
+        feed_url: "https://example.com/manual.xml",
+        website_url: "https://example.com",
+        fetch_interval_minutes: 120,
+        scraper_adapter: "readability",
+        scraping_enabled: true
+      )
+
+      item = FeedMonitor::Item.create!(
+        source: source,
+        guid: "manual-1",
+        title: "Needs Scraping",
+        url: "https://example.com/articles/needs-scraping"
+      )
+
+      visit feed_monitor.item_path(item)
+
+      result = FeedMonitor::Scrapers::Base::Result.new(
+        status: :success,
+        html: "<article><p>Rendered HTML</p></article>",
+        content: "Readable body text",
+        metadata: { http_status: 200, extraction_strategy: "readability" }
+      )
+
+      assert_difference("FeedMonitor::ScrapeLog.count", 1) do
+        FeedMonitor::Scrapers::Readability.stub(:call, result) do
+          click_button "Manual Scrape"
+          assert_text "Scrape completed via Readability"
+        end
+      end
+
+      assert_text "Readable body text"
+      find("summary", text: "View raw HTML").click
+      assert_text "Rendered HTML"
+      assert_text "Scraped"
     end
   end
 end

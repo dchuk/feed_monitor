@@ -4,7 +4,9 @@ FeedMonitor::Engine.routes.draw do
   root to: "dashboard#index"
   resources :fetch_logs, only: %i[index show]
   resources :scrape_logs, only: %i[index show]
-  resources :items, only: %i[index show]
+  resources :items, only: %i[index show] do
+    post :scrape, on: :member
+  end
   resources :sources do
     post :fetch, on: :member
   end
