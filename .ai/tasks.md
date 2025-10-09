@@ -314,11 +314,11 @@
 
 ### 09.01 Build Core Scheduler
 
-- [ ] 09.01.01 Create Scheduler.run entry point
-- [ ] 09.01.02 Find sources due for fetch (next_fetch_at <= now)
-- [ ] 09.01.03 Use SELECT FOR UPDATE SKIP LOCKED
-- [ ] 09.01.04 Enqueue FetchFeedJob for each due source
-- [ ] 09.01.05 Test scheduler finds and enqueues jobs
+- [x] 09.01.01 Create Scheduler.run entry point
+- [x] 09.01.02 Find sources due for fetch (next_fetch_at <= now)
+- [x] 09.01.03 Use SELECT FOR UPDATE SKIP LOCKED
+- [x] 09.01.04 Enqueue FetchFeedJob for each due source
+- [x] 09.01.05 Test scheduler finds and enqueues jobs
 
 ### 09.02 Add Scheduling Strategies
 

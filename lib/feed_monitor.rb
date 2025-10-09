@@ -15,6 +15,7 @@ require "feed_monitor/scraping/item_scraper"
 require "feed_monitor/fetching/fetch_error"
 require "feed_monitor/fetching/feed_fetcher"
 require "feed_monitor/fetching/fetch_runner"
+require "feed_monitor/scheduler"
 require "feed_monitor/items/item_creator"
 
 module FeedMonitor
