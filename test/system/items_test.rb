@@ -5,6 +5,15 @@ require "minitest/mock"
 
 module FeedMonitor
   class ItemsTest < ApplicationSystemTestCase
+    include ActiveJob::TestHelper
+
+    setup do
+      clear_enqueued_jobs
+    end
+
+    teardown do
+      clear_enqueued_jobs
+    end
     test "browsing items and viewing item details" do
       source = FeedMonitor::Source.create!(
         name: "Example Source",
@@ -90,11 +99,13 @@ module FeedMonitor
 
       assert_difference("FeedMonitor::ScrapeLog.count", 1) do
         FeedMonitor::Scrapers::Readability.stub(:call, result) do
-          click_button "Manual Scrape"
-          assert_text "Scrape completed via Readability"
+          perform_enqueued_jobs do
+            click_button "Manual Scrape"
+          end
         end
       end
 
+      assert_text "Scrape has been enqueued and will run shortly."
       assert_text "Readable body text"
       find("summary", text: "View raw HTML").click
       assert_text "Rendered HTML"

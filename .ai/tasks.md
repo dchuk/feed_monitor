@@ -285,11 +285,11 @@
 
 ### 08.03 Implement ScrapeItemJob Pipeline
 
-- [ ] 08.03.01 Create `ScrapeItemJob` as the canonical scraping entry point that reuses the existing scraper orchestration
-- [ ] 08.03.02 Introduce shared scraping enqueue logic invoked by both background jobs and manual UI actions
-- [ ] 08.03.03 Respect per-source scraping configuration and deduplicate in-flight jobs when queuing
-- [ ] 08.03.04 Persist `ScrapeLog` updates and propagate status/errors consistently with the manual flow
-- [ ] 08.03.05 Add tests for scraping job workflow, including cases triggered by both automatic and manual paths
+- [x] 08.03.01 Create `ScrapeItemJob` as the canonical scraping entry point that reuses the existing scraper orchestration
+- [x] 08.03.02 Introduce shared scraping enqueue logic invoked by both background jobs and manual UI actions
+- [x] 08.03.03 Respect per-source scraping configuration and deduplicate in-flight jobs when queuing
+- [x] 08.03.04 Persist `ScrapeLog` updates and propagate status/errors consistently with the manual flow
+- [x] 08.03.05 Add tests for scraping job workflow, including cases triggered by both automatic and manual paths
 
 ### 08.04 Unify UI and Job Queueing
 

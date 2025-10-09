@@ -11,12 +11,13 @@ module FeedMonitor
 
       class ConcurrencyError < StandardError; end
 
-      attr_reader :source, :fetcher_class, :scrape_job_class
+      attr_reader :source, :fetcher_class, :scrape_job_class, :scrape_enqueuer_class
 
-      def initialize(source:, fetcher_class: FeedMonitor::Fetching::FeedFetcher, scrape_job_class: FeedMonitor::ScrapeItemJob)
+      def initialize(source:, fetcher_class: FeedMonitor::Fetching::FeedFetcher, scrape_job_class: FeedMonitor::ScrapeItemJob, scrape_enqueuer_class: FeedMonitor::Scraping::Enqueuer)
         @source = source
         @fetcher_class = fetcher_class
         @scrape_job_class = scrape_job_class
+        @scrape_enqueuer_class = scrape_enqueuer_class
       end
 
       def self.run(source:, **options)
@@ -71,8 +72,7 @@ module FeedMonitor
         Array(result.item_processing&.created_items).each do |item|
           next unless scrape_needed?(item)
 
-          mark_item_pending(item)
-          scrape_job_class.perform_later(item.id)
+          scrape_enqueuer_class.enqueue(item:, source:, job_class: scrape_job_class, reason: :auto)
         end
       end
 
@@ -87,14 +87,6 @@ module FeedMonitor
 
       def scrape_needed?(item)
         item.present? && item.scraped_at.nil?
-      end
-
-      def mark_item_pending(item)
-        item.update_columns(scrape_status: "pending") # rubocop:disable Rails/SkipsModelValidations
-      rescue StandardError
-        # Ignore failures when marking as pending; the follow-up scrape job can
-        # still proceed without the status hint.
-        nil
       end
     end
   end

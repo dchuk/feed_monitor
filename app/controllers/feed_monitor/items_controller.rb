@@ -31,18 +31,18 @@ module FeedMonitor
     end
 
     def scrape
-      unless @item.source&.scraping_enabled?
-        redirect_to feed_monitor.item_path(@item), alert: "Scraping is disabled for this source."
-        return
+      enqueue_result = FeedMonitor::Scraping::Enqueuer.enqueue(item: @item, reason: :manual)
+
+      case enqueue_result.status
+      when :enqueued
+        flash[:notice] = "Scrape has been enqueued and will run shortly."
+      when :already_enqueued
+        flash[:notice] = enqueue_result.message
+      else
+        flash[:alert] = enqueue_result.message || "Unable to enqueue scrape for this item."
       end
 
-      result = FeedMonitor::Scraping::ItemScraper.new(item: @item).call
-      @item.reload
-
-      flash[result.success? ? :notice : :alert] = result.message
       redirect_to feed_monitor.item_path(@item)
-    rescue FeedMonitor::Scraping::ItemScraper::UnknownAdapterError => error
-      redirect_to feed_monitor.item_path(@item), alert: "Scrape failed: #{error.message}"
     end
 
     private
