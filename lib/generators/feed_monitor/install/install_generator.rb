@@ -6,6 +6,8 @@ require "rails/generators/base"
 module FeedMonitor
   module Generators
     class InstallGenerator < Rails::Generators::Base
+      source_root File.expand_path("templates", __dir__)
+
       class_option :mount_path,
         type: :string,
         default: "/feed_monitor",
@@ -14,6 +16,10 @@ module FeedMonitor
       def add_routes_mount
         mount_path = normalized_mount_path
         route %(mount FeedMonitor::Engine, at: "#{mount_path}")
+      end
+
+      def create_initializer
+        template "feed_monitor.rb.tt", "config/initializers/feed_monitor.rb"
       end
 
       private

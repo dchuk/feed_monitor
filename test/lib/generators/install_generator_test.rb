@@ -35,6 +35,22 @@ module FeedMonitor
       assert_file "config/routes.rb", /mount FeedMonitor::Engine, at: "\/admin\/feed_monitor"/
     end
 
+    def test_creates_initializer_with_commented_defaults
+      run_generator
+
+      assert_file "config/initializers/feed_monitor.rb" do |content|
+        assert_match(/FeedMonitor.configure do \|config\|/, content)
+        assert_match(/config.queue_namespace = "feed_monitor"/, content)
+        assert_match(/config.fetch_queue_name = "\#\{config.queue_namespace\}_fetch"/, content)
+        assert_match(/config.scrape_queue_name = "\#\{config.queue_namespace\}_scrape"/, content)
+        assert_match(/config.fetch_queue_concurrency = 2/, content)
+        assert_match(/config.scrape_queue_concurrency = 2/, content)
+        assert_match(/config.job_metrics_enabled = true/, content)
+        assert_match(/config.mission_control_enabled = false/, content)
+        assert_match(/config.mission_control_dashboard_path = nil/, content)
+      end
+    end
+
     private
 
     def write_routes_file
