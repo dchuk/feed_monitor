@@ -4,7 +4,23 @@ require "application_system_test_case"
 
 module FeedMonitor
   class DashboardTest < ApplicationSystemTestCase
-    test "dashboard displays stats and activity" do
+    setup do
+      FeedMonitor.reset_configuration!
+      FeedMonitor::Jobs::Visibility.reset!
+      FeedMonitor::Jobs::Visibility.setup!
+    end
+
+    teardown do
+      FeedMonitor.reset_configuration!
+      FeedMonitor::Jobs::Visibility.reset!
+    end
+
+    test "dashboard displays stats, job metrics, and quick actions" do
+      FeedMonitor.configure do |config|
+        config.mission_control_enabled = true
+        config.mission_control_dashboard_path = "/mission_control"
+      end
+
       source = Source.create!(name: "Example", feed_url: "https://example.com/feed", next_fetch_at: 1.hour.from_now)
       Item.create!(source:, guid: "item-1", url: "https://example.com/item")
       FetchLog.create!(source:, success: true, items_created: 1, items_updated: 0, started_at: Time.current)
@@ -13,9 +29,9 @@ module FeedMonitor
       visit feed_monitor.root_path
 
       assert_text "Overview"
-      assert_text "Sources"
       assert_text "Recent Activity"
       assert_text "Quick Actions"
+      assert_text "Job Queues"
 
       within first(".rounded-lg", text: "Sources") do
         assert_text "1"
@@ -24,6 +40,13 @@ module FeedMonitor
       assert_selector "span", text: "Success"
       assert_selector "span", text: "Failure"
       assert_selector "a", text: "Go", count: 3
+
+      adapter_label = FeedMonitor::Jobs::Visibility.adapter_name.to_s
+      assert_text adapter_label
+      assert_text FeedMonitor.queue_name(:fetch)
+      assert_text FeedMonitor.queue_name(:scrape)
+      assert_text "Depth: 0"
+      assert_selector "a", text: "Open Mission Control"
     end
   end
 end

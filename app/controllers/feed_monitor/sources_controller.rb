@@ -45,47 +45,16 @@ module FeedMonitor
     end
 
     def fetch
-      runner = FeedMonitor::Fetching::FetchRunner.new(source: @source)
-      result = runner.run
-      case result.status
-      when :fetched
-        processing = result.item_processing
-        message = build_fetch_summary(processing)
-        redirect_to feed_monitor.source_path(@source), notice: message
-      when :not_modified
-        redirect_to feed_monitor.source_path(@source), notice: "Source is already up to date"
-      else
-        message = result.error&.message || "Unknown error"
-        redirect_to feed_monitor.source_path(@source), alert: "Fetch failed: #{message}"
-      end
-    rescue FeedMonitor::Fetching::FetchRunner::ConcurrencyError
-      redirect_to feed_monitor.source_path(@source), alert: "Fetch already in progress for this source."
+      FeedMonitor::Fetching::FetchRunner.enqueue(@source.id)
+      redirect_to feed_monitor.source_path(@source), notice: "Fetch has been enqueued and will run shortly."
     rescue StandardError => error
-      redirect_to feed_monitor.source_path(@source), alert: "Fetch failed: #{error.message}"
+      redirect_to feed_monitor.source_path(@source), alert: "Fetch could not be enqueued: #{error.message}"
     end
 
     private
 
     def set_source
       @source = Source.find(params[:id])
-    end
-
-    def build_fetch_summary(processing)
-      created = processing&.created.to_i
-      updated = processing&.updated.to_i
-      failed = processing&.failed.to_i
-
-      parts = []
-      parts << pluralize_count(created, "item created", "items created") if created.positive?
-      parts << pluralize_count(updated, "item updated", "items updated") if updated.positive?
-      parts << pluralize_count(failed, "item failed", "items failed") if failed.positive?
-
-      summary = parts.presence || ["no changes"]
-      "Fetch completed: #{summary.join(', ')}."
-    end
-
-    def pluralize_count(count, singular, plural)
-      view_context.pluralize(count, singular, plural)
     end
 
     def default_attributes

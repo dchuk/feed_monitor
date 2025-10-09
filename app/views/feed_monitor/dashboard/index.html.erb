@@ -44,24 +44,32 @@
       </div>
     </div>
 
-    <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div class="border-b border-slate-200 px-5 py-4">
-        <h2 class="text-lg font-medium">Quick Actions</h2>
-        <p class="mt-1 text-xs text-slate-500">Jump to common workflows.</p>
-      </div>
-      <ul class="divide-y divide-slate-100">
-        <% @quick_actions.each do |action| %>
-          <li class="px-5 py-4">
-            <div class="flex items-center justify-between">
-              <div>
-                <div class="text-sm font-medium text-slate-900"><%= action[:label] %></div>
-                <div class="text-xs text-slate-500"><%= action[:description] %></div>
+    <div class="space-y-6">
+      <%= render "job_metrics",
+            metrics: @job_metrics,
+            adapter: @job_adapter,
+            mission_control_enabled: @mission_control_enabled,
+            mission_control_path: @mission_control_dashboard_path %>
+
+      <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-5 py-4">
+          <h2 class="text-lg font-medium">Quick Actions</h2>
+          <p class="mt-1 text-xs text-slate-500">Jump to common workflows.</p>
+        </div>
+        <ul class="divide-y divide-slate-100">
+          <% @quick_actions.each do |action| %>
+            <li class="px-5 py-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="text-sm font-medium text-slate-900"><%= action[:label] %></div>
+                  <div class="text-xs text-slate-500"><%= action[:description] %></div>
+                </div>
+                <%= link_to "Go", action[:path], class: "inline-flex items-center rounded-md bg-blue-600 px-3 py-1 text-xs font-semibold text-white shadow hover:bg-blue-500" %>
               </div>
-              <%= link_to "Go", action[:path], class: "inline-flex items-center rounded-md bg-blue-600 px-3 py-1 text-xs font-semibold text-white shadow hover:bg-blue-500" %>
-            </div>
-          </li>
-        <% end %>
-      </ul>
+            </li>
+          <% end %>
+        </ul>
+      </div>
     </div>
   </section>
 </div>

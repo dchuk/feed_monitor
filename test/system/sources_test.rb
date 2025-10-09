@@ -4,6 +4,15 @@ require "application_system_test_case"
 
 module FeedMonitor
   class SourcesTest < ApplicationSystemTestCase
+    include ActiveJob::TestHelper
+
+    setup do
+      clear_enqueued_jobs
+    end
+
+    teardown do
+      clear_enqueued_jobs
+    end
     test "managing a source end to end" do
       visit feed_monitor.sources_path
 
@@ -14,7 +23,7 @@ module FeedMonitor
         fill_in "Feed url", with: "https://example.com/feed"
         fill_in "Website url", with: "https://example.com"
         fill_in "Fetch interval (minutes)", with: "240"
-        fill_in "Scraper adapter", with: "readability"
+        select "Readability", from: "Scraper adapter"
 
         click_button "Create Source"
       end
@@ -77,11 +86,18 @@ module FeedMonitor
 
       visit feed_monitor.source_path(source)
 
-      VCR.use_cassette("feed_monitor/fetching/rss_success") do
+      assert_enqueued_with(job: FeedMonitor::FetchFeedJob, args: [source.id]) do
         click_button "Fetch Now"
       end
 
-      assert_text "Fetch completed"
+      assert_text "Fetch has been enqueued and will run shortly."
+
+      VCR.use_cassette("feed_monitor/fetching/rss_success") do
+        perform_enqueued_jobs
+      end
+
+      visit feed_monitor.source_path(source)
+
       assert_selector "[data-testid='source-items-table'] tbody tr", minimum: 1
 
       source.reload

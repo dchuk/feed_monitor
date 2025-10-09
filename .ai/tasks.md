@@ -293,11 +293,11 @@
 
 ### 08.04 Unify UI and Job Queueing
 
-- [ ] 08.04.01 Update manual fetch button to call the shared fetch enqueuer so the UI and jobs share the same foundation
-- [ ] 08.04.02 Update manual scrape actions to leverage the shared scraping enqueuer
-- [ ] 08.04.03 Surface job state/metrics in the admin dashboard using the lightweight visibility layer from 08.01
-- [ ] 08.04.04 Expose optional Mission Control links/documentation when the host app enables it
-- [ ] 08.04.05 Add system/integration tests ensuring manual actions enqueue the proper jobs and display status
+- [x] 08.04.01 Update manual fetch button to call the shared fetch enqueuer so the UI and jobs share the same foundation
+- [x] 08.04.02 Update manual scrape actions to leverage the shared scraping enqueuer
+- [x] 08.04.03 Surface job state/metrics in the admin dashboard using the lightweight visibility layer from 08.01
+- [x] 08.04.04 Expose optional Mission Control links/documentation when the host app enables it
+- [x] 08.04.05 Add system/integration tests ensuring manual actions enqueue the proper jobs and display status
 
 **Deliverable: Production-ready background processing that keeps manual and async flows in sync**
 **Test: Trigger fetch/scrape from UI and scheduler, confirm shared logic enqueues jobs and surfaces status**

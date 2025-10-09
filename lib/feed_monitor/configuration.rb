@@ -8,7 +8,8 @@ module FeedMonitor
       :fetch_queue_concurrency,
       :scrape_queue_concurrency,
       :job_metrics_enabled,
-      :mission_control_enabled
+      :mission_control_enabled,
+      :mission_control_dashboard_path
 
     DEFAULT_QUEUE_NAMESPACE = "feed_monitor"
 
@@ -20,6 +21,7 @@ module FeedMonitor
       @scrape_queue_concurrency = 2
       @job_metrics_enabled = true
       @mission_control_enabled = false
+      @mission_control_dashboard_path = nil
     end
 
     def queue_name_for(role)

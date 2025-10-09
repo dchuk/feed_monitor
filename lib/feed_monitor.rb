@@ -42,5 +42,12 @@ module FeedMonitor
     def mission_control_enabled?
       config.mission_control_enabled
     end
+
+    def mission_control_dashboard_path
+      path = config.mission_control_dashboard_path
+      path.respond_to?(:call) ? path.call : path
+    rescue StandardError
+      nil
+    end
   end
 end

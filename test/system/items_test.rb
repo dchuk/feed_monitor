@@ -97,15 +97,20 @@ module FeedMonitor
         metadata: { http_status: 200, extraction_strategy: "readability" }
       )
 
-      assert_difference("FeedMonitor::ScrapeLog.count", 1) do
-        FeedMonitor::Scrapers::Readability.stub(:call, result) do
-          perform_enqueued_jobs do
-            click_button "Manual Scrape"
-          end
+      FeedMonitor::Scrapers::Readability.stub(:call, result) do
+        assert_enqueued_with(job: FeedMonitor::ScrapeItemJob, args: [item.id]) do
+          click_button "Manual Scrape"
+        end
+
+        assert_text "Scrape has been enqueued and will run shortly."
+
+        assert_difference("FeedMonitor::ScrapeLog.count", 1) do
+          perform_enqueued_jobs
         end
       end
 
-      assert_text "Scrape has been enqueued and will run shortly."
+      visit feed_monitor.item_path(item)
+
       assert_text "Readable body text"
       find("summary", text: "View raw HTML").click
       assert_text "Rendered HTML"
