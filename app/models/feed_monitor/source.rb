@@ -4,7 +4,8 @@ require "uri"
 
 module FeedMonitor
   class Source < ApplicationRecord
-    has_many :items, class_name: "FeedMonitor::Item", inverse_of: :source, dependent: :destroy
+    has_many :all_items, class_name: "FeedMonitor::Item", inverse_of: :source, dependent: :destroy
+    has_many :items, -> { where(deleted_at: nil) }, class_name: "FeedMonitor::Item", inverse_of: :source
     has_many :fetch_logs, class_name: "FeedMonitor::FetchLog", inverse_of: :source, dependent: :destroy
     has_many :scrape_logs, class_name: "FeedMonitor::ScrapeLog", inverse_of: :source, dependent: :destroy
 

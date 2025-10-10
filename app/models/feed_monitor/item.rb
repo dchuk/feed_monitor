@@ -10,6 +10,10 @@ module FeedMonitor
     has_one :item_content, class_name: "FeedMonitor::ItemContent", inverse_of: :item, dependent: :destroy, autosave: true
     has_many :scrape_logs, class_name: "FeedMonitor::ScrapeLog", inverse_of: :item, dependent: :destroy
 
+    default_scope { where(deleted_at: nil) }
+    scope :with_deleted, -> { unscope(where: :deleted_at) }
+    scope :only_deleted, -> { with_deleted.where.not(deleted_at: nil) }
+
     before_validation :normalize_urls
 
     validates :source, presence: true
@@ -34,6 +38,26 @@ module FeedMonitor
 
     def scraped_content=(value)
       assign_content_attribute(:scraped_content, value)
+    end
+
+    def deleted?
+      deleted_at.present?
+    end
+
+    def soft_delete!(timestamp: Time.current)
+      return if deleted?
+
+      self.class.transaction do
+        timestamp = timestamp.in_time_zone if timestamp.respond_to?(:in_time_zone)
+        timestamp ||= Time.current
+
+        update_columns(
+          deleted_at: timestamp,
+          updated_at: timestamp
+        )
+
+        FeedMonitor::Source.decrement_counter(:items_count, source_id) if source_id
+      end
     end
 
     private

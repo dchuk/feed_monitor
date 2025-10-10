@@ -73,13 +73,13 @@ module FeedMonitor
       def find_item_by_guid(guid)
         return if guid.blank?
 
-        source.items.where("LOWER(guid) = ?", guid.downcase).first
+        source.all_items.where("LOWER(guid) = ?", guid.downcase).first
       end
 
       def find_item_by_fingerprint(fingerprint)
         return if fingerprint.blank?
 
-        source.items.find_by(content_fingerprint: fingerprint)
+        source.all_items.find_by(content_fingerprint: fingerprint)
       end
 
       def instrument_duplicate(item, matched_by)
@@ -120,10 +120,10 @@ module FeedMonitor
       def find_conflicting_item(attributes, matched_by)
         case matched_by
         when :guid
-          find_item_by_guid(attributes[:guid]) || source.items.find_by!(guid: attributes[:guid])
+          find_item_by_guid(attributes[:guid]) || source.all_items.find_by!(guid: attributes[:guid])
         else
           fingerprint = attributes[:content_fingerprint]
-          find_item_by_fingerprint(fingerprint) || source.items.find_by!(content_fingerprint: fingerprint)
+          find_item_by_fingerprint(fingerprint) || source.all_items.find_by!(content_fingerprint: fingerprint)
         end
       end
 

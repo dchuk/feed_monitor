@@ -20,6 +20,17 @@ default: &default
     command: "FeedMonitor::Scraping::Scheduler.run(limit: 100)"
     schedule: every 2 minutes
 
+  feed_monitor_item_cleanup:
+    class: FeedMonitor::ItemCleanupJob
+    schedule: at 2am every day
+
+  feed_monitor_log_cleanup:
+    class: FeedMonitor::LogCleanupJob
+    args:
+      - fetch_logs_older_than_days: 90
+        scrape_logs_older_than_days: 60
+    schedule: at 3am every day
+
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12

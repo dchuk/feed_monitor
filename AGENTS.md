@@ -32,7 +32,8 @@ Run `bin/setup` to install gems, prepare the dummy database, and compile Tailwin
 - Per-source retention settings live on `FeedMonitor::Source` (`items_retention_days` and `max_items`). Negative values are rejected; blank means unlimited.
 - `FeedMonitor::Items::RetentionPruner` runs after every fetch via `FeedMonitor::Fetching::FetchRunner`, pruning stale items and their associated content/logs while keeping counter caches in sync.
 - Age-based rules prune items when their published timestamp (or `created_at` fallback) is older than the configured window. Count-based rules keep the newest N items.
-- Phase 10.02 will introduce scheduled cleanup jobs to batch retention work across large datasets; the pruner service already encapsulates the logic for those jobs.
+- `FeedMonitor::ItemCleanupJob` batches retention pruning across sources and can soft delete records (`rake feed_monitor:cleanup:items` honours `SOFT_DELETE=true`, `SOURCE_IDS=1,2`). `FeedMonitor::LogCleanupJob` prunes old fetch/scrape logs (`rake feed_monitor:cleanup:logs`, override `FETCH_LOG_DAYS` / `SCRAPE_LOG_DAYS`).
+- Nightly recurring entries in `config/recurring.yml` enqueue both cleanup jobs by default; adjust schedules or disable via Solid Queue overrides as needed.
 
 ## Coding Style & Naming Conventions
 

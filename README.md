@@ -35,7 +35,9 @@ Feed Monitor now ships with per-source retention controls so historical data sta
 - **Retention window** – set `items_retention_days` (via the admin UI or `FeedMonitor::Source`) to automatically prune items older than the specified number of days.
 - **Maximum stored items** – set `max_items` to keep only the newest N items for a source.
 
-Both policies run immediately after each successful fetch. The engine destroys pruned items alongside their associated scraped content and logs, keeping counter caches accurate without any additional cron jobs. Leave either field blank when you want to retain items indefinitely. Phase 10.02 will add dedicated cleanup jobs for scheduled maintenance runs when large datasets demand them.
+Both policies run immediately after each successful fetch. The engine destroys pruned items alongside their associated scraped content and logs, keeping counter caches accurate without any additional cron jobs. Leave either field blank when you want to retain items indefinitely.
+
+Feed Monitor also ships with nightly maintenance jobs (`FeedMonitor::ItemCleanupJob` and `FeedMonitor::LogCleanupJob`) that you can trigger manually via `rake feed_monitor:cleanup:items` and `rake feed_monitor:cleanup:logs`, or schedule via Solid Queue recurring tasks. Pass `SOFT_DELETE=true` to soft delete items while reviewing, or override `FETCH_LOG_DAYS` / `SCRAPE_LOG_DAYS` to trim logs with custom windows.
 
 ## Contributing
 Contribution directions go here.

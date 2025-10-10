@@ -93,6 +93,23 @@ module FeedMonitor
         ActiveSupport::Notifications.unsubscribe(subscriber) if subscriber
       end
 
+      test "supports soft delete strategy" do
+        source = build_source(items_retention_days: 1)
+
+        travel_to Time.zone.local(2025, 10, 1, 12, 0, 0) do
+          create_item(source:, guid: "stale", published_at: Time.current, title: "Stale")
+        end
+
+        travel_to Time.zone.local(2025, 10, 4, 12, 0, 0) do
+          result = FeedMonitor::Items::RetentionPruner.call(source:, strategy: :soft_delete)
+          assert_equal 1, result.removed_total
+
+          stale = source.all_items.with_deleted.find_by(guid: "stale")
+          assert stale.deleted?
+          assert_equal 0, source.reload.items_count
+        end
+      end
+
       private
 
       def build_source(attributes = {})

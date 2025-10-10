@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_10_090000) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_10_123000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -78,7 +78,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_10_090000) do
     t.jsonb "metadata", default: {}, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
     t.index ["content_fingerprint"], name: "index_feed_monitor_items_on_content_fingerprint"
+    t.index ["deleted_at"], name: "index_feed_monitor_items_on_deleted_at"
     t.index ["guid"], name: "index_feed_monitor_items_on_guid"
     t.index ["published_at"], name: "index_feed_monitor_items_on_published_at"
     t.index ["scrape_status"], name: "index_feed_monitor_items_on_scrape_status"

@@ -13,13 +13,16 @@ module FeedMonitor
         end
       end
 
-      def self.call(source:, now: Time.current)
-        new(source:, now:).call
+      VALID_STRATEGIES = %i[destroy soft_delete].freeze
+
+      def self.call(source:, now: Time.current, strategy: :destroy)
+        new(source:, now:, strategy:).call
       end
 
-      def initialize(source:, now: Time.current)
+      def initialize(source:, now: Time.current, strategy: :destroy)
         @source = source
         @now = now
+        @strategy = normalize_strategy(strategy)
       end
 
       def call
@@ -47,7 +50,7 @@ module FeedMonitor
 
       private
 
-      attr_reader :source, :now
+      attr_reader :source, :now, :strategy
 
       def prune_by_age
         days = source.items_retention_days
@@ -67,7 +70,7 @@ module FeedMonitor
         )
 
         scope = source.items.where(timestamp_expression.lteq(cutoff))
-        destroy_scope(scope)
+        remove_scope(scope)
       end
 
       def prune_by_limit
@@ -82,26 +85,51 @@ module FeedMonitor
           .limit(limit)
           .pluck(:id)
 
-        scope = if ids_to_keep.empty?
-          source.items.none
-        else
-          source.items.where.not(id: ids_to_keep)
-        end
+        scope =
+          if ids_to_keep.empty?
+            source.items.none
+          else
+            source.items.where.not(id: ids_to_keep)
+          end
 
-        destroy_scope(scope)
+        remove_scope(scope)
       end
 
-      def destroy_scope(scope)
+      def remove_scope(scope)
         return 0 if scope.none?
 
         removed = 0
         scope.in_batches(of: 100) do |batch|
-          batch.each do |item|
-            item.destroy!
-            removed += 1
-          end
+          removed += apply_strategy_to_batch(batch)
         end
         removed
+      end
+
+      def apply_strategy_to_batch(batch)
+        count = 0
+        batch.each do |item|
+          apply_strategy(item)
+          count += 1
+        end
+        count
+      end
+
+      def apply_strategy(item)
+        case strategy
+        when :destroy
+          item.destroy!
+        when :soft_delete
+          item.soft_delete!
+        else
+          raise ArgumentError, "Unsupported retention strategy #{strategy.inspect}"
+        end
+      end
+
+      def normalize_strategy(value)
+        value = value.to_sym if value.respond_to?(:to_sym)
+        return value if VALID_STRATEGIES.include?(value)
+
+        raise ArgumentError, "Invalid retention strategy #{value.inspect}. Valid strategies: #{VALID_STRATEGIES.join(', ')}"
       end
     end
   end

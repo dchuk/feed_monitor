@@ -366,11 +366,11 @@
 
 ### 10.02 Build Cleanup Jobs
 
-- [ ] 10.02.01 Create ItemCleanupJob respecting retention policies
-- [ ] 10.02.02 Create LogCleanupJob for old fetch/scrape logs
-- [ ] 10.02.03 Add soft delete option for items
-- [ ] 10.02.04 Create rake tasks for manual cleanup
-- [ ] 10.02.05 Test cleanup jobs work correctly
+- [x] 10.02.01 Create ItemCleanupJob respecting retention policies
+- [x] 10.02.02 Create LogCleanupJob for old fetch/scrape logs
+- [x] 10.02.03 Add soft delete option for items
+- [x] 10.02.04 Create rake tasks for manual cleanup
+- [x] 10.02.05 Test cleanup jobs work correctly
 
 **Deliverable: Sustainable data management with cleanup automation**
 **Test: Run cleanup jobs, verify old data removed per policies**
