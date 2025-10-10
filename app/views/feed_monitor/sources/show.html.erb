@@ -52,7 +52,8 @@
           <% interval_hours = number_with_precision(@source.fetch_interval_minutes / 60.0, precision: 2)
              details = {
                "Website" => (@source.website_url.presence || "—"),
-               "Fetch interval" => "#{@source.fetch_interval_minutes} minutes (~#{interval_hours} hours)",
+             "Fetch interval" => "#{@source.fetch_interval_minutes} minutes (~#{interval_hours} hours)",
+             "Adaptive interval" => @source.adaptive_fetching_enabled? ? "Auto" : "Fixed",
                "Scraper" => @source.scraper_adapter,
                "Feed content" => @source.feed_content_readability_enabled? ? "Readability" : "Raw",
                "Active" => @source.active? ? "Yes" : "No",

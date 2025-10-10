@@ -206,9 +206,8 @@ module FeedMonitor
           attributes[:last_modified] = parsed_time if parsed_time
         end
 
-        interval_seconds = apply_adaptive_interval!(attributes, content_changed: feed_signature_changed?(feed_signature))
-        persist_adaptive_metadata!(interval_seconds:, feed_signature: feed_signature)
-        attributes[:metadata] = source.metadata
+        apply_adaptive_interval!(attributes, content_changed: feed_signature_changed?(feed_signature))
+        attributes[:metadata] = updated_metadata(feed_signature: feed_signature)
         source.update!(attributes)
       end
 
@@ -231,9 +230,8 @@ module FeedMonitor
           attributes[:last_modified] = parsed_time if parsed_time
         end
 
-        interval_seconds = apply_adaptive_interval!(attributes, content_changed: false)
-        persist_adaptive_metadata!(interval_seconds:)
-        attributes[:metadata] = source.metadata
+        apply_adaptive_interval!(attributes, content_changed: false)
+        attributes[:metadata] = updated_metadata
         source.update!(attributes)
       end
 
@@ -248,9 +246,8 @@ module FeedMonitor
           failure_count: source.failure_count.to_i + 1
         }
 
-        interval_seconds = apply_adaptive_interval!(attrs, content_changed: false, failure: true)
-        persist_adaptive_metadata!(interval_seconds:)
-        attrs[:metadata] = source.metadata
+        apply_adaptive_interval!(attrs, content_changed: false, failure: true)
+        attrs[:metadata] = updated_metadata
         source.update!(attrs)
       end
 
@@ -376,21 +373,20 @@ module FeedMonitor
         (source.metadata || {}).fetch("last_feed_signature", nil) != feed_signature
       end
 
-      def persist_adaptive_metadata!(interval_seconds:, feed_signature: nil)
-        metadata = (source.metadata || {}).dup
-        metadata["dynamic_fetch_interval_seconds"] = interval_seconds
-        metadata["last_feed_signature"] = feed_signature if feed_signature.present?
-        source.metadata = metadata
-      end
-
       def apply_adaptive_interval!(attributes, content_changed:, failure: false)
-        interval_seconds = compute_next_interval_seconds(content_changed:, failure:)
-        scheduled_time = Time.current + adjusted_interval_with_jitter(interval_seconds)
-        scheduled_time = [scheduled_time, source.backoff_until].compact.max if source.backoff_until.present?
+        if source.adaptive_fetching_enabled?
+          interval_seconds = compute_next_interval_seconds(content_changed:, failure:)
+          scheduled_time = Time.current + adjusted_interval_with_jitter(interval_seconds)
+          scheduled_time = [scheduled_time, source.backoff_until].compact.max if source.backoff_until.present?
 
-        attributes[:next_fetch_at] = scheduled_time
-        attributes[:backoff_until] = failure ? scheduled_time : nil
-        interval_seconds
+          attributes[:fetch_interval_minutes] = interval_minutes_for(interval_seconds)
+          attributes[:next_fetch_at] = scheduled_time
+          attributes[:backoff_until] = failure ? scheduled_time : nil
+        else
+          fixed_minutes = [source.fetch_interval_minutes.to_i, 1].max
+          attributes[:next_fetch_at] = Time.current + fixed_minutes.minutes
+          attributes[:backoff_until] = nil
+        end
       end
 
       def compute_next_interval_seconds(content_changed:, failure:)
@@ -410,11 +406,19 @@ module FeedMonitor
       end
 
       def current_interval_seconds
-        metadata = source.metadata || {}
-        stored = metadata["dynamic_fetch_interval_seconds"]
-        return stored.to_f if stored.present?
-
         source.fetch_interval_minutes.to_f * 60.0
+      end
+
+      def interval_minutes_for(interval_seconds)
+        minutes = (interval_seconds / 60.0).round
+        [minutes, 1].max
+      end
+
+      def updated_metadata(feed_signature: nil)
+        metadata = (source.metadata || {}).dup
+        metadata.delete("dynamic_fetch_interval_seconds")
+        metadata["last_feed_signature"] = feed_signature if feed_signature.present?
+        metadata
       end
 
       def adjusted_interval_with_jitter(interval_seconds)
