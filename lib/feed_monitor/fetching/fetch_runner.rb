@@ -34,6 +34,7 @@ module FeedMonitor
           result = fetcher_class.new(source: source).call
           apply_retention
           enqueue_follow_up_scrapes(result)
+          FeedMonitor::Events.after_fetch_completed(source: source, result: result) if result
           result
         end
       end

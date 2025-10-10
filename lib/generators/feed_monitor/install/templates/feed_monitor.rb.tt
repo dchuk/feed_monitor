@@ -74,4 +74,20 @@ FeedMonitor.configure do |config|
   config.retention.items_retention_days = nil
   config.retention.max_items = nil
   # config.retention.strategy = :destroy # or :soft_delete
+
+  # ---- Event callbacks ---------------------------------------------------
+  # Integrate with host workflows by responding to engine events. Handlers
+  # receive a single event object with helpful context. For example:
+  #
+  # config.events.after_item_created do |event|
+  #   NewItemNotifier.publish(event.item, source: event.source)
+  # end
+  #
+  # config.events.after_fetch_completed do |event|
+  #   Rails.logger.info "Fetch for #{event.source.name} finished with #{event.status}"
+  # end
+  #
+  # Register item processors to run after each entry is processed. These are
+  # ideal for lightweight normalization or denormalized writes.
+  # config.events.register_item_processor ->(context) { ItemIndexer.index(context.item) }
 end

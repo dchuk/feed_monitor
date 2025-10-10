@@ -50,15 +50,26 @@ FeedMonitor.configure do |config|
   # config.scrapers.register(:custom, "MyApp::Scrapers::Custom")
 
   # Retention defaults applied when a source leaves fields blank
-  config.retention.items_retention_days = 30
+  config.retention.items_retention_days = nil
   config.retention.max_items = nil
   config.retention.strategy = :soft_delete
+
+  # Event callbacks and item processors (each handler receives an event object)
+  config.events.after_item_created do |event|
+    NewItemPublisher.publish(event.item, source: event.source)
+  end
+
+  config.events.after_fetch_completed do |event|
+    Rails.logger.info("[FeedMonitor] #{event.source.name} fetch finished with #{event.status}")
+  end
+
+  config.events.register_item_processor ->(context) { SearchIndexer.index(context.item) }
 end
 ```
 
-HTTP settings feed directly into the Faraday client (timeouts, retry policy, default headers). Scraper registrations override the built-in constant lookup so you can swap the adapter per source name. Retention defaults act as fallbacks—sources can still override or clear them on a per-record basis.
+HTTP settings feed directly into the Faraday client (timeouts, retry policy, default headers). Scraper registrations override the built-in constant lookup so you can swap the adapter per source name. Retention defaults act as fallbacks—leave them as `nil` to retain items indefinitely or set explicit values to opt every new source into pruning.
 
-Set `config.retention.items_retention_days` and `config.retention.max_items` to `nil` (or leave them unset) if you never want the engine to prune items by default. Individual sources can still opt into retention policies later via the admin UI.
+The event layer lets host apps plug into the engine without monkey patches. Use `config.events.after_item_created`, `after_item_scraped`, and `after_fetch_completed` to react to new data or errors, and register lightweight item processors for denormalization or indexing. Each handler receives a structured event object so you can inspect the item, source, and status safely.
 
 ## Retention Strategies
 

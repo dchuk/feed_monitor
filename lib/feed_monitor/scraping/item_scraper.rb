@@ -40,14 +40,22 @@ module FeedMonitor
         adapter_result = adapter.call(item:, source:, settings:, http:)
 
         success = adapter_result.status.to_s != "failed"
-        persist_adapter_result(adapter_result, started_at, success)
+        result = persist_adapter_result(adapter_result, started_at, success)
+        finalize_result(result)
       rescue UnknownAdapterError => error
-        persist_failure(started_at, error, error.message)
+        result = persist_failure(started_at, error, error.message)
+        finalize_result(result)
       rescue StandardError => error
-        persist_failure(started_at, error)
+        result = persist_failure(started_at, error)
+        finalize_result(result)
       end
 
       private
+
+      def finalize_result(result)
+        FeedMonitor::Events.after_item_scraped(result)
+        result
+      end
 
       def resolve_adapter!
         if adapter_name.blank?

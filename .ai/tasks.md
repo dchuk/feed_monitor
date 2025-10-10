@@ -391,11 +391,11 @@
 
 ### 11.02 Event System
 
-- [ ] 11.02.01 Add after_item_created callback hook
-- [ ] 11.02.02 Add after_item_scraped callback hook
-- [ ] 11.02.03 Add after_fetch_completed callback hook
-- [ ] 11.02.04 Support custom item processors
-- [ ] 11.02.05 Document event API with examples
+- [x] 11.02.01 Add after_item_created callback hook
+- [x] 11.02.02 Add after_item_scraped callback hook
+- [x] 11.02.03 Add after_fetch_completed callback hook
+- [x] 11.02.04 Support custom item processors
+- [x] 11.02.05 Document event API with examples
 
 ### 11.03 Model Extensions
 
@@ -412,7 +412,7 @@
 
 ## Phase 12: Real-time Updates with Turbo
 
-**Goal: Live UI updates using Rails 8 defaults and Stimulus Components as documented here: https://context7.com/stimulus-components/stimulus-components **
+**Goal: Live UI updates using Rails 8 defaults and Stimulus Components as documented in context7 mcp here: https://context7.com/stimulus-components/stimulus-components **
 
 ### 12.01 Add Turbo Streams
 

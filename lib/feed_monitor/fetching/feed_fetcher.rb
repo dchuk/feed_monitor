@@ -466,10 +466,12 @@ module FeedMonitor
         Array(feed.entries).each do |entry|
           begin
             result = FeedMonitor::Items::ItemCreator.call(source:, entry:)
+            FeedMonitor::Events.run_item_processors(source:, entry:, result: result)
             items << result.item
             if result.created?
               created += 1
               created_items << result.item
+              FeedMonitor::Events.after_item_created(item: result.item, source:, entry:, result: result)
             else
               updated += 1
               updated_items << result.item
