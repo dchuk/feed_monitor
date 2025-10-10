@@ -345,8 +345,8 @@
 
 ## 09.05 Sources analytics
 
-- [ ] 09.05.01 add a heatmap histogram table visual showing how many sources have fetch intervals in which timespan buckets (5-30 minutes, 30-60, 60-120, 120-240, 240-480, 480+)
-- [ ] 09.05.02 Add a column to source index table showing new item rate per day to see how active different sources are
+- [x] 09.05.01 add a heatmap histogram table visual showing how many sources have fetch intervals in which timespan buckets (5-30 minutes, 30-60, 60-120, 120-240, 240-480, 480+)
+- [x] 09.05.02 Add a column to source index table showing new item rate per day to see how active different sources are
 
 **Deliverable: Robust scheduling that works with standard Rails tools**
 **Test: Run scheduler via rake task, verify jobs enqueued for due sources**

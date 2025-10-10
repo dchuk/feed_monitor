@@ -6,6 +6,8 @@ module FeedMonitor
 
     def index
       @sources = Source.order(created_at: :desc)
+      @fetch_interval_distribution = FeedMonitor::Analytics::SourceFetchIntervalDistribution.new(scope: @sources).buckets
+      @item_activity_rates = FeedMonitor::Analytics::SourceActivityRates.new(scope: @sources).per_source_rates
     end
 
     def show

@@ -16,6 +16,9 @@ module FeedMonitor
     test "managing a source end to end" do
       visit feed_monitor.sources_path
 
+      assert_selector "th", text: "New Items / Day"
+      assert_selector "[data-testid='fetch-interval-heatmap']"
+
       assert_difference("FeedMonitor::Source.count", 1) do
         click_link "New Source", match: :first
 
@@ -61,6 +64,9 @@ module FeedMonitor
       assert_current_path feed_monitor.sources_path
       assert_text "Updated Source"
       assert_selector "span", text: "Paused"
+      within find("tr", text: "Updated Source") do
+        assert_selector "td", text: %r{/ day}
+      end
 
       assert_difference("FeedMonitor::Source.count", -1) do
         visit feed_monitor.source_path(source)

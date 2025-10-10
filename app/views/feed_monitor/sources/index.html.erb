@@ -8,6 +8,38 @@
   </div>
 
   <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+    <div class="border-b border-slate-200 bg-slate-50 px-6 py-4">
+      <h2 class="text-base font-semibold text-slate-900">Fetch Interval Distribution</h2>
+      <p class="mt-1 text-xs text-slate-500">Heatmap shows how many sources sit in each scheduling bucket.</p>
+    </div>
+    <div class="px-6 py-4" data-testid="fetch-interval-heatmap">
+      <% max_count = @fetch_interval_distribution.map(&:count).max.to_i %>
+      <table class="w-full table-fixed text-center text-sm">
+        <thead class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <tr>
+            <% @fetch_interval_distribution.each do |bucket| %>
+              <th scope="col" class="px-2 pb-3"><%= bucket.label %></th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <% @fetch_interval_distribution.each do |bucket| %>
+              <% bucket_classes = heatmap_bucket_classes(bucket.count, max_count) %>
+              <td class="px-2">
+                <div class="flex flex-col items-center justify-center gap-1 rounded-lg px-3 py-4 text-xs font-semibold <%= bucket_classes %>" title="<%= "#{bucket.count} sources between #{bucket.label}" %>">
+                  <span class="text-base"><%= bucket.count %></span>
+                  <span class="font-medium">sources</span>
+                </div>
+              </td>
+            <% end %>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
     <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
       <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
         <tr>
@@ -15,6 +47,7 @@
           <th scope="col" class="px-6 py-3">Status</th>
           <th scope="col" class="px-6 py-3">Fetch Interval</th>
           <th scope="col" class="px-6 py-3">Items</th>
+          <th scope="col" class="px-6 py-3">New Items / Day</th>
           <th scope="col" class="px-6 py-3">Last Fetch</th>
           <th scope="col" class="px-6 py-3"></th>
         </tr>
@@ -41,6 +74,11 @@
               <span class="text-xs text-slate-500">(~<%= number_with_precision(source.fetch_interval_minutes / 60.0, precision: 2) %> h)</span>
             </td>
             <td class="px-6 py-4 text-sm"><%= source.items_count %></td>
+            <td class="px-6 py-4 text-sm">
+              <% rate = @item_activity_rates.fetch(source.id, 0.0) %>
+              <%= number_with_precision(rate, precision: 2) %>
+              <span class="text-xs text-slate-500">/ day</span>
+            </td>
             <td class="px-6 py-4 text-xs text-slate-500">
               <%= source.last_fetched_at ? source.last_fetched_at.strftime("%b %d, %H:%M") : "Never" %>
             </td>
@@ -54,7 +92,7 @@
 
         <% if @sources.blank? %>
           <tr>
-            <td colspan="6" class="px-6 py-6 text-center text-sm text-slate-500">
+            <td colspan="7" class="px-6 py-6 text-center text-sm text-slate-500">
               No sources yet. <%= link_to "Create the first source", feed_monitor.new_source_path, class: "text-blue-600 hover:text-blue-500" %>.
             </td>
           </tr>
