@@ -77,21 +77,26 @@ module FeedMonitor
         scrape: FeedMonitor.queue_name(:scrape)
       }
 
-      queue_names.each_value do |queue_name|
-        FeedMonitor::Jobs::Visibility.state_for(queue_name)
-      end
-
-      snapshot = FeedMonitor::Jobs::Visibility.state_snapshot
+      summaries = FeedMonitor::Jobs::SolidQueueMetrics.call(queue_names: queue_names.values)
 
       queue_names.map do |role, queue_name|
-        state = snapshot[queue_name.to_s] || {}
+        summary = summaries[queue_name.to_s] ||
+          FeedMonitor::Jobs::SolidQueueMetrics::QueueSummary.new(
+            queue_name: queue_name.to_s,
+            ready_count: 0,
+            scheduled_count: 0,
+            failed_count: 0,
+            recurring_count: 0,
+            paused: false,
+            last_enqueued_at: nil,
+            last_started_at: nil,
+            last_finished_at: nil,
+            available: false
+          )
         {
           role: role,
           queue_name: queue_name,
-          depth: state[:depth].to_i,
-          last_enqueued_at: state[:last_enqueued_at],
-          last_started_at: state[:last_started_at],
-          last_finished_at: state[:last_finished_at]
+          summary: summary
         }
       end
     end

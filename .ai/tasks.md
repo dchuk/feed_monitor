@@ -338,10 +338,10 @@
 
 ### 09.04 Refactor Job Queues card on dashboard to pull data directly from solid queue db tables, not from event metrics
 
-- [ ] 09.04.01 Implement a service/query that aggregates counts from Solid Queue job tables (ready, scheduled, failed, recurring).
-- [ ] 09.04.02 Update the dashboard card to render database-driven metrics and handle empty/paused queue states gracefully.
-- [ ] 09.04.03 Add automated coverage (unit + system) confirming the dashboard shows the new metrics.
-- [ ] 09.04.04 Document the metrics source change and required Solid Queue configuration/migrations for host apps.
+- [x] 09.04.01 Implement a service/query that aggregates counts from Solid Queue job tables (ready, scheduled, failed, recurring).
+- [x] 09.04.02 Update the dashboard card to render database-driven metrics and handle empty/paused queue states gracefully.
+- [x] 09.04.03 Add automated coverage (unit + system) confirming the dashboard shows the new metrics.
+- [x] 09.04.04 Document the metrics source change and required Solid Queue configuration/migrations for host apps.
 
 ## 09.05 Sources analytics
 
