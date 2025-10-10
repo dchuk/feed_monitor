@@ -71,7 +71,7 @@ FeedMonitor.configure do |config|
 
   # ---- Retention defaults ------------------------------------------------
   # Sources inherit these values when they leave retention fields blank.
-  # config.retention.items_retention_days = 30
-  # config.retention.max_items = nil
+  config.retention.items_retention_days = nil
+  config.retention.max_items = nil
   # config.retention.strategy = :destroy # or :soft_delete
 end

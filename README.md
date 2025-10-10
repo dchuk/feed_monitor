@@ -51,11 +51,14 @@ FeedMonitor.configure do |config|
 
   # Retention defaults applied when a source leaves fields blank
   config.retention.items_retention_days = 30
+  config.retention.max_items = nil
   config.retention.strategy = :soft_delete
 end
 ```
 
 HTTP settings feed directly into the Faraday client (timeouts, retry policy, default headers). Scraper registrations override the built-in constant lookup so you can swap the adapter per source name. Retention defaults act as fallbacks—sources can still override or clear them on a per-record basis.
+
+Set `config.retention.items_retention_days` and `config.retention.max_items` to `nil` (or leave them unset) if you never want the engine to prune items by default. Individual sources can still opt into retention policies later via the admin UI.
 
 ## Retention Strategies
 
