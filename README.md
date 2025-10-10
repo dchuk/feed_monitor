@@ -39,6 +39,12 @@ FeedMonitor.configure do |config|
   config.fetch_queue_name = "#{config.queue_namespace}_fetch"
   config.fetch_queue_concurrency = 2
 
+  # Realtime transport (Action Cable)
+  config.realtime.adapter = :solid_cable
+  config.realtime.solid_cable.message_retention = "12.hours"
+  # config.realtime.adapter = :redis
+  # config.realtime.redis_url = ENV.fetch("REDIS_URL")
+
   # HTTP client defaults (Faraday)
   config.http.timeout = 15
   config.http.open_timeout = 5
@@ -68,6 +74,26 @@ end
 ```
 
 HTTP settings feed directly into the Faraday client (timeouts, retry policy, default headers). Scraper registrations override the built-in constant lookup so you can swap the adapter per source name. Retention defaults act as fallbacks—leave them as `nil` to retain items indefinitely or set explicit values to opt every new source into pruning.
+
+Feed Monitor ships with [Solid Cable](https://github.com/rails/solid_cable) enabled by default so Turbo Streams work without Redis. The engine creates the `solid_cable_messages` table through its migrations and configures Action Cable to use Solid Cable in every environment. Hosts that prefer Redis can flip `config.realtime.adapter = :redis` (and optionally `config.realtime.redis_url`) in the initializer and restart.
+
+**Action Cable requirement**: Real-time UI updates require Action Cable base classes in your host application. If they don't already exist, create them:
+
+```ruby
+# app/channels/application_cable/connection.rb
+module ApplicationCable
+  class Connection < ActionCable::Connection::Base
+  end
+end
+
+# app/channels/application_cable/channel.rb
+module ApplicationCable
+  class Channel < ActionCable::Channel::Base
+  end
+end
+```
+
+These are standard Rails boilerplate required by Action Cable. The engine will auto-configure the adapter and mount routes, but Rails expects these classes to exist in the host application.
 
 The event layer lets host apps plug into the engine without monkey patches. Use `config.events.after_item_created`, `after_item_scraped`, and `after_fetch_completed` to react to new data or errors, and register lightweight item processors for denormalization or indexing. Each handler receives a structured event object so you can inspect the item, source, and status safely.
 

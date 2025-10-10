@@ -5,6 +5,12 @@ rescue LoadError
 end
 
 begin
+  require "solid_cable"
+rescue LoadError
+  # Solid Cable is optional if the host app uses Redis or another Action Cable adapter.
+end
+
+begin
   require "turbo-rails"
 rescue LoadError
   # Turbo is optional but recommended for real-time updates.

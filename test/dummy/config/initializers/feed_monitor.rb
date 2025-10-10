@@ -42,4 +42,7 @@ FeedMonitor.configure do |config|
 
     record.errors.add(:fetch_interval_minutes, "must be at least 30 minutes for sponsored sources")
   end
+
+  # Realtime configuration for Turbo Streams via Solid Cable
+  config.realtime.adapter = :solid_cable
 end
