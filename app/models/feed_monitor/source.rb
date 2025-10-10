@@ -30,6 +30,8 @@ module FeedMonitor
     validates :feed_url, presence: true, uniqueness: { case_sensitive: false }
     validates :fetch_interval_minutes, numericality: { greater_than: 0 }
     validates :scraper_adapter, presence: true
+    validates :items_retention_days, numericality: { allow_nil: true, only_integer: true, greater_than_or_equal_to: 0 }
+    validates :max_items, numericality: { allow_nil: true, only_integer: true, greater_than_or_equal_to: 0 }
 
     validate :feed_url_must_be_http_or_https
     validate :website_url_must_be_http_or_https

@@ -1,5 +1,6 @@
 require "test_helper"
 require "securerandom"
+require "minitest/mock"
 
 module FeedMonitor
   module Fetching
@@ -98,6 +99,39 @@ module FeedMonitor
         end
 
         assert_raises(FetchRunner::ConcurrencyError) { runner.run }
+      end
+
+      test "invokes retention pruner after each fetch run" do
+        source = create_source
+
+        stub_fetcher = Class.new do
+          define_method(:initialize) { |**_kwargs| }
+
+          define_method(:call) do
+            FeedMonitor::Fetching::FeedFetcher::Result.new(status: :not_modified)
+          end
+        end
+
+        retention_spy = Class.new do
+          class << self
+            attr_accessor :calls
+          end
+
+          def self.call(source:)
+            self.calls ||= []
+            self.calls << source
+            nil
+          end
+        end
+        retention_spy.calls = []
+
+        FetchRunner.new(
+          source:,
+          fetcher_class: stub_fetcher,
+          retention_pruner_class: retention_spy
+        ).run
+
+        assert_equal [source], retention_spy.calls
       end
 
       private

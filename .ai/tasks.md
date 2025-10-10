@@ -359,10 +359,10 @@
 
 ### 10.01 Add Retention Policies
 
-- [ ] 10.01.01 Implement retention by items_retention_days
-- [ ] 10.01.02 Implement retention by max_items per source
-- [ ] 10.01.03 Add UI controls for retention settings
-- [ ] 10.01.04 Document retention strategies
+- [x] 10.01.01 Implement retention by items_retention_days
+- [x] 10.01.02 Implement retention by max_items per source
+- [x] 10.01.03 Add UI controls for retention settings
+- [x] 10.01.04 Document retention strategies
 
 ### 10.02 Build Cleanup Jobs
 
@@ -371,14 +371,6 @@
 - [ ] 10.02.03 Add soft delete option for items
 - [ ] 10.02.04 Create rake tasks for manual cleanup
 - [ ] 10.02.05 Test cleanup jobs work correctly
-
-### 10.03 Add Seed Data
-
-- [ ] 10.03.01 Create canonical test sources (popular blogs, podcasts)
-- [ ] 10.03.02 Add example feed URLs covering edge cases
-- [ ] 10.03.03 Include sources with different formats
-- [ ] 10.03.04 Create db:seed task
-- [ ] 10.03.05 Test seed data loads successfully
 
 **Deliverable: Sustainable data management with cleanup automation**
 **Test: Run cleanup jobs, verify old data removed per policies**
@@ -420,7 +412,7 @@
 
 ## Phase 12: Real-time Updates with Turbo
 
-**Goal: Live UI updates using Rails 8 defaults**
+**Goal: Live UI updates using Rails 8 defaults and Stimulus Components as documented here: https://context7.com/stimulus-components/stimulus-components **
 
 ### 12.01 Add Turbo Streams
 
@@ -435,7 +427,7 @@
 - [ ] 12.02.01 Show active fetch indicators
 - [ ] 12.02.02 Display scraping progress
 - [ ] 12.02.03 Add loading states for async actions
-- [ ] 12.02.04 Toast notifications for job completion
+- [ ] 12.02.04 Toast notifications for job completion (Stimulus Component: Notification)
 - [ ] 12.02.05 Test UX improvements
 
 ### 12.03 Add Stimulus Controllers

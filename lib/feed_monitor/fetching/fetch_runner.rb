@@ -11,13 +11,14 @@ module FeedMonitor
 
       class ConcurrencyError < StandardError; end
 
-      attr_reader :source, :fetcher_class, :scrape_job_class, :scrape_enqueuer_class
+      attr_reader :source, :fetcher_class, :scrape_job_class, :scrape_enqueuer_class, :retention_pruner_class
 
-      def initialize(source:, fetcher_class: FeedMonitor::Fetching::FeedFetcher, scrape_job_class: FeedMonitor::ScrapeItemJob, scrape_enqueuer_class: FeedMonitor::Scraping::Enqueuer)
+      def initialize(source:, fetcher_class: FeedMonitor::Fetching::FeedFetcher, scrape_job_class: FeedMonitor::ScrapeItemJob, scrape_enqueuer_class: FeedMonitor::Scraping::Enqueuer, retention_pruner_class: FeedMonitor::Items::RetentionPruner)
         @source = source
         @fetcher_class = fetcher_class
         @scrape_job_class = scrape_job_class
         @scrape_enqueuer_class = scrape_enqueuer_class
+        @retention_pruner_class = retention_pruner_class
       end
 
       def self.run(source:, **options)
@@ -31,6 +32,7 @@ module FeedMonitor
       def run
         with_concurrency_guard do
           result = fetcher_class.new(source: source).call
+          apply_retention
           enqueue_follow_up_scrapes(result)
           result
         end
@@ -87,6 +89,14 @@ module FeedMonitor
 
       def scrape_needed?(item)
         item.present? && item.scraped_at.nil?
+      end
+
+      def apply_retention
+        retention_pruner_class.call(source:)
+      rescue StandardError => error
+        Rails.logger.error(
+          "[FeedMonitor] Retention pruning failed for source #{source.id}: #{error.class} - #{error.message}"
+        )
       end
     end
   end

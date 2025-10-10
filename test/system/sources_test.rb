@@ -26,6 +26,8 @@ module FeedMonitor
         fill_in "Feed url", with: "https://example.com/feed"
         fill_in "Website url", with: "https://example.com"
         fill_in "Fetch interval (minutes)", with: "240"
+        fill_in "Retention window (days)", with: "14"
+        fill_in "Maximum stored items", with: "200"
         select "Readability", from: "Scraper adapter"
 
         click_button "Create Source"
@@ -33,6 +35,7 @@ module FeedMonitor
 
       assert_current_path feed_monitor.source_path(FeedMonitor::Source.last)
       assert_text "Source created successfully"
+      assert_text "Retention Policy Active"
 
       source = FeedMonitor::Source.last
 

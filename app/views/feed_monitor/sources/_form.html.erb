@@ -27,17 +27,29 @@
     </label>
   </div>
 
-  <div class="grid gap-4 sm:grid-cols-2">
-    <div>
-      <%= form.label :items_retention_days, class: "block text-sm font-medium text-slate-800" %>
-      <%= form.number_field :items_retention_days, min: 0, class: "mt-1 block w-full rounded border border-slate-300 px-3 py-2" %>
-      <p class="mt-1 text-xs text-slate-500">Optional. Number of days to retain items.</p>
+  <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
+    <div class="border-b border-slate-200 px-5 py-4">
+      <h2 class="text-lg font-medium">Retention</h2>
+      <p class="mt-1 text-xs text-slate-500">
+        Choose how long Feed Monitor keeps items for this source. Pruning runs after every fetch so the UI always reflects active retention rules.
+      </p>
     </div>
+    <div class="grid gap-4 px-5 py-5 sm:grid-cols-2">
+      <div>
+        <%= form.label :items_retention_days, "Retention window (days)", class: "block text-sm font-medium text-slate-800" %>
+        <%= form.number_field :items_retention_days, min: 0, class: "mt-1 block w-full rounded border border-slate-300 px-3 py-2" %>
+        <p class="mt-1 text-xs text-slate-500">
+          Leave blank to keep historical items indefinitely. Items older than the configured window are removed automatically.
+        </p>
+      </div>
 
-    <div>
-      <%= form.label :max_items, class: "block text-sm font-medium text-slate-800" %>
-      <%= form.number_field :max_items, min: 0, class: "mt-1 block w-full rounded border border-slate-300 px-3 py-2" %>
-      <p class="mt-1 text-xs text-slate-500">Optional. Limit stored items per source.</p>
+      <div>
+        <%= form.label :max_items, "Maximum stored items", class: "block text-sm font-medium text-slate-800" %>
+        <%= form.number_field :max_items, min: 0, class: "mt-1 block w-full rounded border border-slate-300 px-3 py-2" %>
+        <p class="mt-1 text-xs text-slate-500">
+          Optional hard cap. Feed Monitor keeps the newest items and prunes the rest after each fetch.
+        </p>
+      </div>
     </div>
   </div>
 

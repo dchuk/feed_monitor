@@ -27,6 +27,13 @@ Run `bin/setup` to install gems, prepare the dummy database, and compile Tailwin
 - Recurring schedules live in `config/recurring.yml`, scheduling `FeedMonitor::ScheduleFetchesJob` each minute plus the scraping scheduler every two minutes. Override the schedule path with `bin/jobs --recurring_schedule_file=...` (or `SOLID_QUEUE_RECURRING_SCHEDULE_FILE`) and disable recurring runners with `SOLID_QUEUE_SKIP_RECURRING=true` or `bin/jobs --skip-recurring`.
 - Hosts that need to wrap Solid Queue command execution can set `config.recurring_command_job_class` in the generated initializer to point at their custom job class.
 
+## Retention Defaults
+
+- Per-source retention settings live on `FeedMonitor::Source` (`items_retention_days` and `max_items`). Negative values are rejected; blank means unlimited.
+- `FeedMonitor::Items::RetentionPruner` runs after every fetch via `FeedMonitor::Fetching::FetchRunner`, pruning stale items and their associated content/logs while keeping counter caches in sync.
+- Age-based rules prune items when their published timestamp (or `created_at` fallback) is older than the configured window. Count-based rules keep the newest N items.
+- Phase 10.02 will introduce scheduled cleanup jobs to batch retention work across large datasets; the pruner service already encapsulates the logic for those jobs.
+
 ## Coding Style & Naming Conventions
 
 Use two-space indentation and Ruby 3.3 syntax. Keep engine classes under the `FeedMonitor::` namespace; new modules should mirror their directory, e.g., `lib/feed_monitor/fetching/pipeline.rb`. Favor service objects ending in `Service`, jobs ending in `Job`, and background channels ending in `Channel`. Rails defaults handle formatting, but run `bundle exec rubocop` (configured via `.rubocop.yml`) before opening a PR. For views, stick with ERB and Tailwind utility classes.

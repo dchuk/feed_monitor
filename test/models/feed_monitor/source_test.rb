@@ -44,6 +44,20 @@ module FeedMonitor
       assert_includes duplicate.errors[:feed_url], "has already been taken"
     end
 
+    test "rejects negative retention days" do
+      source = Source.new(name: "Retention", feed_url: "https://example.com/feed.xml", items_retention_days: -1)
+
+      assert_not source.valid?
+      assert_includes source.errors[:items_retention_days], "must be greater than or equal to 0"
+    end
+
+    test "rejects negative max items" do
+      source = Source.new(name: "Retention", feed_url: "https://example.com/feed.xml", max_items: -5)
+
+      assert_not source.valid?
+      assert_includes source.errors[:max_items], "must be greater than or equal to 0"
+    end
+
     test "scopes reflect expected states" do
       healthy = Source.create!(name: "Healthy", feed_url: "https://example.com/healthy", next_fetch_at: 1.minute.ago)
       due_future = Source.create!(name: "Future", feed_url: "https://example.com/future", next_fetch_at: 10.minutes.from_now)
