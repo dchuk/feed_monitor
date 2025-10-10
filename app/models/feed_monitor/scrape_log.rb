@@ -2,8 +2,6 @@
 
 module FeedMonitor
   class ScrapeLog < ApplicationRecord
-    self.table_name = "feed_monitor_scrape_logs"
-
     belongs_to :item, class_name: "FeedMonitor::Item", inverse_of: :scrape_logs
     belongs_to :source, class_name: "FeedMonitor::Source", inverse_of: :scrape_logs
 
@@ -18,6 +16,8 @@ module FeedMonitor
     scope :recent, -> { order(started_at: :desc) }
     scope :successful, -> { where(success: true) }
     scope :failed, -> { where(success: false) }
+
+    FeedMonitor::ModelExtensions.register(self, :scrape_log)
 
     private
 

@@ -2,6 +2,10 @@ module FeedMonitor
   class Engine < ::Rails::Engine
     isolate_namespace FeedMonitor
 
+    def self.table_name_prefix
+      FeedMonitor.config.models.table_name_prefix
+    end
+
     initializer "feed_monitor.assets" do |app|
       app.config.assets.paths << root.join("app/assets/builds")
     end

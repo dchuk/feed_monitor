@@ -399,11 +399,11 @@
 
 ### 11.03 Model Extensions
 
-- [ ] 11.03.01 Allow custom fields via table_name_prefix
-- [ ] 11.03.02 Support concerns for adding behavior
-- [ ] 11.03.03 Enable custom validations via config
-- [ ] 11.03.04 Provide STI examples for source types
-- [ ] 11.03.05 Create example app showing extensions
+- [x] 11.03.01 Allow custom fields via table_name_prefix
+- [x] 11.03.02 Support concerns for adding behavior
+- [x] 11.03.03 Enable custom validations via config
+- [x] 11.03.04 Provide STI examples for source types
+- [x] 11.03.05 Create example app showing extensions
 
 **Deliverable: Fully extensible for host application needs**
 **Test: Create example host app with custom callbacks and fields**

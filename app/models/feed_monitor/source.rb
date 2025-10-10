@@ -37,6 +37,8 @@ module FeedMonitor
     validate :feed_url_must_be_http_or_https
     validate :website_url_must_be_http_or_https
 
+    FeedMonitor::ModelExtensions.register(self, :source)
+
     def fetch_interval_minutes=(value)
       self[:fetch_interval_minutes] = value.presence && value.to_i
     end

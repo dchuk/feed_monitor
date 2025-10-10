@@ -31,4 +31,15 @@ FeedMonitor.configure do |config|
   # config.scrapers.register(:dummy, "Dummy::CustomScraper")
   # config.retention.items_retention_days = 7
   # config.retention.strategy = :soft_delete
+
+  # Model extension examples: mix in a concern, add a reusable validation method,
+  # and apply a block-based validation for STI subclasses.
+  config.models.source.include_concern "DummyFeedMonitor::SourceExtensions"
+  config.models.source.validate :enforce_testing_notes_length
+  config.models.source.validate do |record|
+    next unless record.is_a?(FeedMonitor::SponsoredSource)
+    next if record.fetch_interval_minutes >= 30
+
+    record.errors.add(:fetch_interval_minutes, "must be at least 30 minutes for sponsored sources")
+  end
 end

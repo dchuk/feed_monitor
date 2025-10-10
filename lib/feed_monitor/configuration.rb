@@ -14,7 +14,7 @@ module FeedMonitor
       :mission_control_enabled,
       :mission_control_dashboard_path
 
-    attr_reader :http, :scrapers, :retention, :events
+    attr_reader :http, :scrapers, :retention, :events, :models
 
     DEFAULT_QUEUE_NAMESPACE = "feed_monitor"
 
@@ -32,6 +32,7 @@ module FeedMonitor
       @scrapers = ScraperRegistry.new
       @retention = RetentionSettings.new
       @events = Events.new
+      @models = Models.new
     end
 
     def queue_name_for(role)
@@ -256,6 +257,165 @@ module FeedMonitor
         unless callable.respond_to?(:call)
           raise ArgumentError, "#{name} handler must respond to #call"
         end
+      end
+    end
+
+    class Models
+      MODEL_KEYS = {
+        source: :source,
+        item: :item,
+        fetch_log: :fetch_log,
+        scrape_log: :scrape_log,
+        item_content: :item_content
+      }.freeze
+
+      attr_accessor :table_name_prefix
+
+      def initialize
+        @table_name_prefix = "feed_monitor_"
+        @definitions = MODEL_KEYS.transform_values { ModelDefinition.new }
+      end
+
+      MODEL_KEYS.each do |method_name, key|
+        define_method(method_name) { @definitions[key] }
+      end
+
+      def for(name)
+        key = name.to_sym
+        definition = @definitions[key]
+        raise ArgumentError, "Unknown model #{name.inspect}" unless definition
+
+        definition
+      end
+    end
+
+    class ModelDefinition
+      attr_reader :validations
+
+      def initialize
+        @concern_definitions = []
+        @validations = []
+      end
+
+      def include_concern(concern = nil, &block)
+        definition = ConcernDefinition.new(concern, block)
+        unless @concern_definitions.any? { |existing| existing.signature == definition.signature }
+          @concern_definitions << definition
+        end
+
+        definition.return_value
+      end
+
+      def each_concern
+        return enum_for(:each_concern) unless block_given?
+
+        @concern_definitions.each do |definition|
+          yield definition.signature, definition.resolve
+        end
+      end
+
+      def validate(handler = nil, **options, &block)
+        callable =
+          if block
+            block
+          elsif handler.respond_to?(:call) && !handler.is_a?(Symbol) && !handler.is_a?(String)
+            handler
+          elsif handler.is_a?(Symbol) || handler.is_a?(String)
+            handler.to_sym
+          else
+            raise ArgumentError, "Invalid validation handler #{handler.inspect}"
+          end
+
+        validation = ValidationDefinition.new(callable, options)
+        @validations << validation
+        validation
+      end
+
+      private
+
+      class ConcernDefinition
+        attr_reader :signature
+
+        def initialize(concern, block)
+          @resolver = build_resolver(concern, block)
+          @signature = build_signature(concern, block)
+          @return_value = determine_return_value(concern, block)
+        end
+
+        def resolve
+          @resolved ||= @resolver.call
+        end
+
+        def return_value
+          @return_value
+        end
+
+        private
+
+        def build_resolver(concern, block)
+          if block
+            mod = Module.new(&block)
+            -> { mod }
+          elsif concern.is_a?(Module)
+            -> { concern }
+          elsif concern.respond_to?(:to_s)
+            constant_name = concern.to_s
+            lambda do
+              constant_name.constantize
+            rescue NameError => error
+              raise ArgumentError, error.message
+            end
+          else
+            raise ArgumentError, "Invalid concern #{concern.inspect}"
+          end
+        end
+
+        def build_signature(concern, block)
+          if block
+            [:anonymous_module, block.object_id]
+          elsif concern.is_a?(Module)
+            [:module, concern.object_id]
+          else
+            [:constant, concern.to_s]
+          end
+        end
+
+        def determine_return_value(concern, block)
+          if block
+            resolve
+          elsif concern.is_a?(Module)
+            concern
+          else
+            concern
+          end
+        end
+      end
+    end
+
+    class ValidationDefinition
+      attr_reader :handler, :options
+
+      def initialize(handler, options)
+        @handler = handler
+        @options = options
+      end
+
+      def signature
+        handler_key =
+          case handler
+          when Symbol
+            [:symbol, handler]
+          when String
+            [:symbol, handler.to_sym]
+          else
+            [:callable, handler.object_id]
+          end
+
+        [handler_key, options]
+      end
+
+      def symbol?
+        handler.is_a?(Symbol) || handler.is_a?(String)
       end
     end
   end

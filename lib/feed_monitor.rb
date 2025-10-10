@@ -4,9 +4,22 @@ rescue LoadError
   # Solid Queue is optional if the host app supplies a different Active Job backend.
 end
 
+require "active_support/core_ext/module/redefine_method"
+
+FeedMonitor.singleton_class.redefine_method(:table_name_prefix) do
+  FeedMonitor::Engine.table_name_prefix
+end
+
+ActiveSupport.on_load(:active_record) do
+  FeedMonitor.singleton_class.redefine_method(:table_name_prefix) do
+    FeedMonitor::Engine.table_name_prefix
+  end
+end
+
 require "feed_monitor/version"
 require "feed_monitor/engine"
 require "feed_monitor/configuration"
+require "feed_monitor/model_extensions"
 require "feed_monitor/events"
 require "feed_monitor/instrumentation"
 require "feed_monitor/metrics"
@@ -34,6 +47,7 @@ module FeedMonitor
   class << self
     def configure
       yield config
+      FeedMonitor::ModelExtensions.reload!
     end
 
     def config
@@ -46,6 +60,7 @@ module FeedMonitor
 
     def reset_configuration!
       @config = Configuration.new
+      FeedMonitor::ModelExtensions.reload!
     end
 
     def queue_name(role)
@@ -54,6 +69,10 @@ module FeedMonitor
 
     def queue_concurrency(role)
       config.concurrency_for(role)
+    end
+
+    def table_name_prefix
+      FeedMonitor::Engine.table_name_prefix
     end
 
     def mission_control_enabled?

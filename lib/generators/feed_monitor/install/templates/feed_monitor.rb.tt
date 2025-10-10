@@ -90,4 +90,19 @@ FeedMonitor.configure do |config|
   # Register item processors to run after each entry is processed. These are
   # ideal for lightweight normalization or denormalized writes.
   # config.events.register_item_processor ->(context) { ItemIndexer.index(context.item) }
+
+  # ---- Model extensions --------------------------------------------------
+  # Host applications can extend Feed Monitor models without monkey patches.
+  # Table names default to "feed_monitor_*"; override when multi-tenancy or
+  # legacy naming requires a different prefix.
+  # config.models.table_name_prefix = "feed_monitor_"
+  #
+  # Include extension concerns to add associations, scopes, or helper methods.
+  # config.models.source.include_concern "MyApp::FeedMonitor::SourceExtensions"
+  #
+  # Register custom validations using a method name or a callable. Both forms
+  # run within the model instance context, so you can reuse helpers defined in
+  # your concerns.
+  # config.models.source.validate :enforce_custom_rules
+  # config.models.source.validate ->(record) { record.errors.add(:base, "custom error") }
 end

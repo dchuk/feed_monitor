@@ -2,8 +2,6 @@
 
 module FeedMonitor
   class FetchLog < ApplicationRecord
-    self.table_name = "feed_monitor_fetch_logs"
-
     belongs_to :source, class_name: "FeedMonitor::Source", inverse_of: :fetch_logs
 
     attribute :items_created, :integer, default: 0
@@ -22,5 +20,7 @@ module FeedMonitor
     scope :successful, -> { where(success: true) }
     scope :failed, -> { where(success: false) }
     scope :for_job, ->(job_id) { where(job_id:) }
+
+    FeedMonitor::ModelExtensions.register(self, :fetch_log)
   end
 end

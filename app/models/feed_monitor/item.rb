@@ -4,8 +4,6 @@ require "uri"
 
 module FeedMonitor
   class Item < ApplicationRecord
-    self.table_name = "feed_monitor_items"
-
     belongs_to :source, class_name: "FeedMonitor::Source", inverse_of: :items, counter_cache: true
     has_one :item_content, class_name: "FeedMonitor::ItemContent", inverse_of: :item, dependent: :destroy, autosave: true
     has_many :scrape_logs, class_name: "FeedMonitor::ScrapeLog", inverse_of: :item, dependent: :destroy
@@ -31,6 +29,8 @@ module FeedMonitor
     scope :failed_scrape, -> { where(scrape_status: "failed") }
 
     delegate :scraped_html, :scraped_content, to: :item_content, allow_nil: true
+
+    FeedMonitor::ModelExtensions.register(self, :item)
 
     def scraped_html=(value)
       assign_content_attribute(:scraped_html, value)

@@ -71,6 +71,17 @@ HTTP settings feed directly into the Faraday client (timeouts, retry policy, def
 
 The event layer lets host apps plug into the engine without monkey patches. Use `config.events.after_item_created`, `after_item_scraped`, and `after_fetch_completed` to react to new data or errors, and register lightweight item processors for denormalization or indexing. Each handler receives a structured event object so you can inspect the item, source, and status safely.
 
+## Model Extensions
+
+Feed Monitor models are now configurable so host apps can add behaviour without reopening engine classes:
+
+- **Custom table prefixes** – `config.models.table_name_prefix` defaults to `feed_monitor_`. Override it (e.g. `"tenant_feed_monitor_"`) before running the engine migrations when you need bespoke naming or multi-tenant schemas.
+- **Mix in concerns** – `config.models.source.include_concern "MyApp::FeedMonitor::SourceExtensions"` includes modules that add associations, scopes, or helpers. Concerns can hold reusable validation methods or callbacks.
+- **Register validations** – attach validation methods or callables with `config.models.source.validate :ensure_metadata_rules` or `config.models.item.validate ->(record) { … }`. Blocks receive the record instance so you can reuse shared helpers.
+- **Single Table Inheritance** – the `feed_monitor_sources` table now includes a `type` column, enabling subclasses like `FeedMonitor::SponsoredSource < FeedMonitor::Source`. Combine STI with per-type validations or background workflows through the configuration hooks above.
+
+The dummy host app demonstrates these features by mixing in a concern that adds `testing_notes` metadata, validating the field length, and enforcing a minimum fetch cadence for `FeedMonitor::SponsoredSource` records.
+
 ## Retention Strategies
 
 Feed Monitor now ships with per-source retention controls so historical data stays within the limits you set:

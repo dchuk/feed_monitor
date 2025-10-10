@@ -33,6 +33,7 @@ Run `bin/setup` to install gems, prepare the dummy database, and compile Tailwin
   - `config.http` for Faraday timeouts, retry policy, proxy, and default headers. Per the [Faraday retry docs](https://github.com/lostisland/faraday/blob/main/docs/middleware/index.md), middleware options map 1:1 to the settings we surface (max retries, interval, backoff, statuses).
   - `config.scrapers` registers/overrides adapters by name; adapters must inherit from `FeedMonitor::Scrapers::Base` and are discovered before constant lookup.
   - `config.retention` supplies global defaults for `items_retention_days`, `max_items`, and the pruning strategy (`:destroy` or `:soft_delete`). Runtimes treat blank source fields as “inherit from config”.
+  - `config.models` lets host apps adjust table name prefixes, mix in concerns, and register custom validations per engine model. Use it to bolt on associations or STI-specific rules without monkey patches.
 - Install generator and dummy initializer list all knobs with comments—update those when slicing future roadmap items.
 
 ## Retention Defaults
