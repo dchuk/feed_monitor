@@ -39,5 +39,24 @@ module FeedMonitor
 
       assert_equal "https://status.example.com/mission-control", FeedMonitor.mission_control_dashboard_path
     end
+
+    test "scraper registry returns configured adapters" do
+      FeedMonitor.configure do |config|
+        config.scrapers.register(:custom_readability, FeedMonitor::Scrapers::Readability)
+      end
+
+      adapter = FeedMonitor.config.scrapers.adapter_for("custom_readability")
+      assert_equal FeedMonitor::Scrapers::Readability, adapter
+    end
+
+    test "retention settings default to destroy strategy" do
+      assert_equal :destroy, FeedMonitor.config.retention.strategy
+
+      FeedMonitor.configure do |config|
+        config.retention.strategy = :soft_delete
+      end
+
+      assert_equal :soft_delete, FeedMonitor.config.retention.strategy
+    end
   end
 end

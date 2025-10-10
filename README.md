@@ -28,6 +28,35 @@ By default the engine mounts at `/feed_monitor`. Provide a custom mount point wi
 $ bin/rails generate feed_monitor:install --mount-path=/admin/feeds
 ```
 
+## Configuration
+
+Feed Monitor exposes a lightweight configuration DSL so host applications can tune queue names, HTTP behaviour, scraper adapters, and retention defaults without monkey patches. The install generator drops `config/initializers/feed_monitor.rb` with commented defaults—update that file to match your environment:
+
+```ruby
+FeedMonitor.configure do |config|
+  # Queue names and concurrency (Solid Queue by default)
+  config.queue_namespace = "feed_monitor"
+  config.fetch_queue_name = "#{config.queue_namespace}_fetch"
+  config.fetch_queue_concurrency = 2
+
+  # HTTP client defaults (Faraday)
+  config.http.timeout = 15
+  config.http.open_timeout = 5
+  config.http.headers = { "X-Request-ID" => -> { SecureRandom.uuid } }
+  config.http.retry_max = 6
+
+  # Scraper adapters (inherit from FeedMonitor::Scrapers::Base)
+  config.scrapers.register(:readability, FeedMonitor::Scrapers::Readability)
+  # config.scrapers.register(:custom, "MyApp::Scrapers::Custom")
+
+  # Retention defaults applied when a source leaves fields blank
+  config.retention.items_retention_days = 30
+  config.retention.strategy = :soft_delete
+end
+```
+
+HTTP settings feed directly into the Faraday client (timeouts, retry policy, default headers). Scraper registrations override the built-in constant lookup so you can swap the adapter per source name. Retention defaults act as fallbacks—sources can still override or clear them on a per-record basis.
+
 ## Retention Strategies
 
 Feed Monitor now ships with per-source retention controls so historical data stays within the limits you set:

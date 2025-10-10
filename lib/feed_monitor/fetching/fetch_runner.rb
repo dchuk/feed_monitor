@@ -92,7 +92,7 @@ module FeedMonitor
       end
 
       def apply_retention
-        retention_pruner_class.call(source:)
+        retention_pruner_class.call(source:, strategy: FeedMonitor.config.retention.strategy)
       rescue StandardError => error
         Rails.logger.error(
           "[FeedMonitor] Retention pruning failed for source #{source.id}: #{error.class} - #{error.message}"

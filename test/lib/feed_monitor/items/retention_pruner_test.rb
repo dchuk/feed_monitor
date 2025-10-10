@@ -6,8 +6,13 @@ module FeedMonitor
   module Items
     class RetentionPrunerTest < ActiveSupport::TestCase
       setup do
+        FeedMonitor.reset_configuration!
         FeedMonitor::Item.delete_all
         FeedMonitor::Source.delete_all
+      end
+
+      teardown do
+        FeedMonitor.reset_configuration!
       end
 
       test "removes items older than the configured retention period" do
@@ -107,6 +112,32 @@ module FeedMonitor
           stale = source.all_items.with_deleted.find_by(guid: "stale")
           assert stale.deleted?
           assert_equal 0, source.reload.items_count
+        end
+      end
+
+      test "falls back to configured defaults when source leaves settings blank" do
+        FeedMonitor.configure do |config|
+          config.retention.items_retention_days = 2
+          config.retention.max_items = 1
+          config.retention.strategy = :soft_delete
+        end
+
+        source = build_source(items_retention_days: nil, max_items: nil)
+
+        travel_to Time.zone.local(2025, 10, 1, 9, 0, 0) do
+          create_item(source:, guid: "older", published_at: Time.current, title: "Older")
+        end
+
+        travel_to Time.zone.local(2025, 10, 2, 12, 0, 0) do
+          create_item(source:, guid: "newer", published_at: Time.current, title: "Newer")
+
+          result = FeedMonitor::Items::RetentionPruner.call(source:)
+
+          assert_equal 1, result.removed_total
+
+          older = source.all_items.with_deleted.find_by(guid: "older")
+          assert older.deleted?
+          assert_equal %w[newer], source.items.order(:created_at).pluck(:guid)
         end
       end
 

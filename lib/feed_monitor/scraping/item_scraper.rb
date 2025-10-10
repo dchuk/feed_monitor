@@ -58,6 +58,9 @@ module FeedMonitor
           raise UnknownAdapterError, "Invalid scraper adapter: #{adapter_name}"
         end
 
+        configured = FeedMonitor.config.scrapers.adapter_for(adapter_name)
+        return configured if configured
+
         constant = FeedMonitor::Scrapers.const_get(adapter_name.camelize)
         unless constant <= FeedMonitor::Scrapers::Base
           raise UnknownAdapterError, "Unknown scraper adapter: #{adapter_name}"

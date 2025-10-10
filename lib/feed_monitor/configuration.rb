@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "active_support/core_ext/string/inflections"
+
 module FeedMonitor
   class Configuration
     attr_accessor :queue_namespace,
@@ -11,6 +13,8 @@ module FeedMonitor
       :job_metrics_enabled,
       :mission_control_enabled,
       :mission_control_dashboard_path
+
+    attr_reader :http, :scrapers, :retention
 
     DEFAULT_QUEUE_NAMESPACE = "feed_monitor"
 
@@ -24,6 +28,9 @@ module FeedMonitor
       @job_metrics_enabled = true
       @mission_control_enabled = false
       @mission_control_dashboard_path = nil
+      @http = HTTPSettings.new
+      @scrapers = ScraperRegistry.new
+      @retention = RetentionSettings.new
     end
 
     def queue_name_for(role)
@@ -55,6 +62,144 @@ module FeedMonitor
         scrape_queue_concurrency
       else
         raise ArgumentError, "unknown queue role #{role.inspect}"
+      end
+    end
+
+    class HTTPSettings
+      attr_accessor :timeout,
+        :open_timeout,
+        :max_redirects,
+        :user_agent,
+        :proxy,
+        :headers,
+        :retry_max,
+        :retry_interval,
+        :retry_interval_randomness,
+        :retry_backoff_factor,
+        :retry_statuses
+
+      def initialize
+        reset!
+      end
+
+      def reset!
+        @timeout = 15
+        @open_timeout = 5
+        @max_redirects = 5
+        @user_agent = default_user_agent
+        @proxy = nil
+        @headers = {}
+        @retry_max = 4
+        @retry_interval = 0.5
+        @retry_interval_randomness = 0.5
+        @retry_backoff_factor = 2
+        @retry_statuses = nil
+      end
+
+      private
+
+      def default_user_agent
+        "FeedMonitor/#{FeedMonitor::VERSION}"
+      end
+    end
+
+    class ScraperRegistry
+      include Enumerable
+
+      def initialize
+        @adapters = {}
+      end
+
+      def register(name, adapter)
+        key = normalize_name(name)
+        @adapters[key] = normalize_adapter(adapter)
+      end
+
+      def unregister(name)
+        @adapters.delete(normalize_name(name))
+      end
+
+      def adapter_for(name)
+        adapter = @adapters[normalize_name(name)]
+        adapter if adapter
+      end
+
+      def each(&block)
+        @adapters.each(&block)
+      end
+
+      private
+
+      def normalize_name(name)
+        value = name.to_s
+        raise ArgumentError, "Invalid scraper adapter name #{name.inspect}" unless value.match?(/\A[a-z0-9_]+\z/i)
+
+        value.downcase
+      end
+
+      def normalize_adapter(adapter)
+        constant = resolve_adapter(adapter)
+
+        if defined?(FeedMonitor::Scrapers::Base) && !(constant <= FeedMonitor::Scrapers::Base)
+          raise ArgumentError, "Scraper adapters must inherit from FeedMonitor::Scrapers::Base"
+        end
+
+        constant
+      end
+
+      def resolve_adapter(adapter)
+        return adapter if adapter.is_a?(Class)
+
+        if adapter.respond_to?(:to_s)
+          constant_name = adapter.to_s
+          begin
+            return constant_name.constantize
+          rescue NameError
+            raise ArgumentError, "Unknown scraper adapter constant #{constant_name.inspect}"
+          end
+        end
+
+        raise ArgumentError, "Invalid scraper adapter #{adapter.inspect}"
+      end
+    end
+
+    class RetentionSettings
+      attr_accessor :items_retention_days, :max_items
+
+      def initialize
+        @items_retention_days = nil
+        @max_items = nil
+        @strategy = :destroy
+      end
+
+      def strategy
+        @strategy
+      end
+
+      def strategy=(value)
+        normalized = normalize_strategy(value)
+        @strategy = normalized unless normalized.nil?
+      end
+
+      private
+
+      def normalize_strategy(value)
+        return :destroy if value.nil?
+
+        if value.respond_to?(:to_sym)
+          candidate = value.to_sym
+          valid =
+            if defined?(FeedMonitor::Items::RetentionPruner::VALID_STRATEGIES)
+              FeedMonitor::Items::RetentionPruner::VALID_STRATEGIES
+            else
+              %i[destroy soft_delete]
+            end
+
+          raise ArgumentError, "Invalid retention strategy #{value.inspect}" unless valid.include?(candidate)
+          candidate
+        else
+          raise ArgumentError, "Invalid retention strategy #{value.inspect}"
+        end
       end
     end
   end

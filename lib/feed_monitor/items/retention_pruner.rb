@@ -15,11 +15,11 @@ module FeedMonitor
 
       VALID_STRATEGIES = %i[destroy soft_delete].freeze
 
-      def self.call(source:, now: Time.current, strategy: :destroy)
+      def self.call(source:, now: Time.current, strategy: nil)
         new(source:, now:, strategy:).call
       end
 
-      def initialize(source:, now: Time.current, strategy: :destroy)
+      def initialize(source:, now: Time.current, strategy: nil)
         @source = source
         @now = now
         @strategy = normalize_strategy(strategy)
@@ -36,8 +36,8 @@ module FeedMonitor
             removed_by_age:,
             removed_by_limit:,
             removed_total:,
-            items_retention_days: source.items_retention_days,
-            max_items: source.max_items
+            items_retention_days: items_retention_days,
+            max_items: max_items_limit
           )
         end
 
@@ -53,10 +53,9 @@ module FeedMonitor
       attr_reader :source, :now, :strategy
 
       def prune_by_age
-        days = source.items_retention_days
+        days = items_retention_days
         return 0 unless days.present?
 
-        days = days.to_i
         return 0 if days <= 0
 
         cutoff = now - days.days
@@ -74,10 +73,9 @@ module FeedMonitor
       end
 
       def prune_by_limit
-        limit = source.max_items
+        limit = max_items_limit
         return 0 unless limit.present?
 
-        limit = limit.to_i
         return 0 if limit <= 0
 
         ids_to_keep = source.items
@@ -126,10 +124,36 @@ module FeedMonitor
       end
 
       def normalize_strategy(value)
+        if value.nil?
+          value = FeedMonitor.config.retention.strategy
+        end
+
         value = value.to_sym if value.respond_to?(:to_sym)
         return value if VALID_STRATEGIES.include?(value)
 
         raise ArgumentError, "Invalid retention strategy #{value.inspect}. Valid strategies: #{VALID_STRATEGIES.join(', ')}"
+      end
+
+      def items_retention_days
+        @items_retention_days ||= begin
+          value = source.items_retention_days
+          value = FeedMonitor.config.retention.items_retention_days if value.nil?
+          convert_to_integer(value)
+        end
+      end
+
+      def max_items_limit
+        @max_items_limit ||= begin
+          value = source.max_items
+          value = FeedMonitor.config.retention.max_items if value.nil?
+          convert_to_integer(value)
+        end
+      end
+
+      def convert_to_integer(value)
+        return nil if value.nil?
+
+        value.respond_to?(:to_i) ? value.to_i : value
       end
     end
   end

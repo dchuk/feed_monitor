@@ -82,9 +82,8 @@ module FeedMonitor
       elsif options.key?(:soft_delete)
         ActiveModel::Type::Boolean.new.cast(options[:soft_delete]) ? :soft_delete : :destroy
       else
-        :destroy
+        FeedMonitor.config.retention.strategy
       end
     end
   end
 end
-

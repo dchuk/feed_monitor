@@ -383,11 +383,11 @@
 
 ### 11.01 Configuration DSL
 
-- [ ] 11.01.01 Create FeedMonitor.configure method
-- [ ] 11.01.02 Add HTTP client settings (timeouts, retries)
-- [ ] 11.01.03 Configure scraper adapters
-- [ ] 11.01.04 Set retention policies globally
-- [ ] 11.01.05 Document configuration options
+- [x] 11.01.01 Create FeedMonitor.configure method
+- [x] 11.01.02 Add HTTP client settings (timeouts, retries)
+- [x] 11.01.03 Configure scraper adapters
+- [x] 11.01.04 Set retention policies globally
+- [x] 11.01.05 Document configuration options
 
 ### 11.02 Event System
 

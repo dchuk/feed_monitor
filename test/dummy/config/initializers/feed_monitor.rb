@@ -19,4 +19,16 @@ FeedMonitor.configure do |config|
   # Mission Control is mounted in the dummy app; surface the link by default.
   config.mission_control_enabled = true
   config.mission_control_dashboard_path = -> { "/mission_control" }
+
+  # HTTP client mirrors the engine defaults so the dummy app exercises the
+  # documented configuration surface while keeping behaviour stable.
+  config.http.timeout = 15
+  config.http.open_timeout = 5
+  config.http.max_redirects = 5
+
+  # Example overrides retained for development experimentation.
+  # config.http.headers = { "X-FeedMonitor" => "dummy" }
+  # config.scrapers.register(:dummy, "Dummy::CustomScraper")
+  # config.retention.items_retention_days = 7
+  # config.retention.strategy = :soft_delete
 end

@@ -27,6 +27,14 @@ Run `bin/setup` to install gems, prepare the dummy database, and compile Tailwin
 - Recurring schedules live in `config/recurring.yml`, scheduling `FeedMonitor::ScheduleFetchesJob` each minute plus the scraping scheduler every two minutes. Override the schedule path with `bin/jobs --recurring_schedule_file=...` (or `SOLID_QUEUE_RECURRING_SCHEDULE_FILE`) and disable recurring runners with `SOLID_QUEUE_SKIP_RECURRING=true` or `bin/jobs --skip-recurring`.
 - Hosts that need to wrap Solid Queue command execution can set `config.recurring_command_job_class` in the generated initializer to point at their custom job class.
 
+## Configuration DSL
+
+- `FeedMonitor.configure` now exposes structured namespaces:
+  - `config.http` for Faraday timeouts, retry policy, proxy, and default headers. Per the [Faraday retry docs](https://github.com/lostisland/faraday/blob/main/docs/middleware/index.md), middleware options map 1:1 to the settings we surface (max retries, interval, backoff, statuses).
+  - `config.scrapers` registers/overrides adapters by name; adapters must inherit from `FeedMonitor::Scrapers::Base` and are discovered before constant lookup.
+  - `config.retention` supplies global defaults for `items_retention_days`, `max_items`, and the pruning strategy (`:destroy` or `:soft_delete`). Runtimes treat blank source fields as “inherit from config”.
+- Install generator and dummy initializer list all knobs with comments—update those when slicing future roadmap items.
+
 ## Retention Defaults
 
 - Per-source retention settings live on `FeedMonitor::Source` (`items_retention_days` and `max_items`). Negative values are rejected; blank means unlimited.

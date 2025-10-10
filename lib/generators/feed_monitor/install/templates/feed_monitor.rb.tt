@@ -50,4 +50,28 @@ FeedMonitor.configure do |config|
   #   #   mount MissionControl::Jobs::Engine, at: "/mission_control"
   #   # config.mission_control_dashboard_path = "/mission_control"
   config.mission_control_dashboard_path = nil
+
+  # ---- HTTP client -------------------------------------------------------
+  # Tune the Faraday client Feed Monitor uses for fetches/scrapes.
+  config.http.timeout = 15
+  config.http.open_timeout = 5
+  config.http.max_redirects = 5
+  # config.http.proxy = ENV["FEED_MONITOR_HTTP_PROXY"]
+  # config.http.retry_max = 4
+  # config.http.retry_interval = 0.5
+  # config.http.retry_backoff_factor = 2
+  # config.http.retry_statuses = [429, 500, 502, 503, 504]
+  # Merge extra default headers (User-Agent defaults to FeedMonitor/version).
+  # config.http.headers = { "X-Request-ID" => -> { SecureRandom.uuid } }
+
+  # ---- Scraper adapters --------------------------------------------------
+  # Register additional scraper adapters or override built-ins. Adapters must
+  # inherit from FeedMonitor::Scrapers::Base.
+  # config.scrapers.register(:custom, "MyApp::Scrapers::CustomAdapter")
+
+  # ---- Retention defaults ------------------------------------------------
+  # Sources inherit these values when they leave retention fields blank.
+  # config.retention.items_retention_days = 30
+  # config.retention.max_items = nil
+  # config.retention.strategy = :destroy # or :soft_delete
 end
