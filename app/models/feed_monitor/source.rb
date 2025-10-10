@@ -4,6 +4,8 @@ require "uri"
 
 module FeedMonitor
   class Source < ApplicationRecord
+    FETCH_STATUS_VALUES = %w[idle queued fetching failed].freeze
+
     has_many :all_items, class_name: "FeedMonitor::Item", inverse_of: :source, dependent: :destroy
     has_many :items, -> { where(deleted_at: nil) }, class_name: "FeedMonitor::Item", inverse_of: :source
     has_many :fetch_logs, class_name: "FeedMonitor::FetchLog", inverse_of: :source, dependent: :destroy
@@ -26,6 +28,7 @@ module FeedMonitor
     before_validation :normalize_feed_url
     before_validation :normalize_website_url
     after_initialize :ensure_hash_defaults, if: :new_record?
+    after_initialize :ensure_fetch_status_default
 
     validates :name, presence: true
     validates :feed_url, presence: true, uniqueness: { case_sensitive: false }
@@ -33,6 +36,7 @@ module FeedMonitor
     validates :scraper_adapter, presence: true
     validates :items_retention_days, numericality: { allow_nil: true, only_integer: true, greater_than_or_equal_to: 0 }
     validates :max_items, numericality: { allow_nil: true, only_integer: true, greater_than_or_equal_to: 0 }
+    validates :fetch_status, inclusion: { in: FETCH_STATUS_VALUES }
 
     validate :feed_url_must_be_http_or_https
     validate :website_url_must_be_http_or_https
@@ -59,6 +63,10 @@ module FeedMonitor
       self.scrape_settings ||= {}
       self.custom_headers ||= {}
       self.metadata ||= {}
+    end
+
+    def ensure_fetch_status_default
+      self.fetch_status = "idle" if fetch_status.blank?
     end
 
     def normalize_feed_url

@@ -12,20 +12,16 @@ module FeedMonitor
 
       test "returns average items per day within the lookback window" do
         travel_to Time.zone.local(2025, 10, 10, 12, 0, 0) do
-          source_a = FeedMonitor::Source.create!(
+          source_a = create_source!(
             name: "Active Source",
             feed_url: "https://example.com/a.rss",
-            website_url: "https://example.com/a",
-            fetch_interval_minutes: 60,
-            scraper_adapter: "readability"
+            fetch_interval_minutes: 60
           )
 
-          source_b = FeedMonitor::Source.create!(
+          source_b = create_source!(
             name: "Less Active",
             feed_url: "https://example.com/b.rss",
-            website_url: "https://example.com/b",
-            fetch_interval_minutes: 120,
-            scraper_adapter: "readability"
+            fetch_interval_minutes: 120
           )
 
           3.times do |index|

@@ -15,13 +15,7 @@ module FeedMonitor
       clear_enqueued_jobs
     end
     test "browsing items and viewing item details" do
-      source = FeedMonitor::Source.create!(
-        name: "Example Source",
-        feed_url: "https://example.com/feed.xml",
-        website_url: "https://example.com",
-        fetch_interval_minutes: 360,
-        scraper_adapter: "readability"
-      )
+      source = create_source!(name: "Example Source")
 
       first_item = FeedMonitor::Item.create!(
         source: source,
@@ -72,14 +66,7 @@ module FeedMonitor
     end
 
     test "manually scraping an item updates content and records a log" do
-      source = FeedMonitor::Source.create!(
-        name: "Manual Source",
-        feed_url: "https://example.com/manual.xml",
-        website_url: "https://example.com",
-        fetch_interval_minutes: 120,
-        scraper_adapter: "readability",
-        scraping_enabled: true
-      )
+      source = create_source!(name: "Manual Source", scraping_enabled: true)
 
       item = FeedMonitor::Item.create!(
         source: source,
@@ -98,23 +85,20 @@ module FeedMonitor
       )
 
       FeedMonitor::Scrapers::Readability.stub(:call, result) do
-        assert_enqueued_with(job: FeedMonitor::ScrapeItemJob, args: [item.id]) do
-          click_button "Manual Scrape"
-        end
-
-        assert_text "Scrape has been enqueued and will run shortly."
+        click_button "Manual Scrape"
+        assert_selector "[data-testid='scrape-status-badge']", text: "Pending", wait: 5
 
         assert_difference("FeedMonitor::ScrapeLog.count", 1) do
           perform_enqueued_jobs
         end
       end
-
+      item.reload
+      assert_equal "success", item.scrape_status
       visit feed_monitor.item_path(item)
-
+      assert_selector "[data-testid='scrape-status-badge']", text: "Scraped", wait: 10
       assert_text "Readable body text"
       find("summary", text: "View raw HTML").click
       assert_text "Rendered HTML"
-      assert_text "Scraped"
     end
   end
 end

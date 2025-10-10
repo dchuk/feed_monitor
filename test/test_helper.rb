@@ -10,6 +10,7 @@ require "vcr"
 require "turbo-rails"
 require "action_cable/test_helper"
 require "turbo/broadcastable/test_helper"
+require "securerandom"
 
 require "capybara/rails"
 require "capybara/minitest"
@@ -30,3 +31,25 @@ VCR.configure do |config|
 end
 
 WebMock.disable_net_connect!(allow_localhost: true)
+
+class ActiveSupport::TestCase
+  setup do
+    FeedMonitor.reset_configuration!
+  end
+
+  private
+
+  def create_source!(attributes = {})
+    defaults = {
+      name: "Test Source",
+      feed_url: "https://example.com/feed-#{SecureRandom.hex(4)}.xml",
+      website_url: "https://example.com",
+      fetch_interval_minutes: 60,
+      scraper_adapter: "readability"
+    }
+
+    source = FeedMonitor::Source.new(defaults.merge(attributes))
+    source.save!(validate: false)
+    source
+  end
+end

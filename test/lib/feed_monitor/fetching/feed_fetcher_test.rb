@@ -426,10 +426,9 @@ module FeedMonitor
       private
 
       def build_source(name:, feed_url:, fetch_interval_minutes: 360, adaptive_fetching_enabled: true)
-        FeedMonitor::Source.create!(
+        create_source!(
           name: name,
           feed_url: feed_url,
-          website_url: "https://#{URI.parse(feed_url).host}",
           fetch_interval_minutes: fetch_interval_minutes,
           adaptive_fetching_enabled: adaptive_fetching_enabled
         )

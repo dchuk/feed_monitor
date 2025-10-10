@@ -5,13 +5,7 @@ require "application_system_test_case"
 module FeedMonitor
   class LogsTest < ApplicationSystemTestCase
     setup do
-      @source = FeedMonitor::Source.create!(
-        name: "Log Source",
-        feed_url: "https://example.com/feed.xml",
-        website_url: "https://example.com",
-        fetch_interval_minutes: 360,
-        scraper_adapter: "readability"
-      )
+      @source = create_source!(name: "Log Source", fetch_interval_minutes: 360)
 
       @item = FeedMonitor::Item.create!(
         source: @source,

@@ -16,10 +16,9 @@ module FeedMonitor
       end
 
       test "respects configured scraper adapters" do
-        source = FeedMonitor::Source.create!(
+        source = create_source!(
           name: "Custom Adapter Source",
           feed_url: "https://example.com/custom.xml",
-          fetch_interval_minutes: 60,
           scraper_adapter: "custom"
         )
 

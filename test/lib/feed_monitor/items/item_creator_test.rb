@@ -241,7 +241,7 @@ module FeedMonitor
           fetch_interval_minutes: 60
         }
 
-        FeedMonitor::Source.create!(defaults.merge(attributes))
+        create_source!(defaults.merge(attributes))
       end
 
       def parse_entry(fixture)

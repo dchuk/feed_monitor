@@ -133,15 +133,11 @@ module FeedMonitor
     def build_source(overrides = {})
       defaults = {
         name: "Sample Source",
-        feed_url: "https://example.com/feed.xml",
-        website_url: "https://example.com",
-        active: true,
-        fetch_interval_minutes: 60,
-        scraper_adapter: "readability",
+        feed_url: "https://example.com/feed-#{SecureRandom.hex(4)}.xml",
         adaptive_fetching_enabled: true
       }
 
-      FeedMonitor::Source.create!(defaults.merge(overrides))
+      create_source!(defaults.merge(overrides))
     end
 
     class NullScrapeEnqueuer

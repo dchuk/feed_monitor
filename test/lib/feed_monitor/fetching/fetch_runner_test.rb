@@ -52,6 +52,55 @@ module FeedMonitor
         assert_equal "pending", item.reload.scrape_status
       end
 
+      test "enqueue marks source as queued" do
+        source = create_source
+
+        FeedMonitor::Realtime.stub :broadcast_source, nil do
+          FeedMonitor::FetchFeedJob.stub :perform_later, nil do
+            FetchRunner.enqueue(source.id)
+          end
+        end
+
+        assert_equal "queued", source.reload.fetch_status
+      end
+
+      test "run updates fetch status lifecycle for successful fetch" do
+        source = create_source
+
+        stub_fetcher = Class.new do
+          define_method(:initialize) { |**_kwargs| }
+
+          define_method(:call) do
+            FeedMonitor::Fetching::FeedFetcher::Result.new(status: :fetched)
+          end
+        end
+
+        FeedMonitor::Realtime.stub :broadcast_source, nil do
+          FetchRunner.new(source:, fetcher_class: stub_fetcher).run
+        end
+
+        source.reload
+        assert_equal "idle", source.fetch_status
+        assert_not_nil source.last_fetch_started_at
+      end
+
+      test "run marks source as failed when fetcher raises" do
+        source = create_source
+
+        failing_fetcher = Class.new do
+          define_method(:initialize) { |**_kwargs| }
+          define_method(:call) { raise StandardError, "boom" }
+        end
+
+        FeedMonitor::Realtime.stub :broadcast_source, nil do
+          assert_raises(StandardError) do
+            FetchRunner.new(source:, fetcher_class: failing_fetcher).run
+          end
+        end
+
+        assert_equal "failed", source.reload.fetch_status
+      end
+
       test "does not enqueue scrape jobs when auto scrape is disabled" do
         source = create_source(scraping_enabled: true, auto_scrape: false)
         item = FeedMonitor::Item.create!(
@@ -117,7 +166,7 @@ module FeedMonitor
             attr_accessor :calls
           end
 
-          def self.call(source:)
+          def self.call(source:, **)
             self.calls ||= []
             self.calls << source
             nil
@@ -137,11 +186,7 @@ module FeedMonitor
       private
 
       def create_source(scraping_enabled: false, auto_scrape: false)
-        FeedMonitor::Source.create!(
-          name: "Example Source",
-          feed_url: "https://example.com/feed.xml",
-          website_url: "https://example.com",
-          fetch_interval_minutes: 60,
+        create_source!(
           scraping_enabled: scraping_enabled,
           auto_scrape: auto_scrape
         )

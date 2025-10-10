@@ -60,29 +60,48 @@ module FeedMonitor
       end
 
       def apply_validations(model_class, definition)
-        applied = model_class.instance_variable_get(:@_feed_monitor_extension_validations) || []
+        remove_extension_validations(model_class)
+
+        applied_signatures = []
+        applied_filters = []
 
         definition.validations.each do |validation|
           signature = validation.signature
-          next if applied.include?(signature)
+          next if applied_signatures.include?(signature)
 
           if validation.symbol?
             model_class.validate(validation.handler, **validation.options)
+            applied_filters << validation.handler
           else
             handler = validation.handler
-            model_class.validate(**validation.options) do |record|
-              handler.call(record)
-            end
+            callback = proc { |record| handler.call(record) }
+            model_class.validate(**validation.options, &callback)
+            applied_filters << callback
           end
 
-          applied << signature
+          applied_signatures << signature
         end
 
-        model_class.instance_variable_set(:@_feed_monitor_extension_validations, applied)
+        model_class.instance_variable_set(:@_feed_monitor_extension_validations, applied_signatures)
+        model_class.instance_variable_set(:@_feed_monitor_extension_validation_filters, applied_filters)
       end
 
       def base_table_name_for(model_class)
         model_class.name.demodulize.tableize
+      end
+
+      def remove_extension_validations(model_class)
+        filters = model_class.instance_variable_get(:@_feed_monitor_extension_validation_filters)
+        return unless filters&.any?
+
+        callbacks = model_class._validate_callbacks
+        return unless callbacks
+
+        filtered = callbacks.reject { |callback| filters.include?(callback.filter) }
+        model_class.instance_variable_set(:@_validate_callbacks, filtered)
+
+        model_class.instance_variable_set(:@_feed_monitor_extension_validations, [])
+        model_class.instance_variable_set(:@_feed_monitor_extension_validation_filters, [])
       end
     end
   end

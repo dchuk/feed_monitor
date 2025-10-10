@@ -64,7 +64,7 @@ module FeedMonitor
         active: true
       }
 
-      FeedMonitor::Source.create!(defaults.merge(overrides))
+      create_source!(defaults.merge(overrides))
     end
 
     def capture_sql

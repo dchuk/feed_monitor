@@ -33,6 +33,7 @@ require "feed_monitor/http"
 require "feed_monitor/feedjira_extensions"
 require "feed_monitor/dashboard/queries"
 require "feed_monitor/dashboard/turbo_broadcaster"
+require "feed_monitor/realtime"
 require "feed_monitor/analytics/source_fetch_interval_distribution"
 require "feed_monitor/analytics/source_activity_rates"
 require "feed_monitor/jobs/visibility"
@@ -70,6 +71,7 @@ module FeedMonitor
       @config = Configuration.new
       FeedMonitor::ModelExtensions.reload!
       FeedMonitor::Dashboard::TurboBroadcaster.setup!
+      FeedMonitor::Realtime.setup!
     end
 
     def queue_name(role)

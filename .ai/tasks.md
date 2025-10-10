@@ -424,12 +424,12 @@
 
 ### 12.02 Add Progress Indicators
 
-- [ ] 12.02.01 Show fetch status indicators per source on source index, updated with turbo streams
-- [ ] 12.02.03 Add loading states for async actions
-- [ ] 12.02.04 Toast notifications for manually initiated job completion (Stimulus Component: Notification)
-- [ ] 12.02.05 Real-time updates for source show when manually fetching
-- [ ] 12.02.06 Real-time updates for item show when manually fetching or scraping
-- [ ] 12.02.07 Test UX improvements
+- [x] 12.02.01 Show fetch status indicators per source on source index, updated with turbo streams
+- [x] 12.02.03 Add loading states for async actions
+- [x] 12.02.04 Toast notifications for manually initiated job completion (Stimulus Component: Notification)
+- [x] 12.02.05 Real-time updates for source show when manually fetching
+- [x] 12.02.06 Real-time updates for item show when manually fetching or scraping
+- [x] 12.02.07 Test UX improvements
 
 ### 12.03 Add Stimulus Controllers
 

@@ -8,9 +8,17 @@
   <%= yield :head %>
 
   <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
-  <%= javascript_include_tag "turbo", "data-turbo-track": "reload" %>
+  <%= turbo_include_tags %>
+  <%= javascript_include_tag "stimulus.umd.js", "data-turbo-track": "reload" %>
+  <%= javascript_include_tag "feed_monitor/controllers/notification_controller", "data-turbo-track": "reload" %>
+  <%= javascript_include_tag "feed_monitor/controllers/async_submit_controller", "data-turbo-track": "reload" %>
+  <%= javascript_include_tag "feed_monitor/application", "data-turbo-track": "reload" %>
 </head>
 <body class="fm-admin">
+  <%= turbo_stream_from "feed_monitor_notifications" %>
+  <div class="pointer-events-none fixed inset-x-0 top-4 z-50 flex justify-end px-6">
+    <div id="feed_monitor_notifications" class="flex w-full max-w-sm flex-col gap-3"></div>
+  </div>
   <div class="flex min-h-screen flex-col">
     <header class="bg-slate-800 text-white shadow">
       <div class="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
@@ -36,16 +44,6 @@
     </header>
 
     <main class="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-8">
-      <% if flash.any? %>
-        <div class="mb-6 space-y-3">
-          <% flash.each do |type, message| %>
-            <div class="rounded-md border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm">
-              <%= message %>
-            </div>
-          <% end %>
-        </div>
-      <% end %>
-
       <%= yield %>
     </main>
 

@@ -25,21 +25,52 @@ module FeedMonitor
         new(source:, **options).run
       end
 
-      def self.enqueue(source_id)
-        FeedMonitor::FetchFeedJob.perform_later(source_id)
+      def self.enqueue(source_or_id)
+        source = resolve_source(source_or_id)
+        return unless source
+
+        # Don't broadcast here - controller handles immediate UI update
+        source.update!(fetch_status: "queued")
+        FeedMonitor::FetchFeedJob.perform_later(source.id)
       end
 
       def run
+        result = nil
+
         with_concurrency_guard do
+          mark_fetching!
           result = fetcher_class.new(source: source).call
           apply_retention
           enqueue_follow_up_scrapes(result)
-          FeedMonitor::Events.after_fetch_completed(source: source, result: result) if result
-          result
+          mark_complete!(result)
         end
+
+        FeedMonitor::Events.after_fetch_completed(source: source, result: result)
+        result
+      rescue StandardError => error
+        mark_failed!(error)
+        FeedMonitor::Events.after_fetch_completed(source: source, result: nil)
+        raise
       end
 
       private
+
+      def self.resolve_source(source_or_id)
+        return source_or_id if source_or_id.is_a?(FeedMonitor::Source)
+
+        FeedMonitor::Source.find_by(id: source_or_id)
+      end
+      private_class_method :resolve_source
+
+      def self.update_source_state!(source, attrs)
+        source.update!(attrs)
+        FeedMonitor::Realtime.broadcast_source(source)
+      rescue StandardError => error
+        Rails.logger.error(
+          "[FeedMonitor] Failed to update fetch state for source #{source.id}: #{error.class}: #{error.message}"
+        ) if defined?(Rails) && Rails.respond_to?(:logger) && Rails.logger
+      end
+      private_class_method :update_source_state!
 
       def with_concurrency_guard
         ActiveRecord::Base.connection_pool.with_connection do |connection|
@@ -67,6 +98,24 @@ module FeedMonitor
         # the error—Postgres automatically clears advisory locks when the
         # session terminates.
         nil
+      end
+
+      def mark_fetching!
+        update_source_state(fetch_status: "fetching", last_fetch_started_at: Time.current)
+      end
+
+      def mark_complete!(result)
+        status = result&.status
+        new_status = status == :failed ? "failed" : "idle"
+        update_source_state(fetch_status: new_status)
+      end
+
+      def mark_failed!(_error)
+        update_source_state(fetch_status: "failed")
+      end
+
+      def update_source_state(attrs)
+        self.class.send(:update_source_state!, source, attrs)
       end
 
       def enqueue_follow_up_scrapes(result)

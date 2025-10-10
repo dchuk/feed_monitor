@@ -5,7 +5,7 @@ require "test_helper"
 module FeedMonitor
   class ScrapeLogTest < ActiveSupport::TestCase
     setup do
-      @source = Source.create!(name: "Example", feed_url: "https://example.com/feed")
+      @source = create_source!(name: "Example")
       @item = Item.create!(source: @source, guid: "abc", url: "https://example.com/article")
     end
 
@@ -29,7 +29,7 @@ module FeedMonitor
     end
 
     test "validates source and item relationship" do
-      other_source = Source.create!(name: "Other", feed_url: "https://example.com/other")
+      other_source = create_source!(name: "Other", feed_url: "https://example.com/other")
 
       log = ScrapeLog.new(source: other_source, item: @item, started_at: Time.current)
 

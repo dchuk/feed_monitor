@@ -19,22 +19,21 @@ module FeedMonitor
       assert_selector "th", text: "New Items / Day"
       assert_selector "[data-testid='fetch-interval-heatmap']"
 
-      assert_difference("FeedMonitor::Source.count", 1) do
-        click_link "New Source", match: :first
+      click_link "New Source", match: :first
 
-        fill_in "Name", with: "UI Source"
-        fill_in "Feed url", with: "https://example.com/feed"
-        fill_in "Website url", with: "https://example.com"
-        fill_in "Fetch interval (minutes)", with: "240"
-        fill_in "Retention window (days)", with: "14"
-        fill_in "Maximum stored items", with: "200"
-        select "Readability", from: "Scraper adapter"
+      fill_in "Name", with: "UI Source"
+      fill_in "Feed url", with: "https://example.com/feed"
+      fill_in "Website url", with: "https://example.com"
+      fill_in "Fetch interval (minutes)", with: "240"
+      fill_in "Retention window (days)", with: "14"
+      fill_in "Maximum stored items", with: "200"
+      select "Readability", from: "Scraper adapter"
 
-        click_button "Create Source"
-      end
-
+      click_button "Create Source"
+      assert_selector "h1", text: "UI Source"
+      source = FeedMonitor::Source.find_by!(feed_url: "https://example.com/feed")
+      assert_equal "UI Source", source.name
       assert_current_path feed_monitor.source_path(FeedMonitor::Source.last)
-      assert_text "Source created successfully"
       assert_text "Retention Policy Active"
 
       source = FeedMonitor::Source.last
@@ -60,7 +59,6 @@ module FeedMonitor
       click_button "Update Source"
 
       assert_current_path feed_monitor.source_path(source)
-      assert_text "Source updated successfully"
       assert_text "Updated Source"
 
       click_link "Sources"
@@ -71,13 +69,14 @@ module FeedMonitor
         assert_selector "td", text: %r{/ day}
       end
 
-      assert_difference("FeedMonitor::Source.count", -1) do
-        visit feed_monitor.source_path(source)
+      visit feed_monitor.source_path(source)
+      accept_confirm do
         click_button "Delete"
       end
+      assert_no_text "Updated Source"
+      refute FeedMonitor::Source.exists?(source.id)
 
       assert_current_path feed_monitor.sources_path
-      assert_text "Source deleted"
       assert_no_text "Updated Source"
     end
 
@@ -85,21 +84,15 @@ module FeedMonitor
       FeedMonitor::Item.delete_all
       FeedMonitor::Source.delete_all
 
-      source = FeedMonitor::Source.create!(
+      source = create_source!(
         name: "Fetchable Source",
-        feed_url: "https://www.ruby-lang.org/en/feeds/news.rss",
-        website_url: "https://example.com",
-        fetch_interval_minutes: 60,
-        scraper_adapter: "readability"
+        feed_url: "https://www.ruby-lang.org/en/feeds/news.rss"
       )
 
       visit feed_monitor.source_path(source)
 
-      assert_enqueued_with(job: FeedMonitor::FetchFeedJob, args: [source.id]) do
-        click_button "Fetch Now"
-      end
-
-      assert_text "Fetch has been enqueued and will run shortly."
+      click_button "Fetch Now"
+      assert_selector "[data-testid='fetch-status-badge']", text: "Queued"
 
       VCR.use_cassette("feed_monitor/fetching/rss_success") do
         perform_enqueued_jobs

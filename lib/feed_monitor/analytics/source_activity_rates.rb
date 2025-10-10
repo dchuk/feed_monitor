@@ -27,6 +27,12 @@ module FeedMonitor
         end
       end
 
+      def self.rate_for(source, lookback: DEFAULT_LOOKBACK, now: Time.current)
+        return 0.0 unless source
+
+        new(scope: Array(source), lookback:, now:).per_source_rates[source.id] || 0.0
+      end
+
       private
 
       attr_reader :scope, :lookback, :now

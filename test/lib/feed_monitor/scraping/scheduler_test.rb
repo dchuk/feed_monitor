@@ -52,11 +52,9 @@ module FeedMonitor
       private
 
       def create_source(scraping_enabled:, auto_scrape:)
-        FeedMonitor::Source.create!(
+        create_source!(
           name: "Source #{SecureRandom.hex(4)}",
           feed_url: "https://example.com/#{SecureRandom.hex(8)}.xml",
-          website_url: "https://example.com",
-          fetch_interval_minutes: 60,
           scraping_enabled: scraping_enabled,
           auto_scrape: auto_scrape
         )

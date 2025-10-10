@@ -58,10 +58,9 @@ module FeedMonitor
     private
 
     def create_source
-      FeedMonitor::Source.create!(
+      create_source!(
         name: "Source #{SecureRandom.hex(4)}",
-        feed_url: "https://example.com/#{SecureRandom.hex(8)}.xml",
-        fetch_interval_minutes: 60
+        feed_url: "https://example.com/#{SecureRandom.hex(8)}.xml"
       )
     end
 

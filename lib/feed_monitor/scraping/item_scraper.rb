@@ -35,6 +35,7 @@ module FeedMonitor
 
       def call
         started_at = Time.current
+        log("scraper:start", started_at:, item:, source:)
         raise ArgumentError, "Item does not belong to a source" unless source
         adapter = resolve_adapter!
         adapter_result = adapter.call(item:, source:, settings:, http:)
@@ -43,9 +44,11 @@ module FeedMonitor
         result = persist_adapter_result(adapter_result, started_at, success)
         finalize_result(result)
       rescue UnknownAdapterError => error
+        log("scraper:unknown_adapter", error: error.message)
         result = persist_failure(started_at, error, error.message)
         finalize_result(result)
       rescue StandardError => error
+        log("scraper:exception", error: error.message)
         result = persist_failure(started_at, error)
         finalize_result(result)
       end
@@ -53,6 +56,12 @@ module FeedMonitor
       private
 
       def finalize_result(result)
+        log(
+          "scraper:finalize",
+          status: result&.status,
+          scrape_status: result&.item&.scrape_status,
+          log_id: result&.log&.id
+        )
         FeedMonitor::Events.after_item_scraped(result)
         result
       end
@@ -138,6 +147,20 @@ module FeedMonitor
         end
 
         Result.new(status: :failed, item: item, log: log, message: "Scrape failed: #{message}", error: error)
+      end
+
+      def log(stage, **extra)
+        return unless defined?(Rails) && Rails.respond_to?(:logger) && Rails.logger
+
+        payload = {
+          stage: "FeedMonitor::Scraping::ItemScraper##{stage}",
+          item_id: item&.id,
+          source_id: source&.id,
+          adapter: adapter_name
+        }.merge(extra.compact)
+        Rails.logger.info("[FeedMonitor::ManualScrape] #{payload.to_json}")
+      rescue StandardError
+        nil
       end
 
       def apply_item_outcome(status:, success:, completed_at:, adapter_result:)

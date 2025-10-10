@@ -60,12 +60,7 @@ module FeedMonitor
     private
 
     def create_source
-      FeedMonitor::Source.create!(
-        name: "Example Source",
-        feed_url: "https://example.com/feed.xml",
-        website_url: "https://example.com",
-        fetch_interval_minutes: 60
-      )
+      create_source!(name: "Example Source")
     end
   end
 end

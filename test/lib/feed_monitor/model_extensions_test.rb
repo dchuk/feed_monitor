@@ -5,10 +5,14 @@ require "test_helper"
 module FeedMonitor
   class ModelExtensionsTest < ActiveSupport::TestCase
     setup do
+      @original_validate_callbacks = FeedMonitor::Source._validate_callbacks.dup
       FeedMonitor.reset_configuration!
     end
 
     teardown do
+      FeedMonitor::Source.instance_variable_set(:@_validate_callbacks, @original_validate_callbacks.dup)
+      FeedMonitor::Source.instance_variable_set(:@_feed_monitor_extension_validations, [])
+      FeedMonitor::Source.instance_variable_set(:@_feed_monitor_extension_validation_filters, [])
       FeedMonitor.reset_configuration!
     end
 

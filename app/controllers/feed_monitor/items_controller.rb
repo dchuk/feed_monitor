@@ -2,6 +2,8 @@
 
 module FeedMonitor
   class ItemsController < ApplicationController
+    include ActionView::RecordIdentifier
+
     PER_PAGE = 25
 
     before_action :set_item, only: %i[show scrape]
@@ -31,18 +33,54 @@ module FeedMonitor
     end
 
     def scrape
+      log_manual_scrape("controller:start", item: @item, extra: { format: request.format })
+
       enqueue_result = FeedMonitor::Scraping::Enqueuer.enqueue(item: @item, reason: :manual)
+      log_manual_scrape(
+        "controller:enqueue_result",
+        item: @item,
+        extra: { status: enqueue_result.status, message: enqueue_result.message }
+      )
+      flash_key, flash_message = scrape_flash_payload(enqueue_result)
+      status = enqueue_result.failure? ? :unprocessable_entity : :ok
 
-      case enqueue_result.status
-      when :enqueued
-        flash[:notice] = "Scrape has been enqueued and will run shortly."
-      when :already_enqueued
-        flash[:notice] = enqueue_result.message
-      else
-        flash[:alert] = enqueue_result.message || "Unable to enqueue scrape for this item."
+      respond_to do |format|
+        format.turbo_stream do
+          log_manual_scrape("controller:respond_turbo", item: @item, extra: { status: status })
+
+          streams = []
+
+          # Always update the item details if enqueue succeeded or was already enqueued
+          if enqueue_result.enqueued? || enqueue_result.already_enqueued?
+            streams << turbo_stream.replace(
+              dom_id(@item, :details),
+              partial: "feed_monitor/items/details_wrapper",
+              locals: { item: @item.reload }
+            )
+          end
+
+          # Add toast notification
+          if flash_message
+            level = flash_key == :notice ? :info : :error
+            streams << turbo_stream.append(
+              "feed_monitor_notifications",
+              partial: "feed_monitor/shared/toast",
+              locals: { message: flash_message, level: level, title: nil, delay_ms: 5000 }
+            )
+          end
+
+          render turbo_stream: streams, status: status
+        end
+
+        format.html do
+          log_manual_scrape("controller:respond_html", item: @item)
+          if flash_key && flash_message
+            redirect_to feed_monitor.item_path(@item), flash: { flash_key => flash_message }
+          else
+            redirect_to feed_monitor.item_path(@item)
+          end
+        end
       end
-
-      redirect_to feed_monitor.item_path(@item)
     end
 
     private
@@ -54,6 +92,26 @@ module FeedMonitor
     def load_scrape_context
       @recent_scrape_logs = @item.scrape_logs.order(started_at: :desc).limit(5)
       @latest_scrape_log = @recent_scrape_logs.first
+    end
+
+    def scrape_flash_payload(result)
+      case result.status
+      when :enqueued
+        [:notice, "Scrape has been enqueued and will run shortly."]
+      when :already_enqueued
+        [:notice, result.message]
+      else
+        [:alert, result.message || "Unable to enqueue scrape for this item."]
+      end
+    end
+
+    def log_manual_scrape(stage, item:, extra: {})
+      return unless defined?(Rails) && Rails.respond_to?(:logger) && Rails.logger
+
+      payload = { stage:, item_id: item&.id }.merge(extra.compact)
+      Rails.logger.info("[FeedMonitor::ManualScrape] #{payload.to_json}")
+    rescue StandardError
+      nil
     end
   end
 end
