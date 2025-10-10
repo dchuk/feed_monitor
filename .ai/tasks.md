@@ -416,27 +416,30 @@
 
 ### 12.01 Add Turbo Streams
 
-- [ ] 12.01.01 Configure Turbo (included in Rails 8)
-- [ ] 12.01.02 Setup Turbo Stream broadcasts for fetch completion
-- [ ] 12.01.03 Stream new items to dashboard
-- [ ] 12.01.04 Update stats in real-time
-- [ ] 12.01.05 Test live updates in browser
+- [x] 12.01.01 Configure Turbo (included in Rails 8)
+- [x] 12.01.02 Setup Turbo Stream broadcasts for fetch completion
+- [x] 12.01.03 Stream new items to dashboard
+- [x] 12.01.04 Update stats in real-time
+- [x] 12.01.05 Test live updates in browser
 
 ### 12.02 Add Progress Indicators
 
-- [ ] 12.02.01 Show active fetch indicators
-- [ ] 12.02.02 Display scraping progress
+- [ ] 12.02.01 Show fetch status indicators per source on source index, updated with turbo streams
 - [ ] 12.02.03 Add loading states for async actions
-- [ ] 12.02.04 Toast notifications for job completion (Stimulus Component: Notification)
-- [ ] 12.02.05 Test UX improvements
+- [ ] 12.02.04 Toast notifications for manually initiated job completion (Stimulus Component: Notification)
+- [ ] 12.02.05 Real-time updates for source show when manually fetching
+- [ ] 12.02.06 Real-time updates for item show when manually fetching or scraping
+- [ ] 12.02.07 Test UX improvements
 
 ### 12.03 Add Stimulus Controllers
 
-- [ ] 12.03.01 Create auto-refresh controller for dashboard
-- [ ] 12.03.02 Add infinite scroll for item list
-- [ ] 12.03.03 Build filter controller for search
-- [ ] 12.03.04 Add toggle controllers for UI controls
-- [ ] 12.03.05 Test all interactive components
+- [ ] 12.03.03 Build filter controller for search (use ransack gem, documented in context7 mcp here: https://context7.com/activerecord-hackery/ransack)
+
+## 12.04 Fetch Schedule
+
+- [ ] 12.04.01 When clicking a box in the fetch interval histogram table on source index, filter the list of sources to the ones that have that fetch interval
+- [ ] 12.04.02 On Dashboard, show an upcoming fetch schedule, grouped in 15 minute intervals for first hour, 30 minute intervals for hours 2-4, and then all remaining sources with intevals > 4 hours from load. Show these as a stack of cards containing tables of the sources for each interval
+- [ ] 12.04.03 While on the Dashboard, as sources are fetched by the job queue, real-time update the upcoming fetch interval cards with turbo streams
 
 **Deliverable: Modern real-time UI using Rails 8 defaults**
 **Test: Trigger fetch, watch dashboard update in real-time**
@@ -458,18 +461,10 @@
 ### 13.02 Source Health Monitoring
 
 - [ ] 13.02.01 Calculate rolling success rates
-- [ ] 13.02.02 Auto-pause failing sources after threshold
+- [ ] 13.02.02 Auto-pause failing sources after threshold (user configurable in initializer and per source)
 - [ ] 13.02.03 Add health status indicators in UI
 - [ ] 13.02.04 Auto-recovery detection and resume
 - [ ] 13.02.05 Test health monitoring
-
-### 13.03 Add Alerting
-
-- [ ] 13.03.01 Create alert threshold configuration
-- [ ] 13.03.02 Support webhook notifications
-- [ ] 13.03.03 Add error tracking service integration
-- [ ] 13.03.04 Create alert management UI
-- [ ] 13.03.05 Test alerting workflows
 
 **Deliverable: Self-managing feed system with health monitoring**
 **Test: Simulate failures, verify auto-pause and recovery**
@@ -493,7 +488,7 @@
 - [ ] 14.02.01 Add fragment caching for expensive views
 - [ ] 14.02.02 Cache dashboard statistics
 - [ ] 14.02.03 Use Rails.cache for feed responses
-- [ ] 14.02.04 Configure Solid Cache (Rails 8 default)
+- [ ] 14.02.04 Configure Solid Cache (Rails 8 default, use postgres)
 - [ ] 14.02.05 Test cache effectiveness
 
 ### 14.03 Batch Operations
@@ -523,19 +518,10 @@
 
 ### 15.02 Analytics Dashboard
 
-- [ ] 15.02.01 Add time-series charts with Chart.js
 - [ ] 15.02.02 Show trend analysis
 - [ ] 15.02.03 Create performance reports
 - [ ] 15.02.04 Export metrics data
 - [ ] 15.02.05 Test analytics views
-
-### 15.03 Health Checks
-
-- [ ] 15.03.01 Expand /health endpoint with details
-- [ ] 15.03.02 Add system resource checks
-- [ ] 15.03.03 Monitor database connections
-- [ ] 15.03.04 Check job queue health
-- [ ] 15.03.05 Test health checks
 
 **Deliverable: Complete observability solution**
 **Test: View metrics dashboard, verify data accuracy**
@@ -549,26 +535,17 @@
 ### 16.01 Input Validation
 
 - [ ] 16.01.01 Sanitize all user inputs
-- [ ] 16.01.02 Validate URLs against allowlist/denylist
-- [ ] 16.01.03 Block private IP ranges by default
-- [ ] 16.01.04 Add SSRF protection
 - [ ] 16.01.05 Test security validations
 
 ### 16.02 Authentication & Authorization
 
 - [ ] 16.02.01 Integrate with host app auth (if configured)
 - [ ] 16.02.02 Add before_action filters for auth
-- [ ] 16.02.03 Implement role-based permissions
-- [ ] 16.02.04 Add API token support
 - [ ] 16.02.05 Test auth integration
 
 ### 16.03 Security Features
 
 - [ ] 16.03.01 Verify CSRF protection active
-- [ ] 16.03.02 Implement request rate limiting
-- [ ] 16.03.03 Enforce SSL/TLS verification
-- [ ] 16.03.04 Add security headers
-- [ ] 16.03.05 Run security audit
 
 **Deliverable: Enterprise-ready security**
 **Test: Security scan with brakeman, verify protections**

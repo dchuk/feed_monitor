@@ -14,6 +14,12 @@ module FeedMonitor
       FeedMonitor::Metrics.setup_subscribers!
     end
 
+    initializer "feed_monitor.dashboard_streams" do
+      config.to_prepare do
+        FeedMonitor::Dashboard::TurboBroadcaster.setup!
+      end
+    end
+
     initializer "feed_monitor.jobs" do |app|
       FeedMonitor::Jobs::Visibility.setup!
 

@@ -7,6 +7,9 @@ ActiveRecord::Migrator.migrations_paths << File.expand_path("../db/migrate", __d
 require "rails/test_help"
 require "webmock/minitest"
 require "vcr"
+require "turbo-rails"
+require "action_cable/test_helper"
+require "turbo/broadcastable/test_helper"
 
 require "capybara/rails"
 require "capybara/minitest"

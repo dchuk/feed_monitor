@@ -4,6 +4,12 @@ rescue LoadError
   # Solid Queue is optional if the host app supplies a different Active Job backend.
 end
 
+begin
+  require "turbo-rails"
+rescue LoadError
+  # Turbo is optional but recommended for real-time updates.
+end
+
 require "active_support/core_ext/module/redefine_method"
 
 FeedMonitor.singleton_class.redefine_method(:table_name_prefix) do
@@ -25,6 +31,8 @@ require "feed_monitor/instrumentation"
 require "feed_monitor/metrics"
 require "feed_monitor/http"
 require "feed_monitor/feedjira_extensions"
+require "feed_monitor/dashboard/queries"
+require "feed_monitor/dashboard/turbo_broadcaster"
 require "feed_monitor/analytics/source_fetch_interval_distribution"
 require "feed_monitor/analytics/source_activity_rates"
 require "feed_monitor/jobs/visibility"
@@ -61,6 +69,7 @@ module FeedMonitor
     def reset_configuration!
       @config = Configuration.new
       FeedMonitor::ModelExtensions.reload!
+      FeedMonitor::Dashboard::TurboBroadcaster.setup!
     end
 
     def queue_name(role)

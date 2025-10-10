@@ -8,6 +8,7 @@
   <%= yield :head %>
 
   <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+  <%= javascript_include_tag "turbo", "data-turbo-track": "reload" %>
 </head>
 <body class="fm-admin">
   <div class="flex min-h-screen flex-col">

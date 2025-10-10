@@ -1,4 +1,5 @@
 <%= content_for :title, "Dashboard · Feed Monitor" %>
+<%= turbo_stream_from FeedMonitor::Dashboard::TurboBroadcaster::STREAM_NAME %>
 
 <div class="space-y-8">
   <section>
@@ -12,36 +13,7 @@
 
   <section class="grid gap-6 lg:grid-cols-3">
     <div class="lg:col-span-2">
-      <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
-        <div class="border-b border-slate-200 px-5 py-4">
-          <h2 class="text-lg font-medium">Recent Activity</h2>
-          <p class="mt-1 text-xs text-slate-500">Latest fetch and scrape events across sources.</p>
-        </div>
-        <div class="divide-y divide-slate-100">
-          <% if @recent_activity.any? %>
-            <% @recent_activity.each do |event| %>
-              <div class="flex items-center justify-between px-5 py-4">
-                <div>
-                  <div class="text-sm font-medium text-slate-900"><%= event[:label] %></div>
-                  <div class="text-xs text-slate-500">
-                    <%= event[:description] %>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold <%= event[:status] == :success ? "bg-green-100 text-green-700" : "bg-rose-100 text-rose-700" %>">
-                    <%= event[:status] == :success ? "Success" : "Failure" %>
-                  </span>
-                  <div class="mt-1 text-xs text-slate-400">
-                    <%= event[:time]&.strftime("%b %d, %H:%M") || "Unknown" %>
-                  </div>
-                </div>
-              </div>
-            <% end %>
-          <% else %>
-            <div class="px-5 py-6 text-sm text-slate-500">No recent activity yet. Fetches and scrapes will appear here.</div>
-          <% end %>
-        </div>
-      </div>
+      <%= render "recent_activity", recent_activity: @recent_activity %>
     </div>
 
     <div class="space-y-6">

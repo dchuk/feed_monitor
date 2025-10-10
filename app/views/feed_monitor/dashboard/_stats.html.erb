@@ -1,4 +1,4 @@
-<div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-5">
+<div id="feed_monitor_dashboard_stats" class="grid gap-5 sm:grid-cols-2 xl:grid-cols-5">
   <%= render partial: "stat_card", collection: [
     { label: "Sources", value: stats[:total_sources], caption: "Total registered" },
     { label: "Active", value: stats[:active_sources], caption: "Fetching on schedule" },
