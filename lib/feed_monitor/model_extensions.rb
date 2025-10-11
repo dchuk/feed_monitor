@@ -97,8 +97,9 @@ module FeedMonitor
         callbacks = model_class._validate_callbacks
         return unless callbacks
 
-        filtered = callbacks.reject { |callback| filters.include?(callback.filter) }
-        model_class.instance_variable_set(:@_validate_callbacks, filtered)
+        callbacks.to_a.each do |callback|
+          callbacks.delete(callback) if filters.include?(callback.filter)
+        end
 
         model_class.instance_variable_set(:@_feed_monitor_extension_validations, [])
         model_class.instance_variable_set(:@_feed_monitor_extension_validation_filters, [])

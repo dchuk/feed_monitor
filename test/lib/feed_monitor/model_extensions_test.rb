@@ -4,18 +4,6 @@ require "test_helper"
 
 module FeedMonitor
   class ModelExtensionsTest < ActiveSupport::TestCase
-    setup do
-      @original_validate_callbacks = FeedMonitor::Source._validate_callbacks.dup
-      FeedMonitor.reset_configuration!
-    end
-
-    teardown do
-      FeedMonitor::Source.instance_variable_set(:@_validate_callbacks, @original_validate_callbacks.dup)
-      FeedMonitor::Source.instance_variable_set(:@_feed_monitor_extension_validations, [])
-      FeedMonitor::Source.instance_variable_set(:@_feed_monitor_extension_validation_filters, [])
-      FeedMonitor.reset_configuration!
-    end
-
     test "table name prefix defaults to feed_monitor_" do
       assert_equal "feed_monitor_", FeedMonitor.table_name_prefix
       assert_equal "feed_monitor_sources", FeedMonitor::Source.table_name
