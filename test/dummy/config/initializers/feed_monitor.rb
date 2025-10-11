@@ -26,6 +26,15 @@ FeedMonitor.configure do |config|
   config.http.open_timeout = 5
   config.http.max_redirects = 5
 
+  # Adaptive fetch scheduling mirrors defaults but is left documented here so
+  # developers can experiment with accelerated polling windows in the dummy app.
+  # config.fetching.min_interval_minutes = 5
+  # config.fetching.max_interval_minutes = 1440
+  # config.fetching.increase_factor = 1.25
+  # config.fetching.decrease_factor = 0.75
+  # config.fetching.failure_increase_factor = 1.5
+  # config.fetching.jitter_percent = 0.1
+
   # Example overrides retained for development experimentation.
   # config.http.headers = { "X-FeedMonitor" => "dummy" }
   # config.scrapers.register(:dummy, "Dummy::CustomScraper")

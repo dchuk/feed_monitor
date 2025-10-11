@@ -17,6 +17,88 @@ module FeedMonitor
       end
     end
 
+    def fetch_interval_bucket_path(bucket, search_params, selected: false)
+      query = fetch_interval_bucket_query(bucket, search_params, selected: selected)
+      route_helpers = FeedMonitor::Engine.routes.url_helpers
+
+      query.empty? ? route_helpers.sources_path : route_helpers.sources_path(q: query)
+    end
+
+    def fetch_interval_bucket_query(bucket, search_params, selected: false)
+      base = (search_params || {}).dup
+      base = base.except("fetch_interval_minutes_gteq", "fetch_interval_minutes_lt", "fetch_interval_minutes_lteq")
+
+      query = if selected
+        base
+      else
+        updated = base.dup
+        updated["fetch_interval_minutes_gteq"] = bucket.min.to_i.to_s if bucket.respond_to?(:min) && bucket.min
+
+        if bucket.respond_to?(:max) && bucket.max
+          updated["fetch_interval_minutes_lt"] = bucket.max.to_i.to_s
+        else
+          updated.delete("fetch_interval_minutes_lt")
+          updated.delete("fetch_interval_minutes_lteq")
+        end
+
+        updated
+      end
+
+      if query.respond_to?(:compact_blank)
+        query.compact_blank
+      else
+        query.reject { |_key, value| value.respond_to?(:blank?) ? value.blank? : value.nil? }
+      end
+    end
+
+    def fetch_interval_filter_label(bucket, filter)
+      return bucket.label if bucket&.respond_to?(:label)
+      return unless filter
+
+      min = filter[:min]
+      max = filter[:max]
+
+      if min && max
+        "#{min}-#{max} min"
+      elsif min
+        "#{min}+ min"
+      else
+        "Any interval"
+      end
+    end
+
+    def fetch_schedule_window_label(group)
+      start_time = group.respond_to?(:window_start) ? group.window_start : nil
+      end_time = group.respond_to?(:window_end) ? group.window_end : nil
+
+      return unless start_time || end_time
+
+      if start_time && end_time
+        "#{format_schedule_time(start_time)} – #{format_schedule_time(end_time)}"
+      elsif start_time
+        "After #{format_schedule_time(start_time)}"
+      else
+        nil
+      end
+    end
+
+    def format_schedule_time(time)
+      return unless time
+
+      l(time.in_time_zone, format: :short)
+    end
+
+    def human_fetch_interval(minutes)
+      return "—" if minutes.blank?
+
+      total_minutes = minutes.to_i
+      hours, remaining = total_minutes.divmod(60)
+      parts = []
+      parts << "#{hours}h" if hours.positive?
+      parts << "#{remaining}m" if remaining.positive? || parts.empty?
+      parts.join(" ")
+    end
+
     # Unified status badge helper for both fetch and scrape operations
     def async_status_badge(status, show_spinner: true)
       status_str = status.to_s

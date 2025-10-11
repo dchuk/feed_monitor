@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "feed_monitor/dashboard/upcoming_fetch_schedule"
+
 module FeedMonitor
   module Dashboard
     module Queries
@@ -96,6 +98,10 @@ module FeedMonitor
             summary: summary
           }
         end
+      end
+
+      def upcoming_fetch_schedule
+        FeedMonitor::Dashboard::UpcomingFetchSchedule.new(scope: Source.active)
       end
 
       def queue_name_map

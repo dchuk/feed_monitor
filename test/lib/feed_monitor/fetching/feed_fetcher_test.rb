@@ -310,6 +310,53 @@ module FeedMonitor
         travel_back
       end
 
+      test "uses configured adaptive interval settings" do
+        FeedMonitor.reset_configuration!
+
+        FeedMonitor.configure do |config|
+          config.fetching.min_interval_minutes = 10
+          config.fetching.max_interval_minutes = 120
+          config.fetching.increase_factor = 2.0
+          config.fetching.decrease_factor = 0.5
+          config.fetching.failure_increase_factor = 3.0
+          config.fetching.jitter_percent = 0
+        end
+
+        travel_to Time.zone.parse("2024-02-01 09:00:00 UTC")
+
+        body = File.read(file_fixture("feeds/rss_sample.xml"))
+        url = "https://example.com/configurable.xml"
+
+        source = build_source(name: "Configurable", feed_url: url, fetch_interval_minutes: 60)
+
+        stub_request(:get, url)
+          .to_return(status: 200, body:, headers: { "Content-Type" => "application/rss+xml", "ETag" => "abc" })
+
+        FeedFetcher.new(source: source, jitter: ->(_) { 0 }).call
+
+        source.reload
+        assert_equal 30, source.fetch_interval_minutes, "expected decrease factor to halve the interval"
+
+        stub_request(:get, url)
+          .to_return(status: 200, body:, headers: { "Content-Type" => "application/rss+xml", "ETag" => "abc" })
+
+        FeedFetcher.new(source: source, jitter: ->(_) { 0 }).call
+
+        source.reload
+        assert_equal 60, source.fetch_interval_minutes, "expected increase factor to double interval up to max"
+
+        stub_request(:get, url).to_raise(Faraday::TimeoutError.new("timed out"))
+
+        FeedFetcher.new(source: source, jitter: ->(_) { 0 }).call
+
+        source.reload
+        assert_equal 120, source.fetch_interval_minutes, "expected failure multiplier to respect max bound"
+        assert_equal source.next_fetch_at, source.backoff_until
+      ensure
+        FeedMonitor.reset_configuration!
+        travel_back
+      end
+
       test "increases interval when feed content unchanged" do
         travel_to Time.zone.parse("2024-01-01 09:00:00 UTC")
 

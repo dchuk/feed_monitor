@@ -102,6 +102,27 @@ module FeedMonitor
       assert_text "Elixir News"
     end
 
+    test "filtering sources via fetch interval heatmap" do
+      create_source!(name: "Quick Source", fetch_interval_minutes: 15, feed_url: "https://quick.example.com/feed.xml")
+      create_source!(name: "Regular Source", fetch_interval_minutes: 45, feed_url: "https://regular.example.com/feed.xml")
+      create_source!(name: "Slow Source", fetch_interval_minutes: 95, feed_url: "https://slow.example.com/feed.xml")
+
+      visit feed_monitor.sources_path
+
+      find("[data-testid='fetch-interval-bucket-30-60']").click
+
+      assert_text "Filtered by fetch interval"
+      assert_text "Regular Source"
+      assert_no_text "Quick Source"
+      assert_no_text "Slow Source"
+
+      click_link "Clear interval filter"
+
+      assert_text "Quick Source"
+      assert_text "Regular Source"
+      assert_text "Slow Source"
+    end
+
     test "manually fetching a source" do
       FeedMonitor::Item.delete_all
       FeedMonitor::Source.delete_all

@@ -390,18 +390,18 @@ module FeedMonitor
       end
 
       def compute_next_interval_seconds(content_changed:, failure:)
-        current = [current_interval_seconds, MIN_FETCH_INTERVAL].max
+        current = [current_interval_seconds, min_fetch_interval_seconds].max
 
         next_interval = if failure
-                          current * FAILURE_INCREASE_FACTOR
+                          current * failure_increase_factor_value
                         elsif content_changed
-                          current * DECREASE_FACTOR
+                          current * decrease_factor_value
                         else
-                          current * INCREASE_FACTOR
+                          current * increase_factor_value
                         end
 
-        next_interval = MIN_FETCH_INTERVAL if next_interval < MIN_FETCH_INTERVAL
-        next_interval = MAX_FETCH_INTERVAL if next_interval > MAX_FETCH_INTERVAL
+        next_interval = min_fetch_interval_seconds if next_interval < min_fetch_interval_seconds
+        next_interval = max_fetch_interval_seconds if next_interval > max_fetch_interval_seconds
         next_interval.to_f
       end
 
@@ -414,6 +414,30 @@ module FeedMonitor
         [minutes, 1].max
       end
 
+      def min_fetch_interval_seconds
+        configured_seconds(fetching_config&.min_interval_minutes, MIN_FETCH_INTERVAL)
+      end
+
+      def max_fetch_interval_seconds
+        configured_seconds(fetching_config&.max_interval_minutes, MAX_FETCH_INTERVAL)
+      end
+
+      def increase_factor_value
+        configured_positive(fetching_config&.increase_factor, INCREASE_FACTOR)
+      end
+
+      def decrease_factor_value
+        configured_positive(fetching_config&.decrease_factor, DECREASE_FACTOR)
+      end
+
+      def failure_increase_factor_value
+        configured_positive(fetching_config&.failure_increase_factor, FAILURE_INCREASE_FACTOR)
+      end
+
+      def jitter_percent_value
+        configured_non_negative(fetching_config&.jitter_percent, JITTER_PERCENT)
+      end
+
       def updated_metadata(feed_signature: nil)
         metadata = (source.metadata || {}).dup
         metadata.delete("dynamic_fetch_interval_seconds")
@@ -424,7 +448,7 @@ module FeedMonitor
       def adjusted_interval_with_jitter(interval_seconds)
         jitter = jitter_offset(interval_seconds)
         adjusted = interval_seconds + jitter
-        adjusted = MIN_FETCH_INTERVAL if adjusted < MIN_FETCH_INTERVAL
+        adjusted = min_fetch_interval_seconds if adjusted < min_fetch_interval_seconds
         adjusted
       end
 
@@ -432,7 +456,7 @@ module FeedMonitor
         return 0 if interval_seconds <= 0
         return jitter_proc.call(interval_seconds) if jitter_proc.respond_to?(:call)
 
-        jitter_range = interval_seconds * JITTER_PERCENT
+        jitter_range = interval_seconds * jitter_percent_value
         return 0 if jitter_range <= 0
 
         ((rand * 2) - 1) * jitter_range
@@ -491,6 +515,40 @@ module FeedMonitor
           created_items:,
           updated_items:
         )
+      end
+
+      def configured_seconds(minutes_value, default)
+        minutes = extract_numeric(minutes_value)
+        return default unless minutes && minutes.positive?
+
+        minutes * 60.0
+      end
+
+      def configured_positive(value, default)
+        number = extract_numeric(value)
+        return default unless number && number.positive?
+
+        number
+      end
+
+      def configured_non_negative(value, default)
+        number = extract_numeric(value)
+        return default if number.nil?
+
+        number.negative? ? 0.0 : number
+      end
+
+      def extract_numeric(value)
+        return value if value.is_a?(Numeric)
+        return value.to_f if value.respond_to?(:to_f)
+
+        nil
+      rescue StandardError
+        nil
+      end
+
+      def fetching_config
+        FeedMonitor.config.fetching
       end
 
       def normalize_item_error(entry, error)

@@ -64,6 +64,16 @@ FeedMonitor.configure do |config|
   # Merge extra default headers (User-Agent defaults to FeedMonitor/version).
   # config.http.headers = { "X-Request-ID" => -> { SecureRandom.uuid } }
 
+  # ---- Adaptive fetch scheduling ----------------------------------------
+  # Control how quickly sources speed up or back off when adaptive fetching
+  # is enabled. Times are in minutes; factors must be positive numbers.
+  # config.fetching.min_interval_minutes = 5    # lower bound (default: 5 minutes)
+  # config.fetching.max_interval_minutes = 1440 # upper bound (default: 24 hours)
+  # config.fetching.increase_factor = 1.25      # multiplier when no new items
+  # config.fetching.decrease_factor = 0.75      # multiplier when new items arrive
+  # config.fetching.failure_increase_factor = 1.5 # multiplier on errors/timeouts
+  # config.fetching.jitter_percent = 0.1        # random jitter (0 disables jitter)
+
   # ---- Scraper adapters --------------------------------------------------
   # Register additional scraper adapters or override built-ins. Adapters must
   # inherit from FeedMonitor::Scrapers::Base.

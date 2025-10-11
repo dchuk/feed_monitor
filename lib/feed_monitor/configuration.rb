@@ -14,7 +14,7 @@ module FeedMonitor
       :mission_control_enabled,
       :mission_control_dashboard_path
 
-    attr_reader :http, :scrapers, :retention, :events, :models, :realtime
+    attr_reader :http, :scrapers, :retention, :events, :models, :realtime, :fetching
 
     DEFAULT_QUEUE_NAMESPACE = "feed_monitor"
 
@@ -34,6 +34,7 @@ module FeedMonitor
       @events = Events.new
       @models = Models.new
       @realtime = RealtimeSettings.new
+      @fetching = FetchingSettings.new
     end
 
     def queue_name_for(role)
@@ -193,6 +194,28 @@ module FeedMonitor
 
       def default_user_agent
         "FeedMonitor/#{FeedMonitor::VERSION}"
+      end
+    end
+
+    class FetchingSettings
+      attr_accessor :min_interval_minutes,
+        :max_interval_minutes,
+        :increase_factor,
+        :decrease_factor,
+        :failure_increase_factor,
+        :jitter_percent
+
+      def initialize
+        reset!
+      end
+
+      def reset!
+        @min_interval_minutes = 5
+        @max_interval_minutes = 24 * 60
+        @increase_factor = 1.25
+        @decrease_factor = 0.75
+        @failure_increase_factor = 1.5
+        @jitter_percent = 0.1
       end
     end
 

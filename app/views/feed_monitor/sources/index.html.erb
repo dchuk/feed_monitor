@@ -17,10 +17,32 @@
     </div>
   </div>
 
-  <% if @search_term.present? %>
-    <div class="rounded-md border border-blue-100 bg-blue-50 px-4 py-2 text-xs text-blue-700">
-      Showing results for “<%= @search_term %>”.
-      <%= link_to "Clear search", feed_monitor.sources_path, class: "ml-2 font-medium text-blue-600 hover:text-blue-500" %>
+  <% if @search_term.present? || @fetch_interval_filter.present? %>
+    <div class="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-700">
+      <% if @search_term.present? %>
+        <% clear_search_query = @search_params.dup %>
+        <% clear_search_query.delete("name_or_feed_url_or_website_url_cont") %>
+        <% clear_search_query = if clear_search_query.respond_to?(:compact_blank)
+          clear_search_query.compact_blank
+        else
+          clear_search_query.reject { |_key, value| value.respond_to?(:blank?) ? value.blank? : value.nil? }
+        end %>
+        <% clear_search_path = clear_search_query.empty? ? feed_monitor.sources_path : feed_monitor.sources_path(q: clear_search_query) %>
+        <div>
+          Showing results for “<%= @search_term %>”.
+          <%= link_to "Clear search", clear_search_path, class: "ml-2 font-medium text-blue-600 hover:text-blue-500" %>
+        </div>
+      <% end %>
+
+      <% if @fetch_interval_filter.present? %>
+        <% filter_label = fetch_interval_filter_label(@selected_fetch_interval_bucket, @fetch_interval_filter) %>
+        <div class="mt-1 flex items-center justify-between gap-2">
+          <span>Filtered by fetch interval <%= filter_label %>.</span>
+          <%= link_to "Clear interval filter",
+                fetch_interval_bucket_path(@selected_fetch_interval_bucket, @search_params, selected: true),
+                class: "font-medium text-blue-600 hover:text-blue-500" %>
+        </div>
+      <% end %>
     </div>
   <% end %>
 
@@ -43,11 +65,22 @@
           <tr>
             <% @fetch_interval_distribution.each do |bucket| %>
               <% bucket_classes = heatmap_bucket_classes(bucket.count, max_count) %>
+              <% selected = bucket == @selected_fetch_interval_bucket %>
+              <% link_path = fetch_interval_bucket_path(bucket, @search_params, selected: selected) %>
+              <% bucket_key = [bucket.min || 0, bucket.max || "plus"].join("-") %>
+              <% highlight_classes = selected ? "ring-2 ring-blue-500 shadow-lg" : "ring-1 ring-transparent hover:ring-blue-400 hover:shadow" %>
               <td class="px-2">
-                <div class="flex flex-col items-center justify-center gap-1 rounded-lg px-3 py-4 text-xs font-semibold <%= bucket_classes %>" title="<%= "#{bucket.count} sources between #{bucket.label}" %>">
-                  <span class="text-base"><%= bucket.count %></span>
-                  <span class="font-medium">sources</span>
-                </div>
+                <%= link_to link_path,
+                      class: "block focus:outline-none group",
+                      data: { turbo_frame: "_top" },
+                      "data-testid" => "fetch-interval-bucket-#{bucket_key}",
+                      aria: { label: selected ? "Show all sources" : "Filter sources by #{bucket.label}" } do %>
+                  <div class="flex flex-col items-center justify-center gap-1 rounded-lg px-3 py-4 text-xs font-semibold transition <%= bucket_classes %> <%= highlight_classes %>"
+                       title="<%= "#{bucket.count} sources between #{bucket.label}" %>">
+                    <span class="text-base"><%= bucket.count %></span>
+                    <span class="font-medium">sources</span>
+                  </div>
+                <% end %>
               </td>
             <% end %>
           </tr>

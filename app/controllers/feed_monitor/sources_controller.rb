@@ -18,8 +18,10 @@ module FeedMonitor
       @search_params = safe_search_params
       @search_term = @search_params[SEARCH_FIELD.to_s].to_s.strip
       @search_field = SEARCH_FIELD
+      @fetch_interval_filter = extract_fetch_interval_filter(@search_params)
 
       @fetch_interval_distribution = FeedMonitor::Analytics::SourceFetchIntervalDistribution.new(scope: @sources).buckets
+      @selected_fetch_interval_bucket = find_matching_bucket(@fetch_interval_filter, @fetch_interval_distribution)
       @item_activity_rates = FeedMonitor::Analytics::SourceActivityRates.new(scope: @sources).per_source_rates
     end
 
@@ -174,6 +176,38 @@ module FeedMonitor
         next if value.respond_to?(:blank?) ? value.blank? : value.nil?
 
         memo[key.to_s] = value
+      end
+    end
+
+    def extract_fetch_interval_filter(search_params)
+      min = integer_param(search_params["fetch_interval_minutes_gteq"])
+      max = integer_param(search_params["fetch_interval_minutes_lt"]) || integer_param(search_params["fetch_interval_minutes_lteq"])
+
+      return if min.nil? && max.nil?
+
+      { min: min, max: max }
+    end
+
+    def integer_param(value)
+      return if value.blank?
+
+      Integer(value)
+    rescue ArgumentError, TypeError
+      nil
+    end
+
+    def find_matching_bucket(filter, buckets)
+      return if filter.blank? || buckets.blank?
+
+      buckets.find do |bucket|
+        min_match = filter[:min].present? ? filter[:min].to_i == bucket.min.to_i : bucket.min.nil?
+        max_match = if bucket.max.nil?
+          filter[:max].nil?
+        else
+          filter[:max].present? && filter[:max].to_i == bucket.max.to_i
+        end
+
+        min_match && max_match
       end
     end
   end

@@ -39,6 +39,7 @@ module FeedMonitor
 
       assert_text "Overview"
       assert_text "Recent Activity"
+      assert_text "Upcoming Fetch Schedule"
       assert_text "Quick Actions"
       assert_text "Job Queues"
 
@@ -52,6 +53,11 @@ module FeedMonitor
       assert_selector "span", text: "Success"
       assert_selector "span", text: "Failure"
       assert_selector "a", text: "Go", count: 3
+
+      within "#feed_monitor_dashboard_fetch_schedule" do
+        assert_text "Upcoming Fetch Schedule"
+        assert_text "Example"
+      end
 
       adapter_label = FeedMonitor::Jobs::Visibility.adapter_name.to_s
       assert_text adapter_label
@@ -117,6 +123,10 @@ module FeedMonitor
 
       within "#feed_monitor_dashboard_recent_activity" do
         assert_text "Fetch ##{fetch_log.id}", wait: 5
+      end
+
+      within "#feed_monitor_dashboard_fetch_schedule" do
+        assert_text "Upcoming Fetch Schedule", wait: 5
       end
     end
 

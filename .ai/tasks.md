@@ -437,10 +437,10 @@
 
 ## 12.04 Fetch Schedule
 
-- [ ] 12.04.01 When clicking a box in the fetch interval histogram table on source index, filter the list of sources to the ones that have that fetch interval
-- [ ] 12.04.02 On Dashboard, show an upcoming fetch schedule, grouped in 15 minute intervals for first hour, 30 minute intervals for hours 2-4, and then all remaining sources with intevals > 4 hours from load. Show these as a stack of cards containing tables of the sources for each interval
-- [ ] 12.04.03 While on the Dashboard, as sources are fetched by the job queue, real-time update the upcoming fetch interval cards with turbo streams
-- [ ] 12.04.04 Make source fetch interval back off and speed up (based on if items are fetched) user configurable in the initalizer
+- [x] 12.04.01 When clicking a box in the fetch interval histogram table on source index, filter the list of sources to the ones that have that fetch interval
+- [x] 12.04.02 On Dashboard, show an upcoming fetch schedule, grouped in 15 minute intervals for first hour, 30 minute intervals for hours 2-4, and then all remaining sources with intevals > 4 hours from current time. Show these as a stack of cards containing tables of the sources for each interval
+- [x] 12.04.03 While on the Dashboard, as sources are fetched by the job queue, real-time update the upcoming fetch interval cards with turbo streams
+- [x] 12.04.04 Make source fetch interval back off and speed up (based on if items are fetched) user configurable in the initalizer
 
 **Deliverable: Modern real-time UI using Rails 8 defaults**
 **Test: Trigger fetch, watch dashboard update in real-time**

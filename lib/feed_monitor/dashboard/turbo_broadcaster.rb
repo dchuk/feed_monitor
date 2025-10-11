@@ -39,6 +39,17 @@ module FeedMonitor
             recent_activity: FeedMonitor::Dashboard::Queries.recent_activity
           )
         )
+
+        fetch_schedule = FeedMonitor::Dashboard::Queries.upcoming_fetch_schedule
+        Turbo::StreamsChannel.broadcast_replace_to(
+          STREAM_NAME,
+          target: "feed_monitor_dashboard_fetch_schedule",
+          html: render_partial(
+            "feed_monitor/dashboard/fetch_schedule",
+            groups: fetch_schedule.groups,
+            reference_time: fetch_schedule.reference_time
+          )
+        )
       rescue StandardError => error
         Rails.logger.error(
           "[FeedMonitor] Turbo stream broadcast failed: #{error.class}: #{error.message}"
