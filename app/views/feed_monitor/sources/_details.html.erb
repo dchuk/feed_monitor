@@ -192,6 +192,7 @@
                     </td>
                     <td class="px-5 py-4 text-xs">
                       <% item_status = async_status_badge(item.scrape_status, show_spinner: false) %>
+                      <% item_status[:label] = "Scraped" if item.scrape_status.to_s == "success" %>
                       <span class="inline-flex items-center rounded-full px-3 py-1 font-semibold <%= item_status[:classes] %>"><%= item_status[:label] %></span>
                     </td>
                   </tr>

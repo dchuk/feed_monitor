@@ -43,6 +43,16 @@ module FeedMonitor
 
     FeedMonitor::ModelExtensions.register(self, :source)
 
+    class << self
+      def ransackable_attributes(_auth_object = nil)
+        %w[name feed_url website_url created_at]
+      end
+
+      def ransackable_associations(_auth_object = nil)
+        []
+      end
+    end
+
     def fetch_interval_minutes=(value)
       self[:fetch_interval_minutes] = value.presence && value.to_i
     end

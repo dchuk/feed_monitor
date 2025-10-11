@@ -32,6 +32,16 @@ module FeedMonitor
 
     FeedMonitor::ModelExtensions.register(self, :item)
 
+    class << self
+      def ransackable_attributes(_auth_object = nil)
+        %w[title summary url published_at created_at scrape_status]
+      end
+
+      def ransackable_associations(_auth_object = nil)
+        %w[source]
+      end
+    end
+
     def scraped_html=(value)
       assign_content_attribute(:scraped_html, value)
     end

@@ -80,6 +80,28 @@ module FeedMonitor
       assert_no_text "Updated Source"
     end
 
+    test "searching sources filters the list" do
+      create_source!(name: "Ruby Updates", feed_url: "https://ruby.example.com/feed.xml")
+      create_source!(name: "Elixir News", feed_url: "https://elixir.example.com/feed.xml")
+
+      visit feed_monitor.sources_path
+
+      assert_text "Ruby Updates"
+      assert_text "Elixir News"
+
+      fill_in "Search sources", with: "Ruby"
+      click_button "Search"
+
+      assert_text "Ruby Updates"
+      assert_no_text "Elixir News"
+      assert_text "Showing results for"
+
+      click_link "Clear search"
+
+      assert_text "Ruby Updates"
+      assert_text "Elixir News"
+    end
+
     test "manually fetching a source" do
       FeedMonitor::Item.delete_all
       FeedMonitor::Source.delete_all

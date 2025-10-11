@@ -16,6 +16,12 @@ rescue LoadError
   # Turbo is optional but recommended for real-time updates.
 end
 
+begin
+  require "ransack"
+rescue LoadError
+  # Ransack powers search forms when available.
+end
+
 require "active_support/core_ext/module/redefine_method"
 
 FeedMonitor.singleton_class.redefine_method(:table_name_prefix) do

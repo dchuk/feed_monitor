@@ -22,8 +22,10 @@ module FeedMonitor
       status_str = status.to_s
 
       label, classes, spinner = case status_str
-      when "queued", "pending"
+      when "queued"
         ["Queued", "bg-amber-100 text-amber-700", show_spinner]
+      when "pending"
+        ["Pending", "bg-amber-100 text-amber-700", show_spinner]
       when "fetching", "processing"
         ["Processing", "bg-blue-100 text-blue-700", show_spinner]
       when "success"

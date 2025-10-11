@@ -5,21 +5,20 @@ module FeedMonitor
     include ActionView::RecordIdentifier
 
     PER_PAGE = 25
+    SEARCH_FIELD = :title_or_summary_or_url_or_source_name_cont
 
     before_action :set_item, only: %i[show scrape]
     before_action :load_scrape_context, only: :show
 
     def index
-      @search = params[:search].to_s.strip
+      base_scope = Item.includes(:source).recent
+      @q = base_scope.ransack(params[:q])
+      @q.sorts = "published_at desc, created_at desc" if @q.sorts.blank?
+
+      scope = @q.result(distinct: true)
+
       @page = params.fetch(:page, 1).to_i
       @page = 1 if @page < 1
-
-      scope = Item.includes(:source).recent
-
-      if @search.present?
-        term = ActiveRecord::Base.sanitize_sql_like(@search)
-        scope = scope.where("title ILIKE ?", "%#{term}%")
-      end
 
       offset = (@page - 1) * PER_PAGE
       @items = scope.offset(offset).limit(PER_PAGE + 1)
@@ -27,6 +26,10 @@ module FeedMonitor
       @has_next_page = @items.length > PER_PAGE
       @items = @items.first(PER_PAGE)
       @has_previous_page = @page > 1
+
+      @search_params = safe_search_params
+      @search_term = @search_params[SEARCH_FIELD.to_s].to_s.strip
+      @search_field = SEARCH_FIELD
     end
 
     def show
@@ -112,6 +115,28 @@ module FeedMonitor
       Rails.logger.info("[FeedMonitor::ManualScrape] #{payload.to_json}")
     rescue StandardError
       nil
+    end
+
+    def safe_search_params
+      raw = params[:q]
+      return {} unless raw
+
+      hash =
+        if raw.respond_to?(:to_unsafe_h)
+          raw.to_unsafe_h
+        elsif raw.respond_to?(:to_h)
+          raw.to_h
+        elsif raw.is_a?(Hash)
+          raw
+        else
+          {}
+        end
+
+      hash.each_with_object({}) do |(key, value), memo|
+        next if value.respond_to?(:blank?) ? value.blank? : value.nil?
+
+        memo[key.to_s] = value
+      end
     end
   end
 end

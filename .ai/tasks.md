@@ -433,7 +433,7 @@
 
 ### 12.03 Add Stimulus Controllers
 
-- [ ] 12.03.03 Allow the search of items and feeds from their indexes (use ransack gem, documented in context7 mcp here: https://context7.com/activerecord-hackery/ransack)
+- [x] 12.03.03 Allow the search of items and feeds from their indexes (use ransack gem, documented in context7 mcp here: https://context7.com/activerecord-hackery/ransack)
 
 ## 12.04 Fetch Schedule
 

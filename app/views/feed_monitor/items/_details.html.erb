@@ -3,6 +3,7 @@
 <% manual_scrape_disabled = !source&.scraping_enabled? %>
 <% inflight_scrape = %w[pending processing].include?(item.scrape_status.to_s) %>
 <% scrape_status = async_status_badge(item.scrape_status) %>
+<% scrape_status[:label] = "Scraped" if item.scrape_status.to_s == "success" %>
 <% recent_scrape_logs = item.scrape_logs.order(started_at: :desc).limit(5) %>
 <% latest_scrape_log = recent_scrape_logs.first %>
 

@@ -4,18 +4,18 @@
       <h1 class="text-3xl font-semibold text-slate-900">Items</h1>
       <p class="mt-1 text-sm text-slate-500">Browse recently ingested entries across all sources.</p>
     </div>
-    <%= form_with url: feed_monitor.items_path, method: :get, local: true, html: { class: "w-full max-w-sm sm:w-auto" } do |form| %>
-      <%= form.label :search, "Search items", class: "sr-only" %>
+    <%= search_form_for @q, url: feed_monitor.items_path, method: :get, html: { class: "w-full max-w-sm sm:w-auto" } do |form| %>
+      <%= form.label @search_field, "Search items", class: "sr-only" %>
       <div class="flex rounded-md shadow-sm">
-        <%= form.text_field :search, value: @search, placeholder: "Search title…", class: "w-full rounded-l-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" %>
+        <%= form.search_field @search_field, placeholder: "Search title, summary, or source…", class: "w-full rounded-l-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" %>
         <%= form.submit "Search", class: "rounded-r-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500" %>
       </div>
     <% end %>
   </div>
 
-  <% if @search.present? %>
+  <% if @search_term.present? %>
     <div class="rounded-md border border-blue-100 bg-blue-50 px-4 py-2 text-xs text-blue-700">
-      Showing results for “<%= @search %>”.
+      Showing results for “<%= @search_term %>”.
       <%= link_to "Clear search", feed_monitor.items_path, class: "ml-2 font-medium text-blue-600 hover:text-blue-500" %>
     </div>
   <% end %>
@@ -85,9 +85,9 @@
     </div>
     <div class="flex gap-2">
       <% prev_params = { page: @page - 1 } %>
-      <% prev_params[:search] = @search if @search.present? %>
+      <% prev_params[:q] = @search_params if @search_params.present? %>
       <% next_params = { page: @page + 1 } %>
-      <% next_params[:search] = @search if @search.present? %>
+      <% next_params[:q] = @search_params if @search_params.present? %>
 
       <% if @has_previous_page %>
         <%= link_to "Previous", feed_monitor.items_path(prev_params), class: "inline-flex items-center rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" %>

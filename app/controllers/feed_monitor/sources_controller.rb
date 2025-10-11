@@ -6,8 +6,19 @@ module FeedMonitor
 
     before_action :set_source, only: %i[show edit update destroy fetch]
 
+    SEARCH_FIELD = :name_or_feed_url_or_website_url_cont
+
     def index
-      @sources = Source.order(created_at: :desc)
+      base_scope = Source.order(created_at: :desc)
+      @q = base_scope.ransack(params[:q])
+      @q.sorts = "created_at desc" if @q.sorts.blank?
+
+      @sources = @q.result
+
+      @search_params = safe_search_params
+      @search_term = @search_params[SEARCH_FIELD.to_s].to_s.strip
+      @search_field = SEARCH_FIELD
+
       @fetch_interval_distribution = FeedMonitor::Analytics::SourceFetchIntervalDistribution.new(scope: @sources).buckets
       @item_activity_rates = FeedMonitor::Analytics::SourceActivityRates.new(scope: @sources).per_source_rates
     end
@@ -142,6 +153,28 @@ module FeedMonitor
           { selectors: %i[content title] }
         ]
       )
+    end
+
+    def safe_search_params
+      raw = params[:q]
+      return {} unless raw
+
+      hash =
+        if raw.respond_to?(:to_unsafe_h)
+          raw.to_unsafe_h
+        elsif raw.respond_to?(:to_h)
+          raw.to_h
+        elsif raw.is_a?(Hash)
+          raw
+        else
+          {}
+        end
+
+      hash.each_with_object({}) do |(key, value), memo|
+        next if value.respond_to?(:blank?) ? value.blank? : value.nil?
+
+        memo[key.to_s] = value
+      end
     end
   end
 end
