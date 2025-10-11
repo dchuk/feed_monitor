@@ -116,6 +116,14 @@ module FeedMonitor
       assert_no_text "Quick Source"
       assert_no_text "Slow Source"
 
+      within "[data-testid='fetch-interval-bucket-5-30']" do
+        assert_text "1"
+      end
+
+      within "[data-testid='fetch-interval-bucket-60-120']" do
+        assert_text "1"
+      end
+
       click_link "Clear interval filter"
 
       assert_text "Quick Source"

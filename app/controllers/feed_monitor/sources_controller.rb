@@ -20,7 +20,8 @@ module FeedMonitor
       @search_field = SEARCH_FIELD
       @fetch_interval_filter = extract_fetch_interval_filter(@search_params)
 
-      @fetch_interval_distribution = FeedMonitor::Analytics::SourceFetchIntervalDistribution.new(scope: @sources).buckets
+      distribution_scope = distribution_sources_scope(base_scope)
+      @fetch_interval_distribution = FeedMonitor::Analytics::SourceFetchIntervalDistribution.new(scope: distribution_scope).buckets
       @selected_fetch_interval_bucket = find_matching_bucket(@fetch_interval_filter, @fetch_interval_distribution)
       @item_activity_rates = FeedMonitor::Analytics::SourceActivityRates.new(scope: @sources).per_source_rates
     end
@@ -194,6 +195,12 @@ module FeedMonitor
       Integer(value)
     rescue ArgumentError, TypeError
       nil
+    end
+
+    def distribution_sources_scope(base_scope)
+      interval_keys = %w[fetch_interval_minutes_gteq fetch_interval_minutes_lt fetch_interval_minutes_lteq]
+      distribution_params = @search_params.except(*interval_keys)
+      base_scope.ransack(distribution_params).result
     end
 
     def find_matching_bucket(filter, buckets)
