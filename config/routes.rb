@@ -9,5 +9,6 @@ FeedMonitor::Engine.routes.draw do
   end
   resources :sources do
     post :fetch, on: :member
+    post :retry, on: :member
   end
 end

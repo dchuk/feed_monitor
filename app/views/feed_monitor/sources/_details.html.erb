@@ -46,6 +46,23 @@
                 action: "turbo:submit-start->async-submit#start turbo:submit-end->async-submit#finish"
               }
             } %>
+      <% if source.fetch_circuit_open? %>
+        <%= button_to "Retry Now",
+              feed_monitor.retry_source_path(source),
+              method: :post,
+              class: "inline-flex items-center rounded-md bg-amber-600 px-3 py-2 text-sm font-medium text-white shadow hover:bg-amber-500",
+              data: {
+                "async-submit-target": "button",
+                "async-submit-loading-text-value": "Retrying..."
+              },
+              form: {
+                class: "inline",
+                data: {
+                  controller: "async-submit",
+                  action: "turbo:submit-start->async-submit#start turbo:submit-end->async-submit#finish"
+                }
+              } %>
+      <% end %>
       <%= link_to "Edit", feed_monitor.edit_source_path(source), class: "inline-flex items-center rounded-md bg-slate-800 px-3 py-2 text-sm font-medium text-white shadow hover:bg-slate-700" %>
       <%= form_with url: feed_monitor.source_path(source), method: :delete, data: { turbo_confirm: "Delete this source?" }, class: "inline" do %>
         <button type="submit" class="inline-flex items-center rounded-md border border-rose-400 px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50">
@@ -54,6 +71,22 @@
       <% end %>
     </div>
   </div>
+
+  <% if source.fetch_circuit_open? %>
+    <div class="rounded-lg border border-amber-200 bg-amber-50 px-6 py-4 shadow-sm">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-medium text-amber-900">Circuit breaker open</h2>
+          <p class="mt-1 text-xs text-amber-700">
+            Recent failures paused automatic fetches until <%= source.fetch_circuit_until&.strftime("%b %d, %Y %H:%M %Z") || "later" %>. Use Retry Now to bypass the cooldown.
+          </p>
+        </div>
+        <span class="inline-flex items-center rounded-full bg-amber-600/10 px-3 py-1 text-xs font-semibold text-amber-700">
+          Failures: <%= source.failure_count %>
+        </span>
+      </div>
+    </div>
+  <% end %>
 
   <% if source.items_retention_days.present? || source.max_items.present? %>
     <div class="rounded-lg border border-blue-200 bg-blue-50 px-6 py-4 shadow-sm">
@@ -88,6 +121,14 @@
         </div>
         <dl class="divide-y divide-slate-100">
           <% interval_hours = number_with_precision(source.fetch_interval_minutes / 60.0, precision: 2)
+             circuit_state =
+               if source.fetch_circuit_open?
+                 until_time = source.fetch_circuit_until&.strftime("%b %d, %Y %H:%M %Z") || "unknown"
+                 "Open until #{until_time}"
+               else
+                 "Closed"
+               end
+
              details = {
                "Website" => (source.website_url.presence || "—"),
                "Fetch interval" => "#{source.fetch_interval_minutes} minutes (~#{interval_hours} hours)",
@@ -99,6 +140,8 @@
                "Auto scrape" => source.auto_scrape? ? "Enabled" : "Disabled",
                "Requires JS" => source.requires_javascript? ? "Yes" : "No",
                "Failure count" => source.failure_count,
+               "Retry attempt" => source.fetch_retry_attempt,
+               "Circuit state" => circuit_state,
                "Last error" => source.last_error.presence || "None",
                "Items count" => source.items_count,
                "Retention days" => source.items_retention_days || "—",

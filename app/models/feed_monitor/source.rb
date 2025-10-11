@@ -37,6 +37,7 @@ module FeedMonitor
     validates :items_retention_days, numericality: { allow_nil: true, only_integer: true, greater_than_or_equal_to: 0 }
     validates :max_items, numericality: { allow_nil: true, only_integer: true, greater_than_or_equal_to: 0 }
     validates :fetch_status, inclusion: { in: FETCH_STATUS_VALUES }
+    validates :fetch_retry_attempt, numericality: { greater_than_or_equal_to: 0, only_integer: true }
 
     validate :feed_url_must_be_http_or_https
     validate :website_url_must_be_http_or_https
@@ -65,6 +66,15 @@ module FeedMonitor
       return 0 unless fetch_interval_minutes
 
       fetch_interval_minutes.to_f / 60.0
+    end
+
+    def fetch_circuit_open?
+      fetch_circuit_until.present? && fetch_circuit_until.future?
+    end
+
+    def fetch_retry_attempt
+      value = super
+      value.present? ? value : 0
     end
 
     private

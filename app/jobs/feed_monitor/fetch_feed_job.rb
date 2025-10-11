@@ -8,11 +8,11 @@ module FeedMonitor
 
     discard_on ActiveJob::DeserializationError
 
-    def perform(source_id)
+    def perform(source_id, force: false)
       source = FeedMonitor::Source.find_by(id: source_id)
       return unless source
 
-      FeedMonitor::Fetching::FetchRunner.new(source: source).run
+      FeedMonitor::Fetching::FetchRunner.new(source: source, force: force).run
     rescue FeedMonitor::Fetching::FetchRunner::ConcurrencyError
       retry_job wait: FETCH_CONCURRENCY_RETRY_WAIT
     end

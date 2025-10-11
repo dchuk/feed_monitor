@@ -11,30 +11,35 @@ module FeedMonitor
 
       class ConcurrencyError < StandardError; end
 
-      attr_reader :source, :fetcher_class, :scrape_job_class, :scrape_enqueuer_class, :retention_pruner_class
+      attr_reader :source, :fetcher_class, :scrape_job_class, :scrape_enqueuer_class, :retention_pruner_class, :force
 
-      def initialize(source:, fetcher_class: FeedMonitor::Fetching::FeedFetcher, scrape_job_class: FeedMonitor::ScrapeItemJob, scrape_enqueuer_class: FeedMonitor::Scraping::Enqueuer, retention_pruner_class: FeedMonitor::Items::RetentionPruner)
+      def initialize(source:, fetcher_class: FeedMonitor::Fetching::FeedFetcher, scrape_job_class: FeedMonitor::ScrapeItemJob, scrape_enqueuer_class: FeedMonitor::Scraping::Enqueuer, retention_pruner_class: FeedMonitor::Items::RetentionPruner, force: false)
         @source = source
         @fetcher_class = fetcher_class
         @scrape_job_class = scrape_job_class
         @scrape_enqueuer_class = scrape_enqueuer_class
         @retention_pruner_class = retention_pruner_class
+        @force = force
+        @retry_scheduled = false
       end
 
       def self.run(source:, **options)
         new(source:, **options).run
       end
 
-      def self.enqueue(source_or_id)
+      def self.enqueue(source_or_id, force: false)
         source = resolve_source(source_or_id)
         return unless source
 
         # Don't broadcast here - controller handles immediate UI update
         source.update!(fetch_status: "queued")
-        FeedMonitor::FetchFeedJob.perform_later(source.id)
+        FeedMonitor::FetchFeedJob.perform_later(source.id, force: force)
       end
 
       def run
+        return skip_due_to_circuit if circuit_blocked?
+
+        @retry_scheduled = false
         result = nil
 
         with_concurrency_guard do
@@ -42,6 +47,7 @@ module FeedMonitor
           result = fetcher_class.new(source: source).call
           apply_retention
           enqueue_follow_up_scrapes(result)
+          schedule_retry_if_needed(result)
           mark_complete!(result)
         end
 
@@ -71,6 +77,16 @@ module FeedMonitor
         ) if defined?(Rails) && Rails.respond_to?(:logger) && Rails.logger
       end
       private_class_method :update_source_state!
+
+      def circuit_blocked?
+        !force && source.fetch_circuit_open?
+      end
+
+      def skip_due_to_circuit
+        update_source_state(fetch_status: "failed")
+        FeedMonitor::Events.after_fetch_completed(source: source, result: nil)
+        nil
+      end
 
       def with_concurrency_guard
         ActiveRecord::Base.connection_pool.with_connection do |connection|
@@ -106,16 +122,36 @@ module FeedMonitor
 
       def mark_complete!(result)
         status = result&.status
-        new_status = status == :failed ? "failed" : "idle"
+        new_status =
+          if @retry_scheduled
+            "queued"
+          else
+            status == :failed ? "failed" : "idle"
+          end
         update_source_state(fetch_status: new_status)
       end
 
       def mark_failed!(_error)
+        @retry_scheduled = false
         update_source_state(fetch_status: "failed")
       end
 
       def update_source_state(attrs)
         self.class.send(:update_source_state!, source, attrs)
+      end
+
+      def schedule_retry_if_needed(result)
+        decision = result&.retry_decision
+        return unless decision&.retry?
+
+        wait = decision.wait || 0
+        queue = FeedMonitor::FetchFeedJob.set(wait: wait)
+        queue.perform_later(source.id, force: false)
+        @retry_scheduled = true
+      rescue StandardError => error
+        Rails.logger.error(
+          "[FeedMonitor] Failed to enqueue retry for source #{source.id}: #{error.class}: #{error.message}"
+        ) if defined?(Rails) && Rails.respond_to?(:logger) && Rails.logger
       end
 
       def enqueue_follow_up_scrapes(result)

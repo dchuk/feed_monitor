@@ -4,7 +4,7 @@ module FeedMonitor
   class SourcesController < ApplicationController
     include ActionView::RecordIdentifier
 
-    before_action :set_source, only: %i[show edit update destroy fetch]
+    before_action :set_source, only: %i[show edit update destroy fetch retry]
 
     SEARCH_FIELD = :name_or_feed_url_or_website_url_cont
 
@@ -63,39 +63,15 @@ module FeedMonitor
     end
 
     def fetch
-      # Update source status optimistically before enqueueing
-      @source.update!(fetch_status: "queued")
       FeedMonitor::Fetching::FetchRunner.enqueue(@source.id)
-      success_message = "Fetch has been enqueued and will run shortly."
+      render_fetch_enqueue_response("Fetch has been enqueued and will run shortly.")
+    rescue StandardError => error
+      handle_fetch_failure(error)
+    end
 
-      respond_to do |format|
-        format.turbo_stream do
-          render turbo_stream: [
-            turbo_stream.replace(
-              dom_id(@source, :details),
-              partial: "feed_monitor/sources/details_wrapper",
-              locals: { source: @source.reload }
-            ),
-            turbo_stream.replace(
-              dom_id(@source, :row),
-              partial: "feed_monitor/sources/row",
-              locals: {
-                source: @source,
-                item_activity_rates: { @source.id => FeedMonitor::Analytics::SourceActivityRates.rate_for(@source) }
-              }
-            ),
-            turbo_stream.append(
-              "feed_monitor_notifications",
-              partial: "feed_monitor/shared/toast",
-              locals: { message: success_message, level: :info, title: nil, delay_ms: 5000 }
-            )
-          ]
-        end
-
-        format.html do
-          redirect_to feed_monitor.source_path(@source), notice: success_message
-        end
-      end
+    def retry
+      FeedMonitor::Fetching::FetchRunner.enqueue(@source.id, force: true)
+      render_fetch_enqueue_response("Retry has been forced and will run shortly.")
     rescue StandardError => error
       handle_fetch_failure(error)
     end
@@ -156,6 +132,38 @@ module FeedMonitor
           { selectors: %i[content title] }
         ]
       )
+    end
+
+    def render_fetch_enqueue_response(message)
+      refreshed = @source.reload
+      respond_to do |format|
+        format.turbo_stream do
+          render turbo_stream: [
+            turbo_stream.replace(
+              dom_id(refreshed, :details),
+              partial: "feed_monitor/sources/details_wrapper",
+              locals: { source: refreshed }
+            ),
+            turbo_stream.replace(
+              dom_id(refreshed, :row),
+              partial: "feed_monitor/sources/row",
+              locals: {
+                source: refreshed,
+                item_activity_rates: { refreshed.id => FeedMonitor::Analytics::SourceActivityRates.rate_for(refreshed) }
+              }
+            ),
+            turbo_stream.append(
+              "feed_monitor_notifications",
+              partial: "feed_monitor/shared/toast",
+              locals: { message:, level: :info, title: nil, delay_ms: 5000 }
+            )
+          ]
+        end
+
+        format.html do
+          redirect_to feed_monitor.source_path(refreshed), notice: message
+        end
+      end
     end
 
     def safe_search_params

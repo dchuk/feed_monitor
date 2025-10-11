@@ -4,12 +4,13 @@ require "time"
 require "digest"
 require "feed_monitor/http"
 require "feed_monitor/fetching/fetch_error"
+require "feed_monitor/fetching/retry_policy"
 require "feed_monitor/items/item_creator"
 
 module FeedMonitor
   module Fetching
     class FeedFetcher
-      Result = Struct.new(:status, :feed, :response, :body, :error, :item_processing, keyword_init: true)
+      Result = Struct.new(:status, :feed, :response, :body, :error, :item_processing, :retry_decision, keyword_init: true)
       EntryProcessingResult = Struct.new(
         :created,
         :updated,
@@ -142,6 +143,7 @@ module FeedMonitor
         instrumentation_payload[:items_created] = processing.created
         instrumentation_payload[:items_updated] = processing.updated
         instrumentation_payload[:items_failed] = processing.failed
+        instrumentation_payload[:retry_attempt] = 0
 
         Result.new(status: :fetched, feed:, response:, body:, item_processing: processing)
       end
@@ -163,6 +165,7 @@ module FeedMonitor
         instrumentation_payload[:items_created] = 0
         instrumentation_payload[:items_updated] = 0
         instrumentation_payload[:items_failed] = 0
+        instrumentation_payload[:retry_attempt] = 0
 
         Result.new(
           status: :not_modified,
@@ -208,6 +211,7 @@ module FeedMonitor
 
         apply_adaptive_interval!(attributes, content_changed: feed_signature_changed?(feed_signature))
         attributes[:metadata] = updated_metadata(feed_signature: feed_signature)
+        reset_retry_state!(attributes)
         source.update!(attributes)
       end
 
@@ -232,6 +236,7 @@ module FeedMonitor
 
         apply_adaptive_interval!(attributes, content_changed: false)
         attributes[:metadata] = updated_metadata
+        reset_retry_state!(attributes)
         source.update!(attributes)
       end
 
@@ -248,7 +253,47 @@ module FeedMonitor
 
         apply_adaptive_interval!(attrs, content_changed: false, failure: true)
         attrs[:metadata] = updated_metadata
+        decision = apply_retry_strategy!(attrs, error, now)
         source.update!(attrs)
+        decision
+      end
+
+      def reset_retry_state!(attributes)
+        attributes[:fetch_retry_attempt] = 0
+        attributes[:fetch_circuit_opened_at] = nil
+        attributes[:fetch_circuit_until] = nil
+      end
+
+      def apply_retry_strategy!(attributes, error, now)
+        decision = FeedMonitor::Fetching::RetryPolicy.new(source:, error:, now:).decision
+
+        if decision.open_circuit?
+          attributes[:fetch_retry_attempt] = 0
+          attributes[:fetch_circuit_opened_at] = now
+          attributes[:fetch_circuit_until] = decision.circuit_until
+          attributes[:next_fetch_at] = decision.circuit_until
+          attributes[:backoff_until] = decision.circuit_until
+        elsif decision.retry?
+          attributes[:fetch_retry_attempt] = decision.next_attempt
+          attributes[:fetch_circuit_opened_at] = nil
+          attributes[:fetch_circuit_until] = nil
+          retry_at = now + decision.wait
+          current_next = attributes[:next_fetch_at]
+          attributes[:next_fetch_at] = [current_next, retry_at].compact.min
+          attributes[:backoff_until] = retry_at
+        else
+          attributes[:fetch_retry_attempt] = 0
+        end
+
+        decision
+      rescue StandardError => policy_error
+        Rails.logger.error(
+          "[FeedMonitor] Failed to apply retry strategy for source #{source.id}: #{policy_error.class} - #{policy_error.message}"
+        ) if defined?(Rails) && Rails.respond_to?(:logger) && Rails.logger
+        attributes[:fetch_retry_attempt] ||= 0
+        attributes[:fetch_circuit_opened_at] ||= nil
+        attributes[:fetch_circuit_until] ||= nil
+        nil
       end
 
       def create_fetch_log(response:, duration_ms:, started_at:, success:, feed: nil, error: nil, body: nil, feed_signature: nil,
@@ -316,7 +361,7 @@ module FeedMonitor
         body = response&.body
         duration_ms = elapsed_ms(started_at)
 
-        update_source_for_failure(error, duration_ms)
+        retry_decision = update_source_for_failure(error, duration_ms)
         create_fetch_log(
           response: response,
           duration_ms: duration_ms,
@@ -335,12 +380,14 @@ module FeedMonitor
         instrumentation_payload[:items_created] = 0
         instrumentation_payload[:items_updated] = 0
         instrumentation_payload[:items_failed] = 0
+        instrumentation_payload[:retry_attempt] = retry_decision&.next_attempt ? retry_decision.next_attempt : 0
 
         Result.new(
           status: :failed,
           response: response,
           body: body,
           error: error,
+          retry_decision: retry_decision,
           item_processing: EntryProcessingResult.new(
             created: 0,
             updated: 0,

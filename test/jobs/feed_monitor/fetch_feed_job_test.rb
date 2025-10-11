@@ -38,14 +38,17 @@ module FeedMonitor
       job = FeedMonitor::FetchFeedJob.new(source.id)
 
       FeedMonitor::Fetching::FetchRunner.stub(:new, ->(**_kwargs) { stub_runner.new }) do
-        assert_enqueued_with(job: FeedMonitor::FetchFeedJob, args: [source.id]) do
+        assert_enqueued_jobs 1 do
           job.perform_now
         end
       end
 
       enqueued = enqueued_jobs.last
       assert_equal FeedMonitor::FetchFeedJob, enqueued[:job]
-      assert_equal [source.id], enqueued[:args]
+      args = enqueued[:args]
+      assert_equal source.id, args.first
+      force_value = args[1]&.[]("force")
+      assert_includes [nil, false], force_value
       assert enqueued[:at].present?, "expected retry to be scheduled in the future"
     end
 

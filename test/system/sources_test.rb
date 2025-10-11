@@ -7,6 +7,7 @@ module FeedMonitor
     include ActiveJob::TestHelper
 
     setup do
+      ActiveJob::Base.queue_adapter = :test
       clear_enqueued_jobs
     end
 
@@ -160,6 +161,32 @@ module FeedMonitor
       total_processed = log.items_created + log.items_updated
       assert_equal source.items_count, total_processed
       assert_equal 0, log.items_failed
+    end
+
+    test "retrying a failed source queues a forced fetch" do
+      FeedMonitor::Source.delete_all
+
+      source = create_source!(
+        name: "Unstable Feed",
+        feed_url: "https://unstable.example.com/feed.xml"
+      )
+
+      source.update!(
+        fetch_status: "failed",
+        fetch_retry_attempt: 0,
+        failure_count: 6,
+        fetch_circuit_opened_at: 1.minute.ago,
+        fetch_circuit_until: 1.hour.from_now
+      )
+
+      visit feed_monitor.source_path(source)
+
+      assert_button "Retry Now"
+      assert_selector "[data-testid='fetch-status-badge']", text: "Failed"
+
+      click_button "Retry Now"
+
+      assert_selector "[data-testid='fetch-status-badge']", text: "Queued"
     end
   end
 end

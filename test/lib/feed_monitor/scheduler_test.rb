@@ -29,8 +29,15 @@ module FeedMonitor
         end
       end
 
-      assert_enqueued_with(job: FeedMonitor::FetchFeedJob, args: [due_one.id])
-      assert_enqueued_with(job: FeedMonitor::FetchFeedJob, args: [due_two.id])
+      job_args = enqueued_jobs.map { |job| job[:args] }
+      assert_equal 2, job_args.size
+
+      normalized = job_args.map do |args|
+        { id: args.first, force: args.last["force"] }
+      end
+
+      assert_includes normalized, { id: due_one.id, force: false }
+      assert_includes normalized, { id: due_two.id, force: false }
     end
 
     test "uses skip locked when selecting due sources" do

@@ -183,6 +183,121 @@ module FeedMonitor
         assert_equal [source], retention_spy.calls
       end
 
+      test "schedules retry according to timeout policy" do
+        source = create_source
+        error = FeedMonitor::Fetching::TimeoutError.new("timeout")
+        stub_fetcher = build_timeout_failure_fetcher(error)
+
+        travel_to Time.zone.parse("2025-10-11 09:00:00 UTC") do
+          FeedMonitor::Realtime.stub :broadcast_source, nil do
+            assert_enqueued_jobs 1 do
+              FetchRunner.new(source:, fetcher_class: stub_fetcher).run
+            end
+          end
+
+          enqueued = enqueued_jobs.last
+          assert_in_delta 2.minutes.from_now.to_f, enqueued[:at], 1.0
+          assert_equal FeedMonitor::FetchFeedJob, enqueued[:job]
+          assert_equal source.id, enqueued[:args].first
+          assert_equal false, enqueued[:args].last["force"]
+
+          source.reload
+          assert_equal 1, source.fetch_retry_attempt
+          assert_in_delta 2.minutes.from_now, source.next_fetch_at, 1.second
+        end
+
+        clear_enqueued_jobs
+      end
+
+      test "opens circuit after exceeding retry attempts" do
+        source = create_source
+        error = FeedMonitor::Fetching::TimeoutError.new("timeout")
+        stub_fetcher = build_timeout_failure_fetcher(error)
+
+        travel_to Time.zone.parse("2025-10-11 10:00:00 UTC") do
+          FeedMonitor::Realtime.stub :broadcast_source, nil do
+            3.times do |attempt|
+              clear_enqueued_jobs
+
+              if attempt < 2
+                assert_enqueued_jobs 1 do
+                  FetchRunner.new(source:, fetcher_class: stub_fetcher).run
+                end
+              else
+                assert_enqueued_jobs 0 do
+                  FetchRunner.new(source:, fetcher_class: stub_fetcher).run
+                end
+              end
+
+              source.reload
+            end
+          end
+
+          source.reload
+          assert source.fetch_circuit_open?
+          assert source.fetch_circuit_until > Time.current
+          assert_equal 0, source.fetch_retry_attempt
+        end
+
+        clear_enqueued_jobs
+      end
+
+      test "success resets retry counters and closes circuit" do
+        source = create_source
+
+        # First failure triggers retry attempt
+        error = FeedMonitor::Fetching::TimeoutError.new("timeout")
+        failure_fetcher = build_timeout_failure_fetcher(error)
+
+        FeedMonitor::Realtime.stub :broadcast_source, nil do
+          travel_to Time.zone.parse("2025-10-11 11:00:00 UTC") do
+            assert_enqueued_jobs 1 do
+              FetchRunner.new(source:, fetcher_class: failure_fetcher).run
+            end
+          end
+        end
+
+        clear_enqueued_jobs
+        source.reload
+        assert_equal 1, source.fetch_retry_attempt
+
+        success_fetcher = build_success_fetcher
+
+        FeedMonitor::Realtime.stub :broadcast_source, nil do
+          travel_to Time.zone.parse("2025-10-11 11:05:00 UTC") do
+            assert_enqueued_jobs 0 do
+              FetchRunner.new(source:, fetcher_class: success_fetcher).run
+            end
+          end
+        end
+
+        source.reload
+        assert_equal 0, source.fetch_retry_attempt
+        refute source.fetch_circuit_open?
+        assert_nil source.fetch_circuit_until
+      end
+
+      test "force run bypasses open circuit" do
+        source = create_source
+        source.update!(
+          fetch_circuit_opened_at: Time.zone.parse("2025-10-11 08:50:00 UTC"),
+          fetch_circuit_until: Time.zone.parse("2025-10-11 12:00:00 UTC")
+        )
+
+        stub_fetcher = build_success_fetcher
+
+        FeedMonitor::Realtime.stub :broadcast_source, nil do
+          assert_enqueued_jobs 0 do
+            FetchRunner.new(source:, fetcher_class: stub_fetcher, force: true).run
+          end
+        end
+
+        source.reload
+        refute source.fetch_circuit_open?
+        assert_nil source.fetch_circuit_until
+        assert_equal 0, source.fetch_retry_attempt
+      end
+
       private
 
       def create_source(scraping_enabled: false, auto_scrape: false)
@@ -190,6 +305,89 @@ module FeedMonitor
           scraping_enabled: scraping_enabled,
           auto_scrape: auto_scrape
         )
+      end
+
+      def empty_processing_result
+        FeedMonitor::Fetching::FeedFetcher::EntryProcessingResult.new(
+          created: 0,
+          updated: 0,
+          failed: 0,
+          items: [],
+          errors: [],
+          created_items: [],
+          updated_items: []
+        )
+      end
+
+      def apply_decision!(source, decision, now)
+        return unless decision
+
+        if decision.open_circuit?
+          source.update!(
+            fetch_retry_attempt: 0,
+            fetch_circuit_opened_at: now,
+            fetch_circuit_until: decision.circuit_until,
+            next_fetch_at: decision.circuit_until,
+            backoff_until: decision.circuit_until
+          )
+        elsif decision.retry?
+          retry_at = now + decision.wait
+          source.update!(
+            fetch_retry_attempt: decision.next_attempt,
+            fetch_circuit_opened_at: nil,
+            fetch_circuit_until: nil,
+            next_fetch_at: retry_at,
+            backoff_until: retry_at
+          )
+        end
+      end
+
+      def clear_retry_state!(source)
+        source.update!(
+          fetch_retry_attempt: 0,
+          fetch_circuit_opened_at: nil,
+          fetch_circuit_until: nil
+        )
+      end
+
+      def build_timeout_failure_fetcher(error)
+        context = self
+
+        Class.new do
+          define_method(:initialize) do |source:, **|
+            @source = source
+          end
+
+          define_method(:call) do
+            now = Time.current
+            decision = FeedMonitor::Fetching::RetryPolicy.new(source: @source, error: error, now: now).decision
+            context.send(:apply_decision!, @source, decision, now)
+            FeedMonitor::Fetching::FeedFetcher::Result.new(
+              status: :failed,
+              error: error,
+              retry_decision: decision,
+              item_processing: context.send(:empty_processing_result)
+            )
+          end
+        end
+      end
+
+      def build_success_fetcher
+        context = self
+
+        Class.new do
+          define_method(:initialize) do |source:, **|
+            @source = source
+          end
+
+          define_method(:call) do
+            context.send(:clear_retry_state!, @source)
+            FeedMonitor::Fetching::FeedFetcher::Result.new(
+              status: :fetched,
+              item_processing: context.send(:empty_processing_result)
+            )
+          end
+        end
       end
 
       class DummyFetcher

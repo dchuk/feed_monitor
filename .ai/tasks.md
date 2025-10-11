@@ -453,11 +453,11 @@
 
 ### 13.01 Implement Smart Retries
 
-- [ ] 13.01.01 Add retry strategies per error type
-- [ ] 13.01.02 Implement circuit breaker pattern
-- [ ] 13.01.03 Auto-adjust fetch intervals on failure
-- [ ] 13.01.04 Add manual retry from UI
-- [ ] 13.01.05 Test retry behavior
+- [x] 13.01.01 Add retry strategies per error type
+- [x] 13.01.02 Implement circuit breaker pattern
+- [x] 13.01.03 Auto-adjust fetch intervals on failure
+- [x] 13.01.04 Add manual retry from UI
+- [x] 13.01.05 Test retry behavior
 
 ### 13.02 Source Health Monitoring
 

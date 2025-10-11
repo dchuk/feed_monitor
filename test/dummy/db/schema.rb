@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_10_160000) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_11_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -145,8 +145,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_10_160000) do
     t.string "type"
     t.string "fetch_status", default: "idle", null: false
     t.datetime "last_fetch_started_at"
+    t.integer "fetch_retry_attempt", default: 0, null: false
+    t.datetime "fetch_circuit_opened_at"
+    t.datetime "fetch_circuit_until"
     t.index ["active"], name: "index_feed_monitor_sources_on_active"
     t.index ["feed_url"], name: "index_feed_monitor_sources_on_feed_url", unique: true
+    t.index ["fetch_circuit_until"], name: "index_feed_monitor_sources_on_fetch_circuit_until"
+    t.index ["fetch_retry_attempt"], name: "index_feed_monitor_sources_on_fetch_retry_attempt"
     t.index ["fetch_status"], name: "index_feed_monitor_sources_on_fetch_status"
     t.index ["next_fetch_at"], name: "index_feed_monitor_sources_on_next_fetch_at"
     t.index ["type"], name: "index_feed_monitor_sources_on_type"
