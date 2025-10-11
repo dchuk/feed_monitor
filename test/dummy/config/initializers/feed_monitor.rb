@@ -30,10 +30,10 @@ FeedMonitor.configure do |config|
   # developers can experiment with accelerated polling windows in the dummy app.
   # config.fetching.min_interval_minutes = 5
   # config.fetching.max_interval_minutes = 1440
-  # config.fetching.increase_factor = 1.25
-  # config.fetching.decrease_factor = 0.75
+  config.fetching.increase_factor = 1.05
+  config.fetching.decrease_factor = 0.5
   # config.fetching.failure_increase_factor = 1.5
-  # config.fetching.jitter_percent = 0.1
+  config.fetching.jitter_percent = 0.01
 
   # Example overrides retained for development experimentation.
   # config.http.headers = { "X-FeedMonitor" => "dummy" }
