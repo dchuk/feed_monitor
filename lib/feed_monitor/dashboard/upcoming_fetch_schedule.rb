@@ -20,17 +20,11 @@ module FeedMonitor
       end
 
       INTERVAL_DEFINITIONS = [
-        { key: "0-15", label: "Next 15 minutes", min_minutes: 0, max_minutes: 15 },
-        { key: "15-30", label: "15-30 minutes", min_minutes: 15, max_minutes: 30 },
-        { key: "30-45", label: "30-45 minutes", min_minutes: 30, max_minutes: 45 },
-        { key: "45-60", label: "45-60 minutes", min_minutes: 45, max_minutes: 60 },
-        { key: "60-90", label: "60-90 minutes", min_minutes: 60, max_minutes: 90 },
-        { key: "90-120", label: "90-120 minutes", min_minutes: 90, max_minutes: 120 },
-        { key: "120-150", label: "2-2.5 hours", min_minutes: 120, max_minutes: 150 },
-        { key: "150-180", label: "2.5-3 hours", min_minutes: 150, max_minutes: 180 },
-        { key: "180-210", label: "3-3.5 hours", min_minutes: 180, max_minutes: 210 },
-        { key: "210-240", label: "3.5-4 hours", min_minutes: 210, max_minutes: 240 },
-        { key: "240+", label: "Beyond 4 hours", min_minutes: 240, max_minutes: nil, include_unscheduled: true }
+        { key: "0-30", label: "Within 30 minutes", min_minutes: 0, max_minutes: 30 },
+        { key: "30-60", label: "30-60 minutes", min_minutes: 30, max_minutes: 60 },
+        { key: "60-120", label: "60-120 minutes", min_minutes: 60, max_minutes: 120 },
+        { key: "120-240", label: "120-240 minutes", min_minutes: 120, max_minutes: 240 },
+        { key: "240+", label: "240 minutes +", min_minutes: 240, max_minutes: nil, include_unscheduled: true }
       ].freeze
 
       attr_reader :scope, :reference_time

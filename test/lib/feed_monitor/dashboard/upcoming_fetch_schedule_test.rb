@@ -38,8 +38,8 @@ module FeedMonitor
           schedule = FeedMonitor::Dashboard::UpcomingFetchSchedule.new(scope: FeedMonitor::Source.all)
           groups = schedule.groups.index_by(&:key)
 
-          assert_includes groups.fetch("0-15").sources, near_term
-          assert_includes groups.fetch("60-90").sources, mid_term
+          assert_includes groups.fetch("0-30").sources, near_term
+          assert_includes groups.fetch("60-120").sources, mid_term
 
           beyond_group = groups.fetch("240+")
           assert_includes beyond_group.sources, long_term
