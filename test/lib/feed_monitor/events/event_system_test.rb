@@ -156,7 +156,7 @@ module FeedMonitor
 
     class TestScraper < FeedMonitor::Scrapers::Base
       def call
-        Result.new(
+        FeedMonitor::Scrapers::Base::Result.new(
           status: :success,
           html: "<html></html>",
           content: "body",

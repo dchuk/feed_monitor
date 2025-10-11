@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_10_154500) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_10_160000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -150,6 +150,16 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_10_154500) do
     t.index ["fetch_status"], name: "index_feed_monitor_sources_on_fetch_status"
     t.index ["next_fetch_at"], name: "index_feed_monitor_sources_on_next_fetch_at"
     t.index ["type"], name: "index_feed_monitor_sources_on_type"
+  end
+
+  create_table "solid_cable_messages", force: :cascade do |t|
+    t.binary "channel", null: false
+    t.binary "payload", null: false
+    t.datetime "created_at", null: false
+    t.bigint "channel_hash", null: false
+    t.index ["channel"], name: "index_solid_cable_messages_on_channel"
+    t.index ["channel_hash"], name: "index_solid_cable_messages_on_channel_hash"
+    t.index ["created_at"], name: "index_solid_cable_messages_on_created_at"
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|

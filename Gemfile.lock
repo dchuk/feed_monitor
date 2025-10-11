@@ -10,6 +10,7 @@ PATH
       nokolexbor (~> 0.5)
       rails (>= 8.0.2.1)
       ruby-readability (~> 0.7)
+      solid_cable (>= 0.2)
       solid_queue (>= 0.3)
       tailwindcss-rails
       turbo-rails
@@ -266,10 +267,6 @@ GEM
       erb
       psych (>= 4.0.0)
       tsort
-    redis (5.4.1)
-      redis-client (>= 0.22.0)
-    redis-client (0.26.1)
-      connection_pool
     regexp_parser (2.11.3)
     reline (0.6.2)
       io-console (~> 0.5)
@@ -315,6 +312,11 @@ GEM
       rexml (~> 3.2, >= 3.2.5)
       rubyzip (>= 1.2.2, < 4.0)
       websocket (~> 1.0)
+    solid_cable (3.0.12)
+      actioncable (>= 7.2)
+      activejob (>= 7.2)
+      activerecord (>= 7.2)
+      railties (>= 7.2)
     solid_queue (1.2.1)
       activejob (>= 7.1)
       activerecord (>= 7.1)
@@ -378,7 +380,6 @@ DEPENDENCIES
   pg
   propshaft
   puma
-  redis (>= 4.0)
   rubocop-rails-omakase
   selenium-webdriver
   vcr

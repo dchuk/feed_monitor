@@ -34,6 +34,7 @@ Run `bin/setup` to install gems, prepare the dummy database, and compile Tailwin
   - `config.scrapers` registers/overrides adapters by name; adapters must inherit from `FeedMonitor::Scrapers::Base` and are discovered before constant lookup.
   - `config.retention` supplies global defaults for `items_retention_days`, `max_items`, and the pruning strategy (`:destroy` or `:soft_delete`). Runtimes treat blank source fields as “inherit from config”.
   - `config.models` lets host apps adjust table name prefixes, mix in concerns, and register custom validations per engine model. Use it to bolt on associations or STI-specific rules without monkey patches.
+  - `config.realtime` selects the Action Cable backend (`:solid_cable` by default). Solid Cable keeps Turbo streams in the primary database; set `config.realtime.adapter = :redis` and optionally `config.realtime.redis_url` when hosts prefer Redis.
 - Install generator and dummy initializer list all knobs with comments—update those when slicing future roadmap items.
 
 ## Retention Defaults

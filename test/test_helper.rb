@@ -37,6 +37,10 @@ class ActiveSupport::TestCase
     FeedMonitor.reset_configuration!
   end
 
+  teardown do
+    FeedMonitor.reset_configuration!
+  end
+
   private
 
   def create_source!(attributes = {})

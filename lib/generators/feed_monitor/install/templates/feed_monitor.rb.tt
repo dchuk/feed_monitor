@@ -105,4 +105,16 @@ FeedMonitor.configure do |config|
   # your concerns.
   # config.models.source.validate :enforce_custom_rules
   # config.models.source.validate ->(record) { record.errors.add(:base, "custom error") }
+
+  # ---- Realtime adapter -------------------------------------------------
+  # Choose the Action Cable backend powering Turbo Streams. Solid Cable keeps
+  # everything in the primary database so Redis is no longer required. Switch
+  # to :redis if the host already runs a Redis cluster.
+  config.realtime.adapter = :solid_cable
+  # config.realtime.redis_url = ENV.fetch("FEED_MONITOR_REDIS_URL", nil)
+  # config.realtime.solid_cable.polling_interval = "0.05.seconds"
+  # config.realtime.solid_cable.message_retention = "12.hours"
+  # config.realtime.solid_cable.connects_to = {
+  #   database: { writing: :cable }
+  # }
 end

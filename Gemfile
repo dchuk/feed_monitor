@@ -7,8 +7,6 @@ gem "puma"
 
 gem "pg"
 
-gem "redis", ">= 4.0"
-
 gem "propshaft"
 
 # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
