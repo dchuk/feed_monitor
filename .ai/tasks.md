@@ -554,11 +554,11 @@
 
 ### 17.04 Controller & View Cleanup
 
-- [ ] 17.04.01 Extract a shared sanitized search helper and replace duplicated logic in sources, items, and logs controllers
-- [ ] 17.04.02 Introduce a shared pagination service (or Pagy adoption) with unit coverage and integrate into items index flows
-- [ ] 17.04.03 Create Turbo presenter/responder objects for notifications and details partial updates, updating controller actions accordingly
-- [ ] 17.04.04 Consolidate fetch and scrape log filtering into a shared concern with tests for query parameter casting and scopes
-- [ ] 17.04.05 Move analytics aggregation/bucketing logic out of `SourcesController#index` into a reusable query/presenter with dedicated tests
+- [x] 17.04.01 Extract a shared sanitized search helper and replace duplicated logic in sources, items, and logs controllers
+- [x] 17.04.02 Introduce a shared pagination service (or Pagy adoption) with unit coverage and integrate into items index flows
+- [x] 17.04.03 Create Turbo presenter/responder objects for notifications and details partial updates, updating controller actions accordingly
+- [x] 17.04.04 Consolidate fetch and scrape log filtering into a shared concern with tests for query parameter casting and scopes
+- [x] 17.04.05 Move analytics aggregation/bucketing logic out of `SourcesController#index` into a reusable query/presenter with dedicated tests
 
 ### 17.05 Service Decomposition
 

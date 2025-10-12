@@ -2,10 +2,13 @@
 
 module FeedMonitor
   class ScrapeLogsController < ApplicationController
+    include FeedMonitor::LogFiltering
+
     def index
-      status_param = FeedMonitor::Security::ParameterSanitizer.sanitize(params[:status].to_s)
-      @status = status_param.presence_in(%w[success failed])
-      @logs = scoped_logs.limit(50)
+      @status = log_filter_status
+      @item_id = log_filter_item_id
+      @source_id = log_filter_source_id
+      @logs = filter_scrape_logs(base_scope).limit(50)
     end
 
     def show
@@ -14,35 +17,8 @@ module FeedMonitor
 
     private
 
-    def scoped_logs
-      scope = ScrapeLog.includes(:item, :source).recent
-
-      if (item_id = integer_param(params[:item_id]))
-        scope = scope.where(item_id: item_id)
-      end
-
-      if (source_id = integer_param(params[:source_id]))
-        scope = scope.where(source_id: source_id)
-      end
-
-      case @status
-      when "success"
-        scope.successful
-      when "failed"
-        scope.failed
-      else
-        scope
-      end
-    end
-
-    def integer_param(value)
-      return if value.nil?
-
-      sanitized = FeedMonitor::Security::ParameterSanitizer.sanitize(value.to_s)
-      cleaned = sanitized.strip
-      return if cleaned.blank?
-
-      Integer(cleaned, exception: false)
+    def base_scope
+      ScrapeLog.includes(:item, :source).recent
     end
   end
 end

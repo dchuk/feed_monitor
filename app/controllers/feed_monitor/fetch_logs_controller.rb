@@ -2,10 +2,11 @@
 
 module FeedMonitor
   class FetchLogsController < ApplicationController
+    include FeedMonitor::LogFiltering
+
     def index
-      status_param = FeedMonitor::Security::ParameterSanitizer.sanitize(params[:status].to_s)
-      @status = status_param.presence_in(%w[success failed])
-      @logs = scoped_logs.limit(50)
+      @status = log_filter_status
+      @logs = filter_fetch_logs(base_scope).limit(50)
     end
 
     def show
@@ -14,16 +15,8 @@ module FeedMonitor
 
     private
 
-    def scoped_logs
-      scope = FetchLog.includes(:source).recent
-      case @status
-      when "success"
-        scope.successful
-      when "failed"
-        scope.failed
-      else
-        scope
-      end
+    def base_scope
+      FetchLog.includes(:source).recent
     end
   end
 end

@@ -16,5 +16,22 @@ module FeedMonitor
       refute_includes response_body, "%3Cimg"
       refute_includes response_body, "&lt;img"
     end
+
+    test "paginates items and ignores invalid page numbers" do
+      source = create_source!
+      items = Array.new(2) do |index|
+        FeedMonitor::Item.create!(
+          source: source,
+          guid: SecureRandom.uuid,
+          url: "https://example.com/articles/#{index}",
+          title: "Item #{index}"
+        )
+      end
+
+      get "/feed_monitor/items", params: { page: "-5" }
+
+      assert_response :success
+      assert_includes response.body, items.last.title
+    end
   end
 end

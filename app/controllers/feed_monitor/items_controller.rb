@@ -3,6 +3,7 @@
 module FeedMonitor
   class ItemsController < ApplicationController
     include ActionView::RecordIdentifier
+    include FeedMonitor::SanitizesSearchParams
 
     PER_PAGE = 25
     SEARCH_FIELD = :title_or_summary_or_url_or_source_name_cont
@@ -17,16 +18,16 @@ module FeedMonitor
       @q.sorts = ["published_at desc", "created_at desc"] if @q.sorts.blank?
 
       scope = @q.result(distinct: true)
+      paginator = FeedMonitor::Pagination::Paginator.new(
+        scope:,
+        page: params[:page],
+        per_page: PER_PAGE
+      ).paginate
 
-      @page = params.fetch(:page, 1).to_i
-      @page = 1 if @page < 1
-
-      offset = (@page - 1) * PER_PAGE
-      @items = scope.offset(offset).limit(PER_PAGE + 1)
-
-      @has_next_page = @items.length > PER_PAGE
-      @items = @items.first(PER_PAGE)
-      @has_previous_page = @page > 1
+      @items = paginator.records
+      @page = paginator.page
+      @has_next_page = paginator.has_next_page
+      @has_previous_page = paginator.has_previous_page
 
       @search_term = @search_params[SEARCH_FIELD.to_s].to_s.strip
       @search_field = SEARCH_FIELD
@@ -51,28 +52,23 @@ module FeedMonitor
         format.turbo_stream do
           log_manual_scrape("controller:respond_turbo", item: @item, extra: { status: status })
 
-          streams = []
+          responder = FeedMonitor::TurboStreams::StreamResponder.new
 
-          # Always update the item details if enqueue succeeded or was already enqueued
           if enqueue_result.enqueued? || enqueue_result.already_enqueued?
-            streams << turbo_stream.replace(
-              dom_id(@item, :details),
+            refreshed_item = @item.reload
+            responder.replace_details(
+              refreshed_item,
               partial: "feed_monitor/items/details_wrapper",
-              locals: { item: @item.reload }
+              locals: { item: refreshed_item }
             )
           end
 
-          # Add toast notification
           if flash_message
             level = flash_key == :notice ? :info : :error
-            streams << turbo_stream.append(
-              "feed_monitor_notifications",
-              partial: "feed_monitor/shared/toast",
-              locals: { message: flash_message, level: level, title: nil, delay_ms: 5000 }
-            )
+            responder.toast(message: flash_message, level:, delay_ms: 5000)
           end
 
-          render turbo_stream: streams, status: status
+          render turbo_stream: responder.render(view_context), status: status
         end
 
         format.html do
@@ -117,28 +113,5 @@ module FeedMonitor
       nil
     end
 
-    def sanitized_search_params
-      raw = params[:q]
-      return {} unless raw
-
-      hash =
-        if raw.respond_to?(:to_unsafe_h)
-          raw.to_unsafe_h
-        elsif raw.respond_to?(:to_h)
-          raw.to_h
-        elsif raw.is_a?(Hash)
-          raw
-        else
-          {}
-        end
-
-      sanitized = FeedMonitor::Security::ParameterSanitizer.sanitize(hash)
-
-      sanitized.each_with_object({}) do |(key, value), memo|
-        next if value.respond_to?(:blank?) ? value.blank? : value.nil?
-
-        memo[key.to_s] = value
-      end
-    end
   end
 end
