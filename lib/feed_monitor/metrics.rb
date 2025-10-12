@@ -52,6 +52,17 @@ module FeedMonitor
         gauge(:last_fetch_duration_ms, duration_ms)
       end
 
+      ActiveSupport::Notifications.subscribe("feed_monitor.scheduler.run") do |_name, start, finish, _id, payload|
+        enqueued = payload[:enqueued_count].to_i
+        duration_ms = payload[:duration_ms] || ((finish - start) * 1000.0).round(2)
+
+        increment(:scheduler_runs_total)
+        increment(:scheduler_sources_enqueued_total, enqueued)
+        gauge(:scheduler_last_enqueued_count, enqueued)
+        gauge(:scheduler_last_duration_ms, duration_ms)
+        gauge(:scheduler_last_run_at_epoch, finish.to_f)
+      end
+
       @subscribed = true
     end
 

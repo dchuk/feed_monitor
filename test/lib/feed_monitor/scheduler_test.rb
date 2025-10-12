@@ -60,6 +60,36 @@ module FeedMonitor
       end
     end
 
+    test "instruments scheduler runs and updates metrics" do
+      FeedMonitor::Metrics.reset!
+      now = Time.current
+      create_source(next_fetch_at: now - 1.minute)
+
+      events = []
+      subscription = ActiveSupport::Notifications.subscribe("feed_monitor.scheduler.run") do |*args|
+        events << args.last
+      end
+
+      travel_to(now) do
+        FeedMonitor::Scheduler.run(limit: nil)
+      end
+
+      assert_equal 1, events.size
+      payload = events.first
+      assert_equal 1, payload[:enqueued_count]
+      assert payload[:duration_ms].is_a?(Numeric)
+
+      snapshot = FeedMonitor::Metrics.snapshot
+      assert_equal 1, snapshot[:counters]["scheduler_runs_total"]
+      assert_equal 1, snapshot[:counters]["scheduler_sources_enqueued_total"]
+      assert_equal 1, snapshot[:gauges]["scheduler_last_enqueued_count"]
+      assert snapshot[:gauges]["scheduler_last_duration_ms"] >= 0
+      assert snapshot[:gauges]["scheduler_last_run_at_epoch"].positive?
+    ensure
+      ActiveSupport::Notifications.unsubscribe(subscription) if subscription
+      FeedMonitor::Metrics.reset!
+    end
+
   private
 
     def create_source(overrides = {})

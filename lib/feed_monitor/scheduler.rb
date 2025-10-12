@@ -14,14 +14,21 @@ module FeedMonitor
     end
 
     def run
-      source_ids = lock_due_source_ids
-      return 0 if source_ids.empty?
+      payload = { limit: limit }
 
-      source_ids.each do |source_id|
-        FeedMonitor::Fetching::FetchRunner.enqueue(source_id)
+      ActiveSupport::Notifications.instrument("feed_monitor.scheduler.run", payload) do
+        start_monotonic = FeedMonitor::Instrumentation.monotonic_time
+        source_ids = lock_due_source_ids
+        payload[:enqueued_count] = source_ids.size
+
+        source_ids.each do |source_id|
+          FeedMonitor::Fetching::FetchRunner.enqueue(source_id)
+        end
+
+        payload[:duration_ms] = ((FeedMonitor::Instrumentation.monotonic_time - start_monotonic) * 1000.0).round(2)
+
+        source_ids.size
       end
-
-      source_ids.size
     end
 
     private
