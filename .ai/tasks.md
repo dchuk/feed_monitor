@@ -571,7 +571,7 @@
 
 ### 17.06 Job & Scheduling Reliability
 
-- [ ] 17.06.01 Align `FeedMonitor::ScrapeItemJob` with shared state helpers, ensuring consistent pending/processing transitions and job tests
+- [x] 17.06.01 Align `FeedMonitor::ScrapeItemJob` with shared state helpers, ensuring consistent pending/processing transitions and job tests
 - [ ] 17.06.02 Centralize cleanup job option parsing into a shared utility and update ItemCleanupJob/LogCleanupJob specs
 - [ ] 17.06.03 Add explicit retry/backoff policy for transient errors in `FeedMonitor::FetchFeedJob` with coverage for retry scheduling
 - [ ] 17.06.04 Instrument `FeedMonitor::Scheduler` runs and expose metrics/hooks verified by integration tests

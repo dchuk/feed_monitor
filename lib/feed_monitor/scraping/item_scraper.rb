@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require "feed_monitor/scraping/item_scraper/adapter_resolver"
+require "feed_monitor/scraping/item_scraper/persistence"
+
 module FeedMonitor
   module Scraping
     # Orchestrates execution of the configured scraper adapter for an item,

@@ -19,8 +19,6 @@ module FeedMonitor
         end
       end
 
-      IN_FLIGHT_STATUSES = %w[pending processing].freeze
-
       attr_reader :item, :source, :job_class, :reason
 
       def self.enqueue(item:, source: nil, job_class: FeedMonitor::ScrapeItemJob, reason: :manual)
@@ -48,13 +46,13 @@ module FeedMonitor
         item.with_lock do
           item.reload
 
-          if in_flight?(item.scrape_status)
+          if FeedMonitor::Scraping::State.in_flight?(item.scrape_status)
             log("enqueue:in_flight", item:, status: item.scrape_status)
             already_queued = true
             next
           end
 
-          mark_pending!
+          FeedMonitor::Scraping::State.mark_pending!(item, broadcast: false, lock: false)
         end
 
         if already_queued
@@ -71,16 +69,6 @@ module FeedMonitor
 
       def auto_reason?
         reason == :auto
-      end
-
-      def in_flight?(status)
-        IN_FLIGHT_STATUSES.include?(status.to_s)
-      end
-
-      def mark_pending!
-        item.update_columns(scrape_status: "pending") # rubocop:disable Rails/SkipsModelValidations
-        log("enqueue:mark_pending", item:, status: item.scrape_status)
-        # Don't broadcast here - the controller handles the immediate UI update
       end
 
       def failure(status, message)

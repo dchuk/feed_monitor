@@ -14,42 +14,22 @@ module FeedMonitor
       source = item.source
       unless source&.scraping_enabled?
         log("job:skipped_scraping_disabled", item: item)
-        clear_inflight_status(item)
+        FeedMonitor::Scraping::State.clear_inflight!(item)
         return
       end
 
-      mark_processing(item)
+      FeedMonitor::Scraping::State.mark_processing!(item)
       FeedMonitor::Scraping::ItemScraper.new(item:, source:).call
-      log("job:completed", item: item)
+      log("job:completed", item: item, status: item.scrape_status)
+    rescue StandardError => error
+      log("job:error", item: item, error: error.message)
+      FeedMonitor::Scraping::State.mark_failed!(item)
+      raise
+    ensure
+      FeedMonitor::Scraping::State.clear_inflight!(item) if item
     end
 
     private
-
-    def mark_processing(item)
-      item.with_lock do
-        item.reload
-        item.update_columns(scrape_status: "processing") # rubocop:disable Rails/SkipsModelValidations
-      end
-      log("job:mark_processing", item: item, status: item.scrape_status)
-      FeedMonitor::Realtime.broadcast_item(item)
-    rescue StandardError
-      # If we fail to mark the item as processing (for example if it was
-      # deleted mid-flight), allow the scrape to continue without the hint.
-      nil
-    end
-
-    def clear_inflight_status(item)
-      item.with_lock do
-        item.reload
-        if %w[pending processing].include?(item.scrape_status)
-          item.update_columns(scrape_status: nil) # rubocop:disable Rails/SkipsModelValidations
-        end
-      end
-      log("job:clear_inflight", item: item, status: item.scrape_status)
-      FeedMonitor::Realtime.broadcast_item(item)
-    rescue StandardError
-      nil
-    end
 
     def log(stage, item: nil, item_id: nil, **extra)
       return unless defined?(Rails) && Rails.respond_to?(:logger) && Rails.logger
