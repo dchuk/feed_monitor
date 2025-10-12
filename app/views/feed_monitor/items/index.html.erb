@@ -21,62 +21,106 @@
   <% end %>
 
   <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-    <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
-      <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-        <tr>
-          <th scope="col" class="px-6 py-3">Title</th>
-          <th scope="col" class="px-6 py-3">Source</th>
-          <th scope="col" class="px-6 py-3">Published</th>
-          <th scope="col" class="px-6 py-3">Scrape Status</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-slate-100 text-slate-700">
-        <% @items.each do |item| %>
-          <tr class="hover:bg-slate-50">
-            <td class="px-6 py-4">
-              <div class="font-medium text-slate-900">
-                <%= link_to item.title.presence || "(untitled)", feed_monitor.item_path(item), class: "hover:text-blue-600" %>
-              </div>
-              <% if item.summary.present? %>
-                <div class="mt-1 text-xs text-slate-500"><%= item.summary %></div>
-              <% end %>
-            </td>
-            <td class="px-6 py-4 text-sm">
-              <% if item.source %>
-                <%= link_to item.source.name, feed_monitor.source_path(item.source), class: "text-blue-600 hover:text-blue-500" %>
-              <% else %>
-                <span class="text-slate-400">—</span>
-              <% end %>
-            </td>
-            <td class="px-6 py-4 text-xs text-slate-500">
-              <%= item.published_at ? item.published_at.strftime("%b %d, %Y %H:%M") : "Unpublished" %>
-            </td>
-            <td class="px-6 py-4 text-xs">
-              <% status_label, status_classes =
-                   case item.scrape_status
-                   when "success"
-                     ["Scraped", "bg-green-100 text-green-700"]
-                   when "failed"
-                     ["Failed", "bg-rose-100 text-rose-700"]
-                   when "pending"
-                     ["Pending", "bg-amber-100 text-amber-700"]
-                   else
-                     ["Not Scraped", "bg-slate-100 text-slate-600"]
-                   end %>
-              <span class="inline-flex items-center rounded-full px-3 py-1 font-semibold <%= status_classes %>"><%= status_label %></span>
-            </td>
-          </tr>
-        <% end %>
-
-        <% if @items.blank? %>
+    <%= turbo_frame_tag "feed_monitor_items_table" do %>
+      <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+        <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
           <tr>
-            <td colspan="4" class="px-6 py-6 text-center text-sm text-slate-500">
-              No items found.
-            </td>
+            <th scope="col"
+                class="px-6 py-3"
+                data-sort-column="title"
+                aria-sort="<%= table_sort_aria(@q, :title) %>">
+              <span class="inline-flex items-center gap-1">
+                <%= table_sort_link(
+                      @q,
+                      :title,
+                      "Title",
+                      frame: "feed_monitor_items_table",
+                      default_order: :asc,
+                      secondary: ["published_at desc", "created_at desc"],
+                      html_options: {
+                        class: "inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-600 hover:text-slate-900 focus:outline-none"
+                      }
+                    ) %>
+                <span class="text-[11px] text-slate-400" aria-hidden="true"><%= table_sort_arrow(@q, :title) %></span>
+              </span>
+            </th>
+            <th scope="col" class="px-6 py-3">Source</th>
+            <th scope="col"
+                class="px-6 py-3"
+                data-sort-column="published_at"
+                aria-sort="<%= table_sort_aria(@q, :published_at) %>">
+              <span class="inline-flex items-center gap-1">
+                <%= table_sort_link(
+                      @q,
+                      :published_at,
+                      "Published",
+                      frame: "feed_monitor_items_table",
+                      default_order: :desc,
+                      secondary: ["created_at desc"],
+                      html_options: {
+                        class: "inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-600 hover:text-slate-900 focus:outline-none"
+                      }
+                    ) %>
+                <span class="text-[11px] text-slate-400" aria-hidden="true"><%= table_sort_arrow(@q, :published_at) %></span>
+              </span>
+            </th>
+            <th scope="col" class="px-6 py-3">Scrape Status</th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-slate-700">
+          <% @items.each do |item| %>
+            <tr class="hover:bg-slate-50">
+              <td class="px-6 py-4">
+                <div class="font-medium text-slate-900">
+                  <%= link_to item.title.presence || "(untitled)",
+                        feed_monitor.item_path(item),
+                        class: "hover:text-blue-600",
+                        data: { turbo_frame: "_top" } %>
+                </div>
+                <% if item.summary.present? %>
+                  <div class="mt-1 text-xs text-slate-500"><%= item.summary %></div>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 text-sm">
+                <% if item.source %>
+                  <%= link_to item.source.name,
+                        feed_monitor.source_path(item.source),
+                        class: "text-blue-600 hover:text-blue-500",
+                        data: { turbo_frame: "_top" } %>
+                <% else %>
+                  <span class="text-slate-400">—</span>
+                <% end %>
+              </td>
+              <td class="px-6 py-4 text-xs text-slate-500">
+                <%= item.published_at ? item.published_at.strftime("%b %d, %Y %H:%M") : "Unpublished" %>
+              </td>
+              <td class="px-6 py-4 text-xs">
+                <% status_label, status_classes =
+                     case item.scrape_status
+                     when "success"
+                       ["Scraped", "bg-green-100 text-green-700"]
+                     when "failed"
+                       ["Failed", "bg-rose-100 text-rose-700"]
+                     when "pending"
+                       ["Pending", "bg-amber-100 text-amber-700"]
+                     else
+                       ["Not Scraped", "bg-slate-100 text-slate-600"]
+                     end %>
+                <span class="inline-flex items-center rounded-full px-3 py-1 font-semibold <%= status_classes %>"><%= status_label %></span>
+              </td>
+            </tr>
+          <% end %>
+
+          <% if @items.blank? %>
+            <tr>
+              <td colspan="4" class="px-6 py-6 text-center text-sm text-slate-500">
+                No items found.
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
   </div>
 
   <div class="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">

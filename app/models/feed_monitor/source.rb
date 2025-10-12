@@ -49,7 +49,7 @@ module FeedMonitor
 
     class << self
       def ransackable_attributes(_auth_object = nil)
-        %w[name feed_url website_url created_at fetch_interval_minutes]
+        %w[name feed_url website_url created_at fetch_interval_minutes items_count last_fetched_at]
       end
 
       def ransackable_associations(_auth_object = nil)

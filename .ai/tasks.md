@@ -507,15 +507,15 @@
 
 ### 16.03 Table sorting by columns
 
-- [ ] 16.03.01 Column headers are clickable, flipping sort direction by asc and desc for that column with arrows showing sort direction. use hotwire/turbo to refresh table upon column heading click without forcing full page reload
-- [ ] 16.03.02 Items index table default sorts by published timestamp desc
-- [ ] 16.03.03 move health monitoring card below source details sidebar card on source show view
-- [ ] 16.03.04 remove new source link from navbar
-- [ ] 16.03.05 show categories and tags on the item show view in the sidebar Item Details card
-- [ ] 16.03.06 Show categories and tags columns on the source show view in the items table
-- [ ] 16.03.07 source title should link to the source show page from the source index page table. View/Edit links per source row should be in a dropdown behind a gear icon (use dropdown from Stimulus Components as documented in context7 mcp here: https://context7.com/stimulus-components/stimulus-components)
-- [ ] 16.03.08 Move "View Original" and "Manual Scrape" buttons to be above the Content Comparison card to fix wrapping issues
-- [ ] 16.03.09 the title of each row in Recent Activity table on dashboard should link to the show view of that thing (fetch logs, scrape logs, items, etc)
+- [x] 16.03.01 Column headers in tables are clickable, flipping sort direction by asc and desc by the attribute for that column with arrows showing sort direction. use hotwire/turbo to refresh table upon column heading click without forcing full page reload
+- [x] 16.03.02 Items index table default sorts by published timestamp desc
+- [x] 16.03.03 move health monitoring card below source details sidebar card on source show view
+- [x] 16.03.04 remove new source link from navbar
+- [x] 16.03.05 show categories and tags on the item show view in the sidebar Item Details card
+- [x] 16.03.06 Show categories and tags columns on the source show view in the items table
+- [x] 16.03.07 source title should link to the source show page from the source index page table. View/Edit links per source row should be in a dropdown behind a gear icon (use dropdown from Stimulus Components as documented in context7 mcp here: https://context7.com/stimulus-components/stimulus-components)
+- [x] 16.03.08 Move "View Original" and "Manual Scrape" buttons to be above the Content Comparison card to fix wrapping issues
+- [x] 16.03.09 the title of each row in Recent Activity table on dashboard should link to the show view of that thing (fetch logs, scrape logs, items, etc)
 
 **Deliverable: Enterprise-ready security**
 **Test: Security scan with brakeman, verify protections**

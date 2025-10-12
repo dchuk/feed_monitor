@@ -24,6 +24,7 @@
 
   register("notification", window.FeedMonitorNotificationController);
   register("async-submit", window.FeedMonitorAsyncSubmitController);
+  register("dropdown", window.FeedMonitorDropdownController);
 
   document.addEventListener("turbo:submit-end", () => {
     document.dispatchEvent(new CustomEvent("feed-monitor:form-finished"));

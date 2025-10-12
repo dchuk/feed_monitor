@@ -29,9 +29,9 @@ module FeedMonitor
       end
 
       source = Source.create!(name: "Example", feed_url: "https://example.com/feed", next_fetch_at: 1.hour.from_now)
-      Item.create!(source:, guid: "item-1", url: "https://example.com/item")
-      FetchLog.create!(source:, success: true, items_created: 1, items_updated: 0, started_at: Time.current)
-      ScrapeLog.create!(source:, item: source.items.first, success: false, scraper_adapter: "readability", started_at: 5.minutes.ago)
+      item = Item.create!(source:, guid: "item-1", title: "Dashboard Item", url: "https://example.com/item")
+      fetch_log = FetchLog.create!(source:, success: true, items_created: 1, items_updated: 0, started_at: Time.current)
+      scrape_log = ScrapeLog.create!(source:, item:, success: false, scraper_adapter: "readability", started_at: 5.minutes.ago)
 
       seed_queue_activity
 
@@ -53,6 +53,11 @@ module FeedMonitor
       assert_selector "span", text: "Success"
       assert_selector "span", text: "Failure"
       assert_selector "a", text: "Go", count: 3
+      within "#feed_monitor_dashboard_recent_activity" do
+        assert_selector "a", text: "Dashboard Item"
+        assert_selector "a", text: "Fetch ##{fetch_log.id}"
+        assert_selector "a", text: "Scrape ##{scrape_log.id}"
+      end
 
       within "#feed_monitor_dashboard_fetch_schedule" do
         assert_text "Upcoming Fetch Schedule"

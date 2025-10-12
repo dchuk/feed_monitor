@@ -26,6 +26,8 @@ module FeedMonitor
         content: "Full content body for the first article.",
         scraped_html: "<article><p>Scraped HTML</p></article>",
         scraped_content: "Scraped plain text content.",
+        categories: %w[engineering performance],
+        tags: %w[ruby rails],
         scrape_status: "success",
         scraped_at: Time.current,
         published_at: Time.current,
@@ -46,6 +48,8 @@ module FeedMonitor
       assert_text "First Article"
       assert_text "Second Post"
 
+      assert_item_order ["First Article", "Second Post"]
+
       fill_in "Search items", with: "First"
       click_button "Search"
 
@@ -63,6 +67,14 @@ module FeedMonitor
       assert_text "Scraped plain text content."
       assert_text "View raw HTML"
       assert_text "word_count"
+      within(:xpath, "//div[contains(@class,'rounded-lg')][.//h2[text()='Item Details']]") do
+        assert_text "engineering, performance"
+        assert_text "ruby, rails"
+      end
+      within(:xpath, "//div[contains(@class,'rounded-lg')][.//h2[text()='Counts & Metrics']]") do
+        refute_text "engineering, performance"
+        refute_text "ruby, rails"
+      end
     end
 
     test "manually scraping an item updates content and records a log" do
@@ -99,6 +111,61 @@ module FeedMonitor
       assert_text "Readable body text"
       find("summary", text: "View raw HTML").click
       assert_text "Rendered HTML"
+    end
+
+    test "items table supports sorting" do
+      FeedMonitor::Item.delete_all
+      source = create_source!(name: "Sorted Source")
+
+      older = FeedMonitor::Item.create!(
+        source: source,
+        guid: "item-old",
+        title: "Older Item",
+        url: "https://example.com/items/old",
+        published_at: 2.days.ago
+      )
+      newer = FeedMonitor::Item.create!(
+        source: source,
+        guid: "item-new",
+        title: "Newer Item",
+        url: "https://example.com/items/new",
+        published_at: 1.hour.ago
+      )
+
+      visit feed_monitor.items_path
+
+      assert_item_order ["Newer Item", "Older Item"]
+      within "turbo-frame#feed_monitor_items_table thead th[data-sort-column='published_at']" do
+        assert_text "▼"
+      end
+
+      within "turbo-frame#feed_monitor_items_table thead" do
+        click_link "Published"
+      end
+      assert_item_order ["Older Item", "Newer Item"]
+      within "turbo-frame#feed_monitor_items_table thead th[data-sort-column='published_at']" do
+        assert_text "▲"
+      end
+
+      within "turbo-frame#feed_monitor_items_table thead" do
+        click_link "Published"
+      end
+      assert_item_order ["Newer Item", "Older Item"]
+      within "turbo-frame#feed_monitor_items_table thead th[data-sort-column='published_at']" do
+        assert_text "▼"
+      end
+    end
+
+    private
+
+    def assert_item_order(expected)
+      within "turbo-frame#feed_monitor_items_table" do
+        expected.each_with_index do |title, index|
+          assert_selector :xpath,
+            format(".//tbody/tr[%<row>d]/td[1]", row: index + 1),
+            text: /\A#{Regexp.escape(title)}/
+        end
+      end
     end
   end
 end

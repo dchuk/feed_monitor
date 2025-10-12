@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "application_system_test_case"
+require "uri"
 
 module FeedMonitor
   class SourcesTest < ApplicationSystemTestCase
@@ -17,7 +18,11 @@ module FeedMonitor
     test "managing a source end to end" do
       visit feed_monitor.sources_path
 
-      assert_selector "th", text: "New Items / Day"
+      within "header nav" do
+        assert_no_link "New Source"
+      end
+
+      assert_selector "th", text: /New Items \/ Day/i
       assert_selector "[data-testid='fetch-interval-heatmap']"
 
       click_link "New Source", match: :first
@@ -45,6 +50,8 @@ module FeedMonitor
         title: "UI Item Article",
         url: "https://example.com/articles/ui",
         summary: "Monitoring summary for UI validations.",
+        categories: %w[news analytics],
+        tags: %w[ruby rails],
         scrape_status: "success",
         published_at: Time.current
       )
@@ -53,6 +60,14 @@ module FeedMonitor
 
       assert_selector "[data-testid='source-items-table']"
       assert_text "UI Item Article"
+      within "[data-testid='source-items-table'] thead" do
+        assert_text(/Categories/i)
+        assert_text(/Tags/i)
+      end
+      within "[data-testid='source-items-table'] tbody tr:first-child" do
+        assert_text "news, analytics"
+        assert_text "ruby, rails"
+      end
 
       click_link "Edit"
       fill_in "Name", with: "Updated Source"
@@ -130,6 +145,62 @@ module FeedMonitor
       assert_text "Quick Source"
       assert_text "Regular Source"
       assert_text "Slow Source"
+    end
+
+    test "sources table supports sorting and dropdown actions" do
+      FeedMonitor::Source.delete_all
+      older = create_source!(name: "Alpha Feed", feed_url: "https://alpha.example.com/feed.xml")
+      newer = create_source!(name: "Zeta Feed", feed_url: "https://zeta.example.com/feed.xml")
+      older.update_columns(created_at: 1.hour.ago)
+      newer.update_columns(created_at: Time.current)
+
+      visit feed_monitor.sources_path
+
+      assert_source_order ["Zeta Feed", "Alpha Feed"]
+
+      within "turbo-frame#feed_monitor_sources_table thead" do
+        click_link "Source"
+      end
+
+      assert_source_order ["Alpha Feed", "Zeta Feed"]
+      within "turbo-frame#feed_monitor_sources_table thead th[data-sort-column='name']" do
+        assert_text "▲"
+      end
+
+      within "turbo-frame#feed_monitor_sources_table thead" do
+        click_link "Source"
+      end
+      assert_source_order ["Zeta Feed", "Alpha Feed"]
+      within "turbo-frame#feed_monitor_sources_table thead th[data-sort-column='name']" do
+        assert_text "▼"
+      end
+
+      within "turbo-frame#feed_monitor_sources_table" do
+        first_row = find("tbody tr:first-child")
+        within first_row do
+          name_link = find("td:first-child a", text: "Zeta Feed")
+          assert_equal feed_monitor.source_path(newer), URI.parse(name_link[:href]).path
+
+          assert_no_link "View"
+          assert_no_link "Edit"
+
+          find("button[aria-label='Source actions']").click
+          assert_link "View"
+          assert_link "Edit"
+        end
+      end
+    end
+
+    private
+
+    def assert_source_order(expected)
+      within "turbo-frame#feed_monitor_sources_table" do
+        expected.each_with_index do |name, index|
+          assert_selector :xpath,
+            format(".//tbody/tr[%<row>d]/td[1]", row: index + 1),
+            text: /\A#{Regexp.escape(name)}/
+        end
+      end
     end
 
     test "manually fetching a source" do

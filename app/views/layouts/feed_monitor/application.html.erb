@@ -10,8 +10,11 @@
   <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
   <%= turbo_include_tags %>
   <%= javascript_include_tag "stimulus.umd.js", "data-turbo-track": "reload" %>
+  <%= javascript_include_tag "feed_monitor/dropdown_transition_shim", "data-turbo-track": "reload" %>
+  <%= javascript_include_tag "stimulus-dropdown.umd.js", "data-turbo-track": "reload" %>
   <%= javascript_include_tag "feed_monitor/controllers/notification_controller", "data-turbo-track": "reload" %>
   <%= javascript_include_tag "feed_monitor/controllers/async_submit_controller", "data-turbo-track": "reload" %>
+  <%= javascript_include_tag "feed_monitor/controllers/dropdown_controller", "data-turbo-track": "reload" %>
   <%= javascript_include_tag "feed_monitor/application", "data-turbo-track": "reload" %>
 </head>
 <body class="fm-admin">
@@ -28,8 +31,7 @@
           ["Sources", feed_monitor.sources_path],
           ["Items", feed_monitor.items_path],
           ["Fetch Logs", feed_monitor.fetch_logs_path],
-          ["Scrape Logs", feed_monitor.scrape_logs_path],
-          ["New Source", feed_monitor.new_source_path]
+          ["Scrape Logs", feed_monitor.scrape_logs_path]
         ] %>
         <nav class="flex gap-2">
           <% nav_items.each do |label, path| %>

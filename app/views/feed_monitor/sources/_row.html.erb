@@ -10,7 +10,12 @@
 
 <tr id="<%= dom_id(source, :row) %>" class="hover:bg-slate-50">
   <td class="px-6 py-4">
-    <div class="font-medium text-slate-900"><%= source.name %></div>
+    <div class="font-medium text-slate-900">
+      <%= link_to source.name,
+            feed_monitor.source_path(source),
+            class: "text-slate-900 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
+            data: { turbo_frame: "_top" } %>
+    </div>
     <div class="text-xs text-slate-500 truncate max-w-xs"><%= source.feed_url %></div>
   </td>
   <td class="px-6 py-4">
@@ -41,8 +46,28 @@
     <%= source.last_fetched_at ? source.last_fetched_at.strftime("%b %d, %H:%M") : "Never" %>
   </td>
   <td class="px-6 py-4 text-right text-sm">
-    <%= link_to "View", feed_monitor.source_path(source), class: "text-blue-600 hover:text-blue-500" %>
-    <span class="mx-2 text-slate-300">|</span>
-    <%= link_to "Edit", feed_monitor.edit_source_path(source), class: "text-slate-600 hover:text-slate-500" %>
+    <div data-controller="dropdown" class="relative inline-block text-left">
+      <button type="button"
+              class="inline-flex items-center rounded-md border border-slate-200 bg-white px-2.5 py-1.5 text-slate-600 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              data-action="dropdown#toggle click@window->dropdown#hide"
+              aria-label="Source actions">
+        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.592c.55 0 1.02.398 1.11.94l.287 1.718a1.125 1.125 0 0 0 1.017.93l1.932.149c.552.043.98.5.98 1.053v2.516c0 .553-.428 1.01-.98 1.053l-1.932.149a1.125 1.125 0 0 0-1.017.93l-.287 1.718c-.09.542-.56.94-1.11.94h-2.592c-.55 0-1.02-.398-1.11-.94l-.287-1.718a1.125 1.125 0 0 0-1.017-.93l-1.932-.149A1.062 1.062 0 0 1 6 11.42V8.904c0-.553.428-1.01.98-1.053l1.932-.149a1.125 1.125 0 0 0 1.017-.93l.287-1.718Z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v3m0 3h.008v.008H12V15Z" />
+        </svg>
+      </button>
+      <div data-dropdown-target="menu" class="absolute right-0 z-10 mt-2 w-36 origin-top-right rounded-md border border-slate-200 bg-white shadow-lg transition hidden">
+        <div class="py-1 text-sm text-slate-700">
+          <%= link_to "View",
+                feed_monitor.source_path(source),
+                class: "block px-3 py-2 hover:bg-slate-50",
+                data: { action: "dropdown#toggle", turbo_frame: "_top" } %>
+          <%= link_to "Edit",
+                feed_monitor.edit_source_path(source),
+                class: "block px-3 py-2 hover:bg-slate-50",
+                data: { action: "dropdown#toggle", turbo_frame: "_top" } %>
+        </div>
+      </div>
+    </div>
   </td>
 </tr>

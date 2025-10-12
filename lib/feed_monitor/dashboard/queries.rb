@@ -18,13 +18,16 @@ module FeedMonitor
       end
 
       def recent_activity(limit: 8)
+        helpers = FeedMonitor::Engine.routes.url_helpers
+
         fetch_events = FetchLog.order(started_at: :desc).limit(limit).map do |log|
           {
             time: log.started_at,
             label: "Fetch ##{log.id}",
             status: log.success? ? :success : :failure,
             description: "#{log.items_created} created / #{log.items_updated} updated",
-            type: :fetch
+            type: :fetch,
+            path: helpers.fetch_log_path(log)
           }
         end
 
@@ -34,7 +37,8 @@ module FeedMonitor
             label: "Scrape ##{log.id}",
             status: log.success? ? :success : :failure,
             description: log.scraper_adapter.presence || "Scraper",
-            type: :scrape
+            type: :scrape,
+            path: helpers.scrape_log_path(log)
           }
         end
 
@@ -44,7 +48,8 @@ module FeedMonitor
             label: item.title.presence || "New Item",
             status: :success,
             description: item.source&.name || item.url || "New feed item",
-            type: :item
+            type: :item,
+            path: helpers.item_path(item)
           }
         end
 

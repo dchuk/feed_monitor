@@ -9,7 +9,13 @@
         <div class="flex items-center justify-between px-5 py-4">
           <div>
             <div class="flex items-center gap-2">
-              <div class="text-sm font-medium text-slate-900"><%= event[:label] %></div>
+              <div class="text-sm font-medium text-slate-900">
+                <% if event[:path].present? %>
+                  <%= link_to event[:label], event[:path], data: { turbo_frame: "_top" }, class: "text-slate-900 hover:text-blue-600" %>
+                <% else %>
+                  <%= event[:label] %>
+                <% end %>
+              </div>
               <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-600"><%= event[:type].to_s.humanize %></span>
             </div>
             <div class="mt-1 text-xs text-slate-500">

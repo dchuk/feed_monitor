@@ -90,29 +90,103 @@
   </div>
 
   <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-    <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
-      <thead class="bg-slate-50 text-xs font-semibold tracking-wide text-slate-500">
-        <tr>
-          <th scope="col" class="px-6 py-3">Source</th>
-          <th scope="col" class="px-6 py-3">Status</th>
-          <th scope="col" class="px-6 py-3">Fetch Interval</th>
-          <th scope="col" class="px-6 py-3">Items</th>
-          <th scope="col" class="px-6 py-3">New Items / Day</th>
-          <th scope="col" class="px-6 py-3">Last Fetch</th>
-          <th scope="col" class="px-6 py-3"></th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-slate-100 text-slate-700">
-        <%= render partial: "feed_monitor/sources/row", collection: @sources, as: :source, locals: { item_activity_rates: @item_activity_rates } %>
-
-        <% if @sources.blank? %>
+    <%= turbo_frame_tag "feed_monitor_sources_table" do %>
+      <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+        <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
           <tr>
-            <td colspan="7" class="px-6 py-6 text-center text-sm text-slate-500">
-              No sources yet. <%= link_to "Create the first source", feed_monitor.new_source_path, class: "text-blue-600 hover:text-blue-500" %>.
-            </td>
+            <th scope="col"
+                class="px-6 py-3"
+                data-sort-column="name"
+                aria-sort="<%= table_sort_aria(@q, :name) %>">
+              <span class="inline-flex items-center gap-1">
+                <%= table_sort_link(
+                      @q,
+                      :name,
+                      "Source",
+                      frame: "feed_monitor_sources_table",
+                      default_order: :asc,
+                      secondary: ["created_at desc"],
+                      html_options: {
+                        class: "inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-600 hover:text-slate-900 focus:outline-none"
+                      }
+                    ) %>
+                <span class="text-[11px] text-slate-400" aria-hidden="true"><%= table_sort_arrow(@q, :name) %></span>
+              </span>
+            </th>
+            <th scope="col" class="px-6 py-3">Status</th>
+            <th scope="col"
+                class="px-6 py-3"
+                data-sort-column="fetch_interval_minutes"
+                aria-sort="<%= table_sort_aria(@q, :fetch_interval_minutes) %>">
+              <span class="inline-flex items-center gap-1">
+                <%= table_sort_link(
+                      @q,
+                      :fetch_interval_minutes,
+                      "Fetch Interval",
+                      frame: "feed_monitor_sources_table",
+                      default_order: :asc,
+                      secondary: ["created_at desc"],
+                      html_options: {
+                        class: "inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-600 hover:text-slate-900 focus:outline-none"
+                      }
+                    ) %>
+                <span class="text-[11px] text-slate-400" aria-hidden="true"><%= table_sort_arrow(@q, :fetch_interval_minutes) %></span>
+              </span>
+            </th>
+            <th scope="col"
+                class="px-6 py-3"
+                data-sort-column="items_count"
+                aria-sort="<%= table_sort_aria(@q, :items_count) %>">
+              <span class="inline-flex items-center gap-1">
+                <%= table_sort_link(
+                      @q,
+                      :items_count,
+                      "Items",
+                      frame: "feed_monitor_sources_table",
+                      default_order: :desc,
+                      secondary: ["created_at desc"],
+                      html_options: {
+                        class: "inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-600 hover:text-slate-900 focus:outline-none"
+                      }
+                    ) %>
+                <span class="text-[11px] text-slate-400" aria-hidden="true"><%= table_sort_arrow(@q, :items_count) %></span>
+              </span>
+            </th>
+            <th scope="col" class="px-6 py-3">New Items / Day</th>
+            <th scope="col"
+                class="px-6 py-3"
+                data-sort-column="last_fetched_at"
+                aria-sort="<%= table_sort_aria(@q, :last_fetched_at) %>">
+              <span class="inline-flex items-center gap-1">
+                <%= table_sort_link(
+                      @q,
+                      :last_fetched_at,
+                      "Last Fetch",
+                      frame: "feed_monitor_sources_table",
+                      default_order: :desc,
+                      secondary: ["created_at desc"],
+                      html_options: {
+                        class: "inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-600 hover:text-slate-900 focus:outline-none"
+                      }
+                    ) %>
+                <span class="text-[11px] text-slate-400" aria-hidden="true"><%= table_sort_arrow(@q, :last_fetched_at) %></span>
+              </span>
+            </th>
+            <th scope="col" class="px-6 py-3"></th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-slate-700">
+          <%= render partial: "feed_monitor/sources/row", collection: @sources, as: :source, locals: { item_activity_rates: @item_activity_rates } %>
+
+          <% if @sources.blank? %>
+            <tr>
+              <td colspan="7" class="px-6 py-6 text-center text-sm text-slate-500">
+                No sources yet. <%= link_to "Create the first source", feed_monitor.new_source_path, class: "text-blue-600 hover:text-blue-500" %>.
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
   </div>
 </div>
