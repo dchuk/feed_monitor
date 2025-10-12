@@ -32,7 +32,8 @@ module FeedMonitor
     end
 
     test "uses exception strategy for CSRF protection" do
-      assert_equal :exception, FeedMonitor::ApplicationController.forgery_protection_strategy
+      assert_equal ActionController::RequestForgeryProtection::ProtectionMethods::Exception,
+        FeedMonitor::ApplicationController.forgery_protection_strategy
     end
   end
 end

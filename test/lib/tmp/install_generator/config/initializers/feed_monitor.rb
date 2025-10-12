@@ -51,6 +51,15 @@ FeedMonitor.configure do |config|
   #   # config.mission_control_dashboard_path = "/mission_control"
   config.mission_control_dashboard_path = nil
 
+  # ---- Authentication -----------------------------------------------------
+  # Hook Feed Monitor into your host application's authentication stack. Each
+  # handler can be a Symbol (invoked on the controller) or a callable that will
+  # receive the controller instance.
+  # config.authentication.authenticate_with :authenticate_admin!
+  # config.authentication.authorize_with -> { authorize!(:manage, :feed_monitor) }
+  # config.authentication.current_user_method = :current_admin
+  # config.authentication.user_signed_in_method = :admin_signed_in?
+
   # ---- HTTP client -------------------------------------------------------
   # Tune the Faraday client Feed Monitor uses for fetches/scrapes.
   config.http.timeout = 15

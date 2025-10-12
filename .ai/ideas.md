@@ -6,6 +6,4 @@
 - for the sources interval heatmap, clicking any box should filter the table to those sources
 - job queues table needs to be rethought
 - add opml import/export
-- remove new source link from navbar
 - clean upgrade strategy
-- move health monitoring card below source details sidebar card

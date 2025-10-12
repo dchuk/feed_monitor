@@ -3,22 +3,20 @@
 module FeedMonitor
   module Security
     module Authentication
-      module_function
-
-      def authenticate!(controller)
-        call_handler(settings.authenticate_handler, controller)
+      def self.authenticate!(controller)
+        call_handler(FeedMonitor.config.authentication.authenticate_handler, controller)
       end
 
-      def authorize!(controller)
-        call_handler(settings.authorize_handler, controller)
+      def self.authorize!(controller)
+        call_handler(FeedMonitor.config.authentication.authorize_handler, controller)
       end
 
-      def current_user(controller)
+      def self.current_user(controller)
         method_name = preferred_current_user_method(controller)
         safe_public_send(controller, method_name)
       end
 
-      def user_signed_in?(controller)
+      def self.user_signed_in?(controller)
         method_name = preferred_user_signed_in_method(controller)
 
         if method_name
@@ -28,39 +26,35 @@ module FeedMonitor
         end
       end
 
-      def authentication_configured?
-        settings.authenticate_handler.present? || settings.authorize_handler.present?
+      def self.authentication_configured?
+        config = FeedMonitor.config.authentication
+        config.authenticate_handler.present? || config.authorize_handler.present?
       end
 
-      def authorize_configured?
-        settings.authorize_handler.present?
+      def self.authorize_configured?
+        FeedMonitor.config.authentication.authorize_handler.present?
       end
 
-      def authenticate_configured?
-        settings.authenticate_handler.present?
+      def self.authenticate_configured?
+        FeedMonitor.config.authentication.authenticate_handler.present?
       end
 
-      private
-
-      def settings
-        FeedMonitor.config.authentication
-      end
-
-      def call_handler(handler, controller)
+      def self.call_handler(handler, controller)
         return unless handler
 
         handler.call(controller)
       end
 
-      def safe_public_send(controller, method_name)
+      def self.safe_public_send(controller, method_name)
         return unless method_name
         return unless controller.respond_to?(method_name, true)
 
         controller.public_send(method_name)
       end
 
-      def preferred_current_user_method(controller)
-        method_name = settings.current_user_method
+      def self.preferred_current_user_method(controller)
+        config = FeedMonitor.config.authentication
+        method_name = config.current_user_method
         method_name = method_name.to_sym if method_name.respond_to?(:to_sym)
 
         if method_name
@@ -70,8 +64,9 @@ module FeedMonitor
         end
       end
 
-      def preferred_user_signed_in_method(controller)
-        method_name = settings.user_signed_in_method
+      def self.preferred_user_signed_in_method(controller)
+        config = FeedMonitor.config.authentication
+        method_name = config.user_signed_in_method
         method_name = method_name.to_sym if method_name.respond_to?(:to_sym)
 
         if method_name
@@ -80,6 +75,11 @@ module FeedMonitor
           :user_signed_in?
         end
       end
+
+      private_class_method :call_handler,
+        :safe_public_send,
+        :preferred_current_user_method,
+        :preferred_user_signed_in_method
     end
   end
 end
