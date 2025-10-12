@@ -277,10 +277,12 @@ module FeedMonitor
           attributes[:fetch_retry_attempt] = decision.next_attempt
           attributes[:fetch_circuit_opened_at] = nil
           attributes[:fetch_circuit_until] = nil
-          retry_at = now + decision.wait
-          current_next = attributes[:next_fetch_at]
-          attributes[:next_fetch_at] = [current_next, retry_at].compact.min
-          attributes[:backoff_until] = retry_at
+          unless source.adaptive_fetching_enabled? == false
+            retry_at = now + decision.wait
+            current_next = attributes[:next_fetch_at]
+            attributes[:next_fetch_at] = [current_next, retry_at].compact.min
+            attributes[:backoff_until] = retry_at
+          end
         else
           attributes[:fetch_retry_attempt] = 0
         end

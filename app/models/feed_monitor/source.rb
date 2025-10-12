@@ -29,6 +29,7 @@ module FeedMonitor
     before_validation :normalize_website_url
     after_initialize :ensure_hash_defaults, if: :new_record?
     after_initialize :ensure_fetch_status_default
+    after_initialize :ensure_health_defaults
 
     validates :name, presence: true
     validates :feed_url, presence: true, uniqueness: { case_sensitive: false }
@@ -41,6 +42,7 @@ module FeedMonitor
 
     validate :feed_url_must_be_http_or_https
     validate :website_url_must_be_http_or_https
+    validate :health_auto_pause_threshold_within_bounds
 
     FeedMonitor::ModelExtensions.register(self, :source)
 
@@ -77,6 +79,10 @@ module FeedMonitor
       value.present? ? value : 0
     end
 
+    def auto_paused?
+      auto_paused_until.present? && auto_paused_until.future?
+    end
+
     private
 
     def ensure_hash_defaults
@@ -87,6 +93,10 @@ module FeedMonitor
 
     def ensure_fetch_status_default
       self.fetch_status = "idle" if fetch_status.blank?
+    end
+
+    def ensure_health_defaults
+      self.health_status = "healthy" if health_status.blank?
     end
 
     def normalize_feed_url
@@ -134,6 +144,15 @@ module FeedMonitor
       uri.fragment = nil
 
       uri.to_s
+    end
+
+    def health_auto_pause_threshold_within_bounds
+      return if health_auto_pause_threshold.nil?
+
+      value = health_auto_pause_threshold.to_f
+      return if value >= 0 && value <= 1
+
+      errors.add(:health_auto_pause_threshold, "must be between 0 and 1")
     end
   end
 end

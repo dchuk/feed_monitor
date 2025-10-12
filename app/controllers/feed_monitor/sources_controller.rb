@@ -128,6 +128,7 @@ module FeedMonitor
         :items_retention_days,
         :max_items,
         :adaptive_fetching_enabled,
+        :health_auto_pause_threshold,
         scrape_settings: [
           { selectors: %i[content title] }
         ]

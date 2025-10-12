@@ -461,11 +461,11 @@
 
 ### 13.02 Source Health Monitoring
 
-- [ ] 13.02.01 Calculate rolling success rates
-- [ ] 13.02.02 Auto-pause failing sources after threshold (user configurable in initializer and per source)
-- [ ] 13.02.03 Add health status indicators in UI
-- [ ] 13.02.04 Auto-recovery detection and resume
-- [ ] 13.02.05 Test health monitoring
+- [x] 13.02.01 Calculate rolling success rates
+- [x] 13.02.02 Auto-pause failing sources after threshold (user configurable in initializer and per source)
+- [x] 13.02.03 Add health status indicators in UI
+- [x] 13.02.04 Auto-recovery detection and resume
+- [x] 13.02.05 Test health monitoring
 
 **Deliverable: Self-managing feed system with health monitoring**
 **Test: Simulate failures, verify auto-pause and recovery**

@@ -63,6 +63,7 @@ require "feed_monitor/items/retention_pruner"
 require "feed_monitor/fetching/fetch_runner"
 require "feed_monitor/scheduler"
 require "feed_monitor/items/item_creator"
+require "feed_monitor/health"
 
 module FeedMonitor
   class << self
@@ -84,6 +85,7 @@ module FeedMonitor
       FeedMonitor::ModelExtensions.reload!
       FeedMonitor::Dashboard::TurboBroadcaster.setup!
       FeedMonitor::Realtime.setup!
+      FeedMonitor::Health.setup!
     end
 
     def queue_name(role)

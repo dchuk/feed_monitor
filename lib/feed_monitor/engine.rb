@@ -18,6 +18,7 @@ module FeedMonitor
       config.to_prepare do
         FeedMonitor::Dashboard::TurboBroadcaster.setup!
         FeedMonitor::Realtime.setup!
+        FeedMonitor::Health.setup!
       end
     end
 

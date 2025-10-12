@@ -143,5 +143,19 @@ module FeedMonitor
         concat tag.path(class: "opacity-75", fill: "currentColor", d: "M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z")
       end
     end
+
+    def source_health_badge(source)
+      status = source&.health_status.presence || "healthy"
+
+      mapping = {
+        "healthy" => { label: "Healthy", classes: "bg-green-100 text-green-700" },
+        "warning" => { label: "Needs Attention", classes: "bg-amber-100 text-amber-700" },
+        "critical" => { label: "Failing", classes: "bg-rose-100 text-rose-700" },
+        "auto_paused" => { label: "Auto-Paused", classes: "bg-amber-100 text-amber-700" },
+        "unknown" => { label: "Unknown", classes: "bg-slate-100 text-slate-600" }
+      }
+
+      mapping.fetch(status) { mapping.fetch("unknown") }
+    end
   end
 end

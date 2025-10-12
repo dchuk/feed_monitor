@@ -14,7 +14,7 @@ module FeedMonitor
       :mission_control_enabled,
       :mission_control_dashboard_path
 
-    attr_reader :http, :scrapers, :retention, :events, :models, :realtime, :fetching
+    attr_reader :http, :scrapers, :retention, :events, :models, :realtime, :fetching, :health
 
     DEFAULT_QUEUE_NAMESPACE = "feed_monitor"
 
@@ -35,6 +35,7 @@ module FeedMonitor
       @models = Models.new
       @realtime = RealtimeSettings.new
       @fetching = FetchingSettings.new
+      @health = HealthSettings.new
     end
 
     def queue_name_for(role)
@@ -216,6 +217,28 @@ module FeedMonitor
         @decrease_factor = 0.75
         @failure_increase_factor = 1.5
         @jitter_percent = 0.1
+      end
+    end
+
+    class HealthSettings
+      attr_accessor :window_size,
+        :healthy_threshold,
+        :warning_threshold,
+        :auto_pause_threshold,
+        :auto_resume_threshold,
+        :auto_pause_cooldown_minutes
+
+      def initialize
+        reset!
+      end
+
+      def reset!
+        @window_size = 20
+        @healthy_threshold = 0.8
+        @warning_threshold = 0.5
+        @auto_pause_threshold = 0.2
+        @auto_resume_threshold = 0.6
+        @auto_pause_cooldown_minutes = 60
       end
     end
 

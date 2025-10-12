@@ -188,5 +188,23 @@ module FeedMonitor
 
       assert_selector "[data-testid='fetch-status-badge']", text: "Queued"
     end
+
+    test "auto paused sources show auto paused badge" do
+      FeedMonitor::Source.delete_all
+
+      source = create_source!(
+        name: "Flaky Feed",
+        feed_url: "https://flaky.example.com/feed.xml",
+        health_status: "auto_paused",
+        auto_paused_at: Time.current,
+        auto_paused_until: 2.hours.from_now
+      )
+
+      visit feed_monitor.sources_path
+
+      within find("tr", text: source.name) do
+        assert_selector "span", text: "Auto-Paused"
+      end
+    end
   end
 end

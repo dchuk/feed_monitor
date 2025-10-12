@@ -1,14 +1,11 @@
 <% rate_map = local_assigns[:item_activity_rates] || {} %>
 <% activity_rate = rate_map.fetch(source.id, nil) %>
 <% activity_rate = FeedMonitor::Analytics::SourceActivityRates.rate_for(source) if activity_rate.nil? %>
-<% health_status =
-     if !source.active?
-       { label: "Paused", classes: "bg-amber-100 text-amber-700" }
-     elsif source.failure_count.positive? || source.last_error.present?
-       { label: "Needs Attention", classes: "bg-rose-100 text-rose-700" }
-     else
-       { label: "Healthy", classes: "bg-green-100 text-green-700" }
-     end %>
+<% health_status = if !source.active?
+    { label: "Paused", classes: "bg-amber-100 text-amber-700" }
+  else
+    source_health_badge(source)
+  end %>
 <% fetch_status = async_status_badge(source.fetch_status) %>
 
 <tr id="<%= dom_id(source, :row) %>" class="hover:bg-slate-50">
@@ -19,6 +16,9 @@
   <td class="px-6 py-4">
     <div class="flex flex-col gap-2 text-xs">
       <span class="inline-flex items-center rounded-full px-3 py-1 font-semibold <%= health_status[:classes] %>"><%= health_status[:label] %></span>
+      <% if source.rolling_success_rate.present? %>
+        <span class="text-[11px] text-slate-500">Success Rate: <%= number_to_percentage(source.rolling_success_rate * 100, precision: 0) %></span>
+      <% end %>
       <span class="inline-flex items-center rounded-full px-3 py-1 font-semibold <%= fetch_status[:classes] %>">
         <%= loading_spinner_svg(css_class: "mr-1 h-3.5 w-3.5 animate-spin text-blue-500") if fetch_status[:show_spinner] %>
         <%= fetch_status[:label] %>

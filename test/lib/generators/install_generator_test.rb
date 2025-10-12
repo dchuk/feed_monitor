@@ -48,6 +48,8 @@ module FeedMonitor
         assert_match(/config.job_metrics_enabled = true/, content)
         assert_match(/config.mission_control_enabled = false/, content)
         assert_match(/config.mission_control_dashboard_path = nil/, content)
+        assert_match(/config.health.window_size = 20/, content)
+        assert_match(/config.health.auto_pause_threshold = 0.2/, content)
       end
     end
 

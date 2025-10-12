@@ -82,5 +82,27 @@ module FeedMonitor
       assert_includes Source.healthy, healthy
       assert_not_includes Source.healthy, failed
     end
+
+    test "rejects health auto pause threshold outside 0 and 1" do
+      source = Source.new(name: "Threshold", feed_url: "https://example.com/feed.xml", health_auto_pause_threshold: 1.5)
+
+      assert_not source.valid?
+      assert_includes source.errors[:health_auto_pause_threshold], "must be between 0 and 1"
+
+      source.health_auto_pause_threshold = -0.1
+      source.validate
+
+      assert_includes source.errors[:health_auto_pause_threshold], "must be between 0 and 1"
+    end
+
+    test "auto_paused? reflects pause window" do
+      source = Source.new(auto_paused_until: 5.minutes.from_now)
+
+      assert source.auto_paused?
+
+      source.auto_paused_until = 1.minute.ago
+
+      assert_not source.auto_paused?
+    end
   end
 end
