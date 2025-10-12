@@ -537,12 +537,12 @@
 
 ### 17.02 Findings Report & Recommendations
 
-- [ ] 17.02.01 Produce an audit report cataloging each issue with file references, context, and impacted behaviour
-- [ ] 17.02.02 Document recommended Rails-aligned remediation for controller, model, job, and service object issues (RESTful routing, skinny controllers, fat models, dependency injection)
-- [ ] 17.02.03 Outline DRY and complexity reduction strategies (extractions, shared concerns, presenters) with implementation guidance and prerequisites
-- [ ] 17.02.04 Capture front-end package management and view-layer recommendations (Stimulus module boundaries, Turbo usage, asset bundling hygiene)
-- [ ] 17.02.05 Prioritize findings with effort/impact scoring, required stakeholders, and suggested sequencing across future roadmap phases
-- [ ] 17.02.06 Save final analysis to .ai/ folder as markdown file
+- [x] 17.02.01 Produce an audit report cataloging each issue with file references, context, and impacted behaviour
+- [x] 17.02.02 Document recommended Rails-aligned remediation for controller, model, job, and service object issues (RESTful routing, skinny controllers, fat models, dependency injection)
+- [x] 17.02.03 Outline DRY and complexity reduction strategies (extractions, shared concerns, presenters) with implementation guidance and prerequisites
+- [x] 17.02.04 Capture front-end package management and view-layer recommendations (Stimulus module boundaries, Turbo usage, asset bundling hygiene)
+- [x] 17.02.05 Prioritize findings with effort/impact scoring, required stakeholders, and suggested sequencing across future roadmap phases
+- [x] 17.02.06 Save final analysis to .ai/ folder as markdown file
 
 ### 17.03 Refactoring Execution Planning
 
