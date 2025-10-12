@@ -558,6 +558,7 @@
 - [ ] 17.04.02 Introduce a shared pagination service (or Pagy adoption) with unit coverage and integrate into items index flows
 - [ ] 17.04.03 Create Turbo presenter/responder objects for notifications and details partial updates, updating controller actions accordingly
 - [ ] 17.04.04 Consolidate fetch and scrape log filtering into a shared concern with tests for query parameter casting and scopes
+- [ ] 17.04.05 Move analytics aggregation/bucketing logic out of `SourcesController#index` into a reusable query/presenter with dedicated tests
 
 ### 17.05 Service Decomposition
 
@@ -565,6 +566,8 @@
 - [ ] 17.05.02 Split fetch completion responsibilities (retention, scrape enqueue, events) into injectable services and cover with integration specs
 - [ ] 17.05.03 Refactor `FeedMonitor::Scraping::ItemScraper` into adapter resolver and persistence steps with contract tests for adapters
 - [ ] 17.05.04 Break `FeedMonitor::Items::RetentionPruner` strategies into separate classes/modules and expand test coverage for destroy vs soft delete
+- [ ] 17.05.05 Introduce a shared sanitization module for models (e.g., Source, future models) and migrate existing callbacks with unit coverage
+- [ ] 17.05.06 Extract reusable URL normalization helpers for Item and other URL-backed models with regression tests
 
 ### 17.06 Job & Scheduling Reliability
 
@@ -590,7 +593,7 @@
 
 ### 17.09 Dashboard Performance Enhancements
 
-- [ ] 17.09.01 Introduce query batching/caching within `FeedMonitor::Dashboard::Queries` and cover with performance-focused tests
+- [ ] 17.09.01 Refactor `FeedMonitor::Dashboard::Queries` to batch/cache queries and separate routing/presentation concerns, with performance-focused tests
 - [ ] 17.09.02 Add instrumentation for dashboard query durations and expose metrics for Mission Control integration
 - [ ] 17.09.03 Document dashboard configuration expectations for host apps, including Mission Control linking prerequisites
 
