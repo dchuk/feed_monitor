@@ -546,11 +546,53 @@
 
 ### 17.03 Refactoring Execution Planning
 
-- [ ] 17.03.01 Break prioritized findings into actionable refactor workstreams (controllers, models/services, background jobs, front-end) with owners
-- [ ] 17.03.02 Define success criteria and regression test coverage requirements for each workstream, including new automated tests or fixtures needed
-- [ ] 17.03.03 Sequence refactor tasks into incremental deliveries, noting dependencies, rollout strategy, and migration considerations
-- [ ] 17.03.04 Establish monitoring and QA checkpoints (notifications, metrics dashboards, manual verification) to validate behavioural parity post-refactor
-- [ ] 17.03.05 Create follow-up tickets for any deferred or risky refactors, ensuring documentation links back to the audit report and recommendations
+- [x] 17.03.01 Break prioritized findings into actionable refactor workstreams (controllers, models/services, background jobs, front-end) with owners
+- [x] 17.03.02 Define success criteria and regression test coverage requirements for each workstream, including new automated tests or fixtures needed
+- [x] 17.03.03 Sequence refactor tasks into incremental deliveries, noting dependencies, rollout strategy, and migration considerations
+- [x] 17.03.04 Establish monitoring and QA checkpoints (notifications, metrics dashboards, manual verification) to validate behavioural parity post-refactor
+- [x] 17.03.05 Create follow-up tickets for any deferred or risky refactors, ensuring documentation links back to the audit report and recommendations
+
+### 17.04 Controller & View Cleanup
+
+- [ ] 17.04.01 Extract a shared sanitized search helper and replace duplicated logic in sources, items, and logs controllers
+- [ ] 17.04.02 Introduce a shared pagination service (or Pagy adoption) with unit coverage and integrate into items index flows
+- [ ] 17.04.03 Create Turbo presenter/responder objects for notifications and details partial updates, updating controller actions accordingly
+- [ ] 17.04.04 Consolidate fetch and scrape log filtering into a shared concern with tests for query parameter casting and scopes
+
+### 17.05 Service Decomposition
+
+- [ ] 17.05.01 Extract advisory lock management from `FeedMonitor::Fetching::FetchRunner` into a dedicated collaborator with unit tests
+- [ ] 17.05.02 Split fetch completion responsibilities (retention, scrape enqueue, events) into injectable services and cover with integration specs
+- [ ] 17.05.03 Refactor `FeedMonitor::Scraping::ItemScraper` into adapter resolver and persistence steps with contract tests for adapters
+- [ ] 17.05.04 Break `FeedMonitor::Items::RetentionPruner` strategies into separate classes/modules and expand test coverage for destroy vs soft delete
+
+### 17.06 Job & Scheduling Reliability
+
+- [ ] 17.06.01 Align `FeedMonitor::ScrapeItemJob` with shared state helpers, ensuring consistent pending/processing transitions and job tests
+- [ ] 17.06.02 Centralize cleanup job option parsing into a shared utility and update ItemCleanupJob/LogCleanupJob specs
+- [ ] 17.06.03 Add explicit retry/backoff policy for transient errors in `FeedMonitor::FetchFeedJob` with coverage for retry scheduling
+- [ ] 17.06.04 Instrument `FeedMonitor::Scheduler` runs and expose metrics/hooks verified by integration tests
+
+### 17.07 Front-End Pipeline Modernization
+
+- [ ] 17.07.01 Convert Stimulus controllers to ES module/importmap loading and remove global registration, with smoke/system tests
+- [ ] 17.07.02 Provide graceful fallback when optional dropdown dependency is missing, including documentation and JS tests
+- [ ] 17.07.03 Replace or realign the transition shim with maintained stimulus-use utilities and verify behaviour via integration tests
+- [ ] 17.07.04 Automate Tailwind rebuilds and add asset verification scripts to the development/CI workflow
+
+### 17.08 Tooling & Coverage Guardrails
+
+- [ ] 17.08.01 Establish Rubocop autocorrect baseline and enforce lint step in CI with developer documentation
+- [ ] 17.08.02 Add Brakeman to the bundle, configure ignore list if needed, and wire into CI security stage
+- [ ] 17.08.03 Enable SimpleCov with coverage gating (≥90% for new/changed lines) and surface reports in CI
+- [ ] 17.08.04 Add asset lint/test commands (e.g., eslint/stylelint or equivalent) and integrate into CI
+- [ ] 17.08.05 Update contributor docs with new lint/test workflows and ensure bin scripts support local runs
+
+### 17.09 Dashboard Performance Enhancements
+
+- [ ] 17.09.01 Introduce query batching/caching within `FeedMonitor::Dashboard::Queries` and cover with performance-focused tests
+- [ ] 17.09.02 Add instrumentation for dashboard query durations and expose metrics for Mission Control integration
+- [ ] 17.09.03 Document dashboard configuration expectations for host apps, including Mission Control linking prerequisites
 
 ---
 
