@@ -12,7 +12,8 @@ module FeedMonitor
 
     def index
       base_scope = Item.includes(:source).recent
-      @q = base_scope.ransack(params[:q])
+      @search_params = sanitized_search_params
+      @q = base_scope.ransack(@search_params)
       @q.sorts = "published_at desc, created_at desc" if @q.sorts.blank?
 
       scope = @q.result(distinct: true)
@@ -27,7 +28,6 @@ module FeedMonitor
       @items = @items.first(PER_PAGE)
       @has_previous_page = @page > 1
 
-      @search_params = safe_search_params
       @search_term = @search_params[SEARCH_FIELD.to_s].to_s.strip
       @search_field = SEARCH_FIELD
     end
@@ -117,7 +117,7 @@ module FeedMonitor
       nil
     end
 
-    def safe_search_params
+    def sanitized_search_params
       raw = params[:q]
       return {} unless raw
 
@@ -132,7 +132,9 @@ module FeedMonitor
           {}
         end
 
-      hash.each_with_object({}) do |(key, value), memo|
+      sanitized = FeedMonitor::Security::ParameterSanitizer.sanitize(hash)
+
+      sanitized.each_with_object({}) do |(key, value), memo|
         next if value.respond_to?(:blank?) ? value.blank? : value.nil?
 
         memo[key.to_s] = value

@@ -10,12 +10,12 @@ module FeedMonitor
 
     def index
       base_scope = Source.order(created_at: :desc)
-      @q = base_scope.ransack(params[:q])
+      @search_params = sanitized_search_params
+      @q = base_scope.ransack(@search_params)
       @q.sorts = "created_at desc" if @q.sorts.blank?
 
       @sources = @q.result
 
-      @search_params = safe_search_params
       @search_term = @search_params[SEARCH_FIELD.to_s].to_s.strip
       @search_field = SEARCH_FIELD
       @fetch_interval_filter = extract_fetch_interval_filter(@search_params)
@@ -114,7 +114,7 @@ module FeedMonitor
     end
 
     def source_params
-      params.require(:source).permit(
+      permitted = params.require(:source).permit(
         :name,
         :feed_url,
         :website_url,
@@ -133,6 +133,8 @@ module FeedMonitor
           { selectors: %i[content title] }
         ]
       )
+
+      FeedMonitor::Security::ParameterSanitizer.sanitize(permitted.to_h)
     end
 
     def render_fetch_enqueue_response(message)
@@ -167,7 +169,7 @@ module FeedMonitor
       end
     end
 
-    def safe_search_params
+    def sanitized_search_params
       raw = params[:q]
       return {} unless raw
 
@@ -182,7 +184,9 @@ module FeedMonitor
           {}
         end
 
-      hash.each_with_object({}) do |(key, value), memo|
+      sanitized = FeedMonitor::Security::ParameterSanitizer.sanitize(hash)
+
+      sanitized.each_with_object({}) do |(key, value), memo|
         next if value.respond_to?(:blank?) ? value.blank? : value.nil?
 
         memo[key.to_s] = value

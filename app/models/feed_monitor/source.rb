@@ -25,6 +25,7 @@ module FeedMonitor
     }
     scope :healthy, -> { active.where(failure_count: 0, last_error: nil, last_error_at: nil) }
 
+    before_validation :sanitize_user_inputs
     before_validation :normalize_feed_url
     before_validation :normalize_website_url
     after_initialize :ensure_hash_defaults, if: :new_record?
@@ -153,6 +154,29 @@ module FeedMonitor
       return if value >= 0 && value <= 1
 
       errors.add(:health_auto_pause_threshold, "must be between 0 and 1")
+    end
+
+    def sanitize_user_inputs
+      sanitizer = FeedMonitor::Security::ParameterSanitizer
+
+      %i[name feed_url website_url scraper_adapter].each do |attribute|
+        value = self[attribute]
+        next unless value.is_a?(String)
+
+        sanitized_value = sanitizer.sanitize(value)
+        self[attribute] = sanitized_value
+      end
+
+      self.scrape_settings = sanitize_hash_attribute(scrape_settings)
+      self.custom_headers = sanitize_hash_attribute(custom_headers)
+      self.metadata = sanitize_hash_attribute(metadata)
+    end
+
+    def sanitize_hash_attribute(value)
+      sanitized = FeedMonitor::Security::ParameterSanitizer.sanitize(value || {})
+      return {} unless sanitized.is_a?(Hash)
+
+      sanitized
     end
   end
 end

@@ -484,48 +484,8 @@
 - [x] 14.01.04 Eliminate N+1 queries with includes
 - [x] 14.01.05 Add query performance tests
 
-### 14.02 Caching Strategy
-
-- [ ] 14.02.01 Add fragment caching for expensive views
-- [ ] 14.02.02 Cache dashboard statistics
-- [ ] 14.02.03 Use Rails.cache for feed responses
-- [ ] 14.02.04 Configure Solid Cache (Rails 8 default, use postgres)
-- [ ] 14.02.05 Test cache effectiveness
-
-### 14.03 Batch Operations
-
-- [ ] 14.03.01 Batch insert items during fetch
-- [ ] 14.03.02 Parallel processing for independent sources
-- [ ] 14.03.03 Stream large content efficiently
-- [ ] 14.03.04 Add performance benchmarks
-- [ ] 14.03.05 Test with 1000+ sources
-
 **Deliverable: Handle 1000+ sources efficiently**
 **Test: Load test with large number of sources, measure performance**
-
----
-
-## Phase 15: Monitoring & Analytics
-
-**Goal: Operational insights**
-
-### 15.01 Metrics Collection
-
-- [ ] 15.01.01 Track fetch success/failure rates
-- [ ] 15.01.02 Measure scraping performance
-- [ ] 15.01.03 Monitor job queue depths
-- [ ] 15.01.04 Record error patterns
-- [ ] 15.01.05 Test metrics collection
-
-### 15.02 Analytics Dashboard
-
-- [ ] 15.02.02 Show trend analysis
-- [ ] 15.02.03 Create performance reports
-- [ ] 15.02.04 Export metrics data
-- [ ] 15.02.05 Test analytics views
-
-**Deliverable: Complete observability solution**
-**Test: View metrics dashboard, verify data accuracy**
 
 ---
 
@@ -535,8 +495,8 @@
 
 ### 16.01 Input Validation
 
-- [ ] 16.01.01 Sanitize all user inputs
-- [ ] 16.01.05 Test security validations
+- [x] 16.01.01 Sanitize all user inputs
+- [x] 16.01.05 Test security validations
 
 ### 16.02 Authentication & Authorization
 

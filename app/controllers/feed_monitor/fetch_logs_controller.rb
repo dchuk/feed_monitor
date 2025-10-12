@@ -3,7 +3,8 @@
 module FeedMonitor
   class FetchLogsController < ApplicationController
     def index
-      @status = params[:status].presence_in(%w[success failed])
+      status_param = FeedMonitor::Security::ParameterSanitizer.sanitize(params[:status].to_s)
+      @status = status_param.presence_in(%w[success failed])
       @logs = scoped_logs.limit(50)
     end
 
