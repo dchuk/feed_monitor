@@ -2,6 +2,8 @@
 
 refer to ./ai/project_overview.md for full scope of this project
 
+use rbenv for all ruby and bundler/gem commands, not the system ruby
+
 ## Library Documentation
 
 - Use Context7 MCP constantly to look up fresh documentation for any task you're looking to complete, especially tasks that rely on using libraries or gems
