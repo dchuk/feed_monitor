@@ -141,11 +141,20 @@ module FeedMonitor
 
       test "raises concurrency error when advisory lock acquisition fails" do
         source = create_source
-        runner = FetchRunner.new(source:, fetcher_class: DummyFetcher)
 
-        runner.singleton_class.class_eval do
-          define_method(:try_lock) { |_connection| false }
+        failing_lock_class = Class.new do
+          def initialize(namespace:, key:, connection_pool:); end
+
+          def with_lock
+            raise FeedMonitor::Fetching::AdvisoryLock::NotAcquiredError, "busy"
+          end
         end
+
+        runner = FetchRunner.new(
+          source:,
+          fetcher_class: DummyFetcher,
+          lock_factory: failing_lock_class
+        )
 
         assert_raises(FetchRunner::ConcurrencyError) { runner.run }
       end
@@ -174,13 +183,60 @@ module FeedMonitor
         end
         retention_spy.calls = []
 
-        FetchRunner.new(
+        runner = FetchRunner.new(
           source:,
           fetcher_class: stub_fetcher,
           retention_pruner_class: retention_spy
-        ).run
+        )
+
+        runner.run
 
         assert_equal [source], retention_spy.calls
+      end
+
+      test "delegates completion to injected handlers" do
+        source = create_source
+
+        processing = FeedMonitor::Fetching::FeedFetcher::EntryProcessingResult.new(
+          created: 0,
+          updated: 0,
+          failed: 0,
+          items: [],
+          errors: [],
+          created_items: [],
+          updated_items: []
+        )
+        result = FeedMonitor::Fetching::FeedFetcher::Result.new(status: :fetched, item_processing: processing)
+
+        result = FeedMonitor::Fetching::FeedFetcher::Result.new(status: :fetched, item_processing: processing)
+
+        stub_fetcher = Class.new do
+          define_method(:initialize) { |**_kwargs| }
+          define_method(:call) { result }
+        end
+
+        retention_handler = HandlerSpy.new
+        follow_up_handler = HandlerSpy.new
+        event_publisher = HandlerSpy.new
+
+        runner = FetchRunner.new(
+          source:,
+          fetcher_class: stub_fetcher,
+          retention_handler: retention_handler,
+          follow_up_handler: follow_up_handler,
+          event_publisher: event_publisher
+        )
+
+        runner.run
+
+        assert_equal 1, retention_handler.calls.count
+        assert_equal({ source:, result: result }, retention_handler.calls.first)
+
+        assert_equal 1, follow_up_handler.calls.count
+        assert_equal({ source:, result: result }, follow_up_handler.calls.first)
+
+        assert_equal 1, event_publisher.calls.count
+        assert_equal({ source:, result: result }, event_publisher.calls.first)
       end
 
       test "schedules retry according to timeout policy" do
@@ -395,6 +451,18 @@ module FeedMonitor
 
         def call
           FeedMonitor::Fetching::FeedFetcher::Result.new(status: :not_modified)
+        end
+      end
+
+      class HandlerSpy
+        attr_reader :calls
+
+        def initialize
+          @calls = []
+        end
+
+        def call(source:, result:)
+          calls << { source:, result: }
         end
       end
     end

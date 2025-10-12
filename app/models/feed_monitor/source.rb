@@ -1,9 +1,13 @@
 # frozen_string_literal: true
 
-require "uri"
+require "feed_monitor/models/sanitizable"
+require "feed_monitor/models/url_normalizable"
 
 module FeedMonitor
   class Source < ApplicationRecord
+    include FeedMonitor::Models::Sanitizable
+    include FeedMonitor::Models::UrlNormalizable
+
     FETCH_STATUS_VALUES = %w[idle queued fetching failed].freeze
 
     has_many :all_items, class_name: "FeedMonitor::Item", inverse_of: :source, dependent: :destroy
@@ -25,12 +29,13 @@ module FeedMonitor
     }
     scope :healthy, -> { active.where(failure_count: 0, last_error: nil, last_error_at: nil) }
 
-    before_validation :sanitize_user_inputs
-    before_validation :normalize_feed_url
-    before_validation :normalize_website_url
     after_initialize :ensure_hash_defaults, if: :new_record?
     after_initialize :ensure_fetch_status_default
     after_initialize :ensure_health_defaults
+
+    sanitizes_string_attributes :name, :feed_url, :website_url, :scraper_adapter
+    sanitizes_hash_attributes :scrape_settings, :custom_headers, :metadata
+    normalizes_urls :feed_url, :website_url
 
     validates :name, presence: true
     validates :feed_url, presence: true, uniqueness: { case_sensitive: false }
@@ -100,51 +105,16 @@ module FeedMonitor
       self.health_status = "healthy" if health_status.blank?
     end
 
-    def normalize_feed_url
-      @invalid_feed_url = false
-      return if feed_url.blank?
-
-      self.feed_url = normalize_url(feed_url)
-    rescue URI::InvalidURIError
-      @invalid_feed_url = true
-    end
-
-    def normalize_website_url
-      @invalid_website_url = false
-      return if website_url.blank?
-
-      self.website_url = normalize_url(website_url)
-    rescue URI::InvalidURIError
-      @invalid_website_url = true
-    end
-
     def feed_url_must_be_http_or_https
       return if feed_url.blank?
-      errors.add(:feed_url, "must be a valid HTTP(S) URL") if @invalid_feed_url
+
+      errors.add(:feed_url, "must be a valid HTTP(S) URL") if url_invalid?(:feed_url)
     end
 
     def website_url_must_be_http_or_https
       return if website_url.blank?
 
-      errors.add(:website_url, "must be a valid HTTP(S) URL") if @invalid_website_url
-    end
-
-    def normalize_url(value)
-      uri = URI.parse(value.strip)
-
-      raise URI::InvalidURIError if uri.scheme.blank? || uri.host.blank?
-
-      scheme = uri.scheme.downcase
-      unless %w[http https].include?(scheme)
-        raise URI::InvalidURIError
-      end
-
-      uri.scheme = scheme
-      uri.host = uri.host.downcase
-      uri.path = "/" if uri.path.blank?
-      uri.fragment = nil
-
-      uri.to_s
+      errors.add(:website_url, "must be a valid HTTP(S) URL") if url_invalid?(:website_url)
     end
 
     def health_auto_pause_threshold_within_bounds
@@ -154,29 +124,6 @@ module FeedMonitor
       return if value >= 0 && value <= 1
 
       errors.add(:health_auto_pause_threshold, "must be between 0 and 1")
-    end
-
-    def sanitize_user_inputs
-      sanitizer = FeedMonitor::Security::ParameterSanitizer
-
-      %i[name feed_url website_url scraper_adapter].each do |attribute|
-        value = self[attribute]
-        next unless value.is_a?(String)
-
-        sanitized_value = sanitizer.sanitize(value)
-        self[attribute] = sanitized_value
-      end
-
-      self.scrape_settings = sanitize_hash_attribute(scrape_settings)
-      self.custom_headers = sanitize_hash_attribute(custom_headers)
-      self.metadata = sanitize_hash_attribute(metadata)
-    end
-
-    def sanitize_hash_attribute(value)
-      sanitized = FeedMonitor::Security::ParameterSanitizer.sanitize(value || {})
-      return {} unless sanitized.is_a?(Hash)
-
-      sanitized
     end
   end
 end

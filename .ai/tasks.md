@@ -562,12 +562,12 @@
 
 ### 17.05 Service Decomposition
 
-- [ ] 17.05.01 Extract advisory lock management from `FeedMonitor::Fetching::FetchRunner` into a dedicated collaborator with unit tests
-- [ ] 17.05.02 Split fetch completion responsibilities (retention, scrape enqueue, events) into injectable services and cover with integration specs
-- [ ] 17.05.03 Refactor `FeedMonitor::Scraping::ItemScraper` into adapter resolver and persistence steps with contract tests for adapters
-- [ ] 17.05.04 Break `FeedMonitor::Items::RetentionPruner` strategies into separate classes/modules and expand test coverage for destroy vs soft delete
-- [ ] 17.05.05 Introduce a shared sanitization module for models (e.g., Source, future models) and migrate existing callbacks with unit coverage
-- [ ] 17.05.06 Extract reusable URL normalization helpers for Item and other URL-backed models with regression tests
+- [x] 17.05.01 Extract advisory lock management from `FeedMonitor::Fetching::FetchRunner` into a dedicated collaborator with unit tests
+- [x] 17.05.02 Split fetch completion responsibilities (retention, scrape enqueue, events) into injectable services and cover with integration specs
+- [x] 17.05.03 Refactor `FeedMonitor::Scraping::ItemScraper` into adapter resolver and persistence steps with contract tests for adapters
+- [x] 17.05.04 Break `FeedMonitor::Items::RetentionPruner` strategies into separate classes/modules and expand test coverage for destroy vs soft delete
+- [x] 17.05.05 Introduce a shared sanitization module for models (e.g., Source, future models) and migrate existing callbacks with unit coverage
+- [x] 17.05.06 Extract reusable URL normalization helpers for Item and other URL-backed models with regression tests
 
 ### 17.06 Job & Scheduling Reliability
 

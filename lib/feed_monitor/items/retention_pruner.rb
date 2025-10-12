@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 require "feed_monitor/instrumentation"
+require "feed_monitor/items/retention_strategies"
+require "feed_monitor/items/retention_strategies/destroy"
+require "feed_monitor/items/retention_strategies/soft_delete"
 
 module FeedMonitor
   module Items
@@ -13,7 +16,10 @@ module FeedMonitor
         end
       end
 
-      VALID_STRATEGIES = %i[destroy soft_delete].freeze
+      STRATEGY_CLASSES = {
+        destroy: FeedMonitor::Items::RetentionStrategies::Destroy,
+        soft_delete: FeedMonitor::Items::RetentionStrategies::SoftDelete
+      }.freeze
 
       def self.call(source:, now: Time.current, strategy: nil)
         new(source:, now:, strategy:).call
@@ -22,7 +28,8 @@ module FeedMonitor
       def initialize(source:, now: Time.current, strategy: nil)
         @source = source
         @now = now
-        @strategy = normalize_strategy(strategy)
+        @strategy_name = normalize_strategy(strategy)
+        @strategy_handler = STRATEGY_CLASSES.fetch(@strategy_name).new(source: source)
       end
 
       def call
@@ -50,7 +57,7 @@ module FeedMonitor
 
       private
 
-      attr_reader :source, :now, :strategy
+      attr_reader :source, :now, :strategy_name, :strategy_handler
 
       def prune_by_age
         days = items_retention_days
@@ -98,29 +105,19 @@ module FeedMonitor
 
         removed = 0
         scope.in_batches(of: 100) do |batch|
-          removed += apply_strategy_to_batch(batch)
+          removed += strategy_handler.apply(batch:, now:)
         end
         removed
-      end
-
-      def apply_strategy_to_batch(batch)
-        case strategy
-        when :soft_delete
-          soft_delete_batch(batch)
-        when :destroy
-          destroy_batch(batch)
-        else
-          raise ArgumentError, "Unsupported retention strategy #{strategy.inspect}"
-        end
       end
 
       def normalize_strategy(value)
         value = FeedMonitor.config.retention.strategy if value.nil?
 
         value = value.to_sym if value.respond_to?(:to_sym)
-        return value if VALID_STRATEGIES.include?(value)
+        return value if STRATEGY_CLASSES.key?(value)
 
-        raise ArgumentError, "Invalid retention strategy #{value.inspect}. Valid strategies: #{VALID_STRATEGIES.join(', ')}"
+        valid = STRATEGY_CLASSES.keys.join(", ")
+        raise ArgumentError, "Invalid retention strategy #{value.inspect}. Valid strategies: #{valid}"
       end
 
       def items_retention_days
@@ -143,48 +140,6 @@ module FeedMonitor
         return nil if value.nil?
 
         value.respond_to?(:to_i) ? value.to_i : value
-      end
-
-      def soft_delete_batch(batch)
-        ids = batch.pluck(:id)
-        return 0 if ids.empty?
-
-        timestamp = normalized_timestamp
-
-        FeedMonitor::Item.where(id: ids).update_all(
-          deleted_at: timestamp,
-          updated_at: timestamp
-        )
-
-        adjust_source_counter(ids.length)
-
-        ids.length
-      end
-
-      def destroy_batch(batch)
-        count = 0
-        batch.each do |item|
-          item.destroy!
-          count += 1
-        end
-        count
-      end
-
-      def normalized_timestamp
-        return Time.current if now.nil?
-
-        now.respond_to?(:in_time_zone) ? now.in_time_zone : now
-      end
-
-      def adjust_source_counter(amount)
-        return unless source&.id
-
-        FeedMonitor::Source.update_counters(source.id, items_count: -amount)
-
-        return unless source.respond_to?(:items_count) && !source.items_count.nil?
-
-        source.items_count -= amount
-        source.items_count = 0 if source.items_count.negative?
       end
     end
   end

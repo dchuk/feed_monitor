@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+require "feed_monitor/fetching/advisory_lock"
+require "feed_monitor/fetching/completion/retention_handler"
+require "feed_monitor/fetching/completion/follow_up_handler"
+require "feed_monitor/fetching/completion/event_publisher"
+
 module FeedMonitor
   module Fetching
     # Coordinates execution of FeedFetcher while ensuring we do not run more than
@@ -11,15 +16,20 @@ module FeedMonitor
 
       class ConcurrencyError < StandardError; end
 
-      attr_reader :source, :fetcher_class, :scrape_job_class, :scrape_enqueuer_class, :retention_pruner_class, :force
+      attr_reader :source, :fetcher_class, :force, :lock, :retention_handler, :follow_up_handler, :event_publisher
 
-      def initialize(source:, fetcher_class: FeedMonitor::Fetching::FeedFetcher, scrape_job_class: FeedMonitor::ScrapeItemJob, scrape_enqueuer_class: FeedMonitor::Scraping::Enqueuer, retention_pruner_class: FeedMonitor::Items::RetentionPruner, force: false)
+      def initialize(source:, fetcher_class: FeedMonitor::Fetching::FeedFetcher, scrape_job_class: FeedMonitor::ScrapeItemJob, scrape_enqueuer_class: FeedMonitor::Scraping::Enqueuer, retention_pruner_class: FeedMonitor::Items::RetentionPruner, lock_factory: FeedMonitor::Fetching::AdvisoryLock, retention_handler: nil, follow_up_handler: nil, event_publisher: nil, force: false)
         @source = source
         @fetcher_class = fetcher_class
-        @scrape_job_class = scrape_job_class
-        @scrape_enqueuer_class = scrape_enqueuer_class
-        @retention_pruner_class = retention_pruner_class
         @force = force
+        @lock = lock_factory.new(
+          namespace: LOCK_NAMESPACE,
+          key: source.id,
+          connection_pool: ActiveRecord::Base.connection_pool
+        )
+        @retention_handler = retention_handler || FeedMonitor::Fetching::Completion::RetentionHandler.new(pruner: retention_pruner_class)
+        @follow_up_handler = follow_up_handler || FeedMonitor::Fetching::Completion::FollowUpHandler.new(enqueuer_class: scrape_enqueuer_class, job_class: scrape_job_class)
+        @event_publisher = event_publisher || FeedMonitor::Fetching::Completion::EventPublisher.new
         @retry_scheduled = false
       end
 
@@ -42,20 +52,22 @@ module FeedMonitor
         @retry_scheduled = false
         result = nil
 
-        with_concurrency_guard do
+        lock.with_lock do
           mark_fetching!
           result = fetcher_class.new(source: source).call
-          apply_retention
-          enqueue_follow_up_scrapes(result)
+          retention_handler.call(source:, result:)
+          follow_up_handler.call(source:, result:)
           schedule_retry_if_needed(result)
           mark_complete!(result)
         end
 
-        FeedMonitor::Events.after_fetch_completed(source: source, result: result)
+        event_publisher.call(source:, result:)
         result
+      rescue FeedMonitor::Fetching::AdvisoryLock::NotAcquiredError => error
+        raise ConcurrencyError, error.message
       rescue StandardError => error
         mark_failed!(error)
-        FeedMonitor::Events.after_fetch_completed(source: source, result: nil)
+        event_publisher.call(source:, result: nil)
         raise
       end
 
@@ -84,35 +96,7 @@ module FeedMonitor
 
       def skip_due_to_circuit
         update_source_state(fetch_status: "failed")
-        FeedMonitor::Events.after_fetch_completed(source: source, result: nil)
-        nil
-      end
-
-      def with_concurrency_guard
-        ActiveRecord::Base.connection_pool.with_connection do |connection|
-          locked = try_lock(connection)
-          raise ConcurrencyError, "Fetch already in progress for source #{source.id}" unless locked
-
-          begin
-            yield
-          ensure
-            release_lock(connection)
-          end
-        end
-      end
-
-      def try_lock(connection)
-        result = connection.exec_query("SELECT pg_try_advisory_lock(#{LOCK_NAMESPACE}, #{source.id})")
-        value = result.rows.dig(0, 0)
-        value == true || value.to_s == "t"
-      end
-
-      def release_lock(connection)
-        connection.exec_query("SELECT pg_advisory_unlock(#{LOCK_NAMESPACE}, #{source.id})")
-      rescue StandardError
-        # If the connection has been reset or the lock already released, ignore
-        # the error—Postgres automatically clears advisory locks when the
-        # session terminates.
+        event_publisher.call(source:, result: nil)
         nil
       end
 
@@ -152,37 +136,6 @@ module FeedMonitor
         Rails.logger.error(
           "[FeedMonitor] Failed to enqueue retry for source #{source.id}: #{error.class}: #{error.message}"
         ) if defined?(Rails) && Rails.respond_to?(:logger) && Rails.logger
-      end
-
-      def enqueue_follow_up_scrapes(result)
-        return unless should_enqueue_scrapes?(result)
-
-        Array(result.item_processing&.created_items).each do |item|
-          next unless scrape_needed?(item)
-
-          scrape_enqueuer_class.enqueue(item:, source:, job_class: scrape_job_class, reason: :auto)
-        end
-      end
-
-      def should_enqueue_scrapes?(result)
-        return false unless result
-        return false unless result.status == :fetched
-        return false unless source.scraping_enabled? && source.auto_scrape?
-
-        created_count = result.item_processing&.created.to_i
-        created_count.positive?
-      end
-
-      def scrape_needed?(item)
-        item.present? && item.scraped_at.nil?
-      end
-
-      def apply_retention
-        retention_pruner_class.call(source:, strategy: FeedMonitor.config.retention.strategy)
-      rescue StandardError => error
-        Rails.logger.error(
-          "[FeedMonitor] Retention pruning failed for source #{source.id}: #{error.class} - #{error.message}"
-        )
       end
     end
   end

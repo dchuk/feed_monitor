@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
-require "uri"
+require "feed_monitor/models/url_normalizable"
 
 module FeedMonitor
   class Item < ApplicationRecord
+    include FeedMonitor::Models::UrlNormalizable
+
     belongs_to :source, class_name: "FeedMonitor::Source", inverse_of: :items, counter_cache: true
     has_one :item_content, class_name: "FeedMonitor::ItemContent", inverse_of: :item, dependent: :destroy, autosave: true
     has_many :scrape_logs, class_name: "FeedMonitor::ScrapeLog", inverse_of: :item, dependent: :destroy
@@ -12,7 +14,7 @@ module FeedMonitor
     scope :with_deleted, -> { unscope(where: :deleted_at) }
     scope :only_deleted, -> { with_deleted.where.not(deleted_at: nil) }
 
-    before_validation :normalize_urls
+    normalizes_urls :url, :canonical_url, :comments_url
 
     validates :source, presence: true
     validates :guid, presence: true, uniqueness: { scope: :source_id, case_sensitive: false }
@@ -72,49 +74,16 @@ module FeedMonitor
 
     private
 
-    URL_FIELDS = %i[url canonical_url comments_url].freeze
-    def normalize_urls
-      URL_FIELDS.each do |field|
-        instance_variable_set("@invalid_#{field}", nil)
-        raw_value = read_attribute(field)
-        normalized = normalize_url(raw_value)
-        write_attribute(field, normalized)
-      rescue URI::InvalidURIError
-        instance_variable_set("@invalid_#{field}", true)
-      end
-    end
-
     def url_must_be_http
-      errors.add(:url, "must be a valid HTTP(S) URL") if invalid_url?(:url)
+      errors.add(:url, "must be a valid HTTP(S) URL") if url_invalid?(:url)
     end
 
     def canonical_url_must_be_http
-      errors.add(:canonical_url, "must be a valid HTTP(S) URL") if invalid_url?(:canonical_url)
+      errors.add(:canonical_url, "must be a valid HTTP(S) URL") if url_invalid?(:canonical_url)
     end
 
     def comments_url_must_be_http
-      errors.add(:comments_url, "must be a valid HTTP(S) URL") if invalid_url?(:comments_url)
-    end
-
-    def invalid_url?(field)
-      instance_variable_get("@invalid_#{field}")
-    end
-
-    def normalize_url(value)
-      return nil if value.blank?
-
-      uri = URI.parse(value.strip)
-      raise URI::InvalidURIError if uri.scheme.blank? || uri.host.blank?
-
-      scheme = uri.scheme.downcase
-      raise URI::InvalidURIError unless %w[http https].include?(scheme)
-
-      uri.scheme = scheme
-      uri.host = uri.host.downcase
-      uri.path = "/" if uri.path.blank?
-      uri.fragment = nil
-
-      uri.to_s
+      errors.add(:comments_url, "must be a valid HTTP(S) URL") if url_invalid?(:comments_url)
     end
 
     def assign_content_attribute(attribute, value)
