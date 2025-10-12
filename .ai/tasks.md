@@ -522,33 +522,65 @@
 
 ---
 
-## Phase 17: Documentation & Release
+## Phase 17: Complexity Analysis & Rails Conventions and Best Practices
+
+**Goal: Simple, conventional implementations**
+
+### 17.01 Comprehensive Complexity Audit
+
+- [x] 17.01.01 Compile an inventory of all controllers, models, jobs, services, view components, and front-end assets to set audit scope
+- [x] 17.01.02 Review controller actions for RESTful conventions, before_action bloat, and opportunities to slim controllers in favour of service objects
+- [x] 17.01.03 Evaluate models, service objects, and modules for SRP adherence, duplication, and opportunities to encapsulate behaviour cleanly
+- [x] 17.01.04 Inspect background jobs, Solid Queue workers, and scheduling flows for redundant logic, excessive coupling, or non-idiomatic patterns
+- [x] 17.01.05 Audit front-end assets (Stimulus controllers, Turbo Streams, Tailwind, JS package management) for anti-patterns, dependency drift, or missing build steps
+- [x] 17.01.06 Summarize complexity hotspots (long methods, deep conditionals, callback chains) with supporting metrics from tools like `bundle exec brakeman`, `bundle exec rubocop`, and SimpleCov trends and save to .ai/ folder as markdown file
+
+### 17.02 Findings Report & Recommendations
+
+- [ ] 17.02.01 Produce an audit report cataloging each issue with file references, context, and impacted behaviour
+- [ ] 17.02.02 Document recommended Rails-aligned remediation for controller, model, job, and service object issues (RESTful routing, skinny controllers, fat models, dependency injection)
+- [ ] 17.02.03 Outline DRY and complexity reduction strategies (extractions, shared concerns, presenters) with implementation guidance and prerequisites
+- [ ] 17.02.04 Capture front-end package management and view-layer recommendations (Stimulus module boundaries, Turbo usage, asset bundling hygiene)
+- [ ] 17.02.05 Prioritize findings with effort/impact scoring, required stakeholders, and suggested sequencing across future roadmap phases
+- [ ] 17.02.06 Save final analysis to .ai/ folder as markdown file
+
+### 17.03 Refactoring Execution Planning
+
+- [ ] 17.03.01 Break prioritized findings into actionable refactor workstreams (controllers, models/services, background jobs, front-end) with owners
+- [ ] 17.03.02 Define success criteria and regression test coverage requirements for each workstream, including new automated tests or fixtures needed
+- [ ] 17.03.03 Sequence refactor tasks into incremental deliveries, noting dependencies, rollout strategy, and migration considerations
+- [ ] 17.03.04 Establish monitoring and QA checkpoints (notifications, metrics dashboards, manual verification) to validate behavioural parity post-refactor
+- [ ] 17.03.05 Create follow-up tickets for any deferred or risky refactors, ensuring documentation links back to the audit report and recommendations
+
+---
+
+## Phase 18: Documentation & Release
 
 **Goal: Production-ready gem**
 
-### 17.01 Complete Documentation
+### 18.01 Complete Documentation
 
-- [ ] 17.01.01 Write comprehensive README
-- [ ] 17.01.02 Create installation guide
-- [ ] 17.01.03 Add API/configuration documentation
-- [ ] 17.01.04 Write deployment guides
-- [ ] 17.01.05 Create troubleshooting guide
+- [ ] 18.01.01 Write comprehensive README
+- [ ] 18.01.02 Create installation guide
+- [ ] 18.01.03 Add API/configuration documentation
+- [ ] 18.01.04 Write deployment guides
+- [ ] 18.01.05 Create troubleshooting guide
 
-### 17.02 Example Applications
+### 18.02 Example Applications
 
-- [ ] 17.02.01 Create basic example app
-- [ ] 17.02.02 Add advanced integration example
-- [ ] 17.02.03 Show custom adapter example
-- [ ] 17.02.04 Include Docker configuration
-- [ ] 17.02.05 Document production deployment
+- [ ] 18.02.01 Create basic example app
+- [ ] 18.02.02 Add advanced integration example
+- [ ] 18.02.03 Show custom adapter example
+- [ ] 18.02.04 Include Docker configuration
+- [ ] 18.02.05 Document production deployment
 
-### 17.03 Release Package
+### 18.03 Release Package
 
-- [ ] 17.03.01 Set version 1.0.0
-- [ ] 17.03.02 Write CHANGELOG
-- [ ] 17.03.03 Add MIT License
-- [ ] 17.03.04 Publish to RubyGems
-- [ ] 17.03.05 Announce release
+- [ ] 18.03.01 Set version 1.0.0
+- [ ] 18.03.02 Write CHANGELOG
+- [ ] 18.03.03 Add MIT License
+- [ ] 18.03.04 Publish to RubyGems
+- [ ] 18.03.05 Announce release
 
 **Deliverable: Production-ready, well-documented gem**
 **Test: Install in fresh Rails 8 app using published gem**
