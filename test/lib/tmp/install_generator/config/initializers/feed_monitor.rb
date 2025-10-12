@@ -74,6 +74,16 @@ FeedMonitor.configure do |config|
   # config.fetching.failure_increase_factor = 1.5 # multiplier on errors/timeouts
   # config.fetching.jitter_percent = 0.1        # random jitter (0 disables jitter)
 
+  # ---- Source health monitoring ---------------------------------------
+  # Tune how many fetches Feed Monitor evaluates when determining health
+  # status, as well as thresholds for warnings and automatic pauses.
+  config.health.window_size = 20
+  config.health.healthy_threshold = 0.8
+  config.health.warning_threshold = 0.5
+  config.health.auto_pause_threshold = 0.2
+  config.health.auto_resume_threshold = 0.6
+  config.health.auto_pause_cooldown_minutes = 60
+
   # ---- Scraper adapters --------------------------------------------------
   # Register additional scraper adapters or override built-ins. Adapters must
   # inherit from FeedMonitor::Scrapers::Base.
