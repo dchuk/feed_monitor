@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_12_090000) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_12_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -86,6 +86,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_12_090000) do
     t.index ["scrape_status"], name: "index_feed_monitor_items_on_scrape_status"
     t.index ["source_id", "content_fingerprint"], name: "index_feed_monitor_items_on_source_id_and_content_fingerprint", unique: true
     t.index ["source_id", "guid"], name: "index_feed_monitor_items_on_source_id_and_guid", unique: true
+    t.index ["source_id", "published_at", "created_at"], name: "index_feed_monitor_items_on_source_and_published_at"
     t.index ["source_id"], name: "index_feed_monitor_items_on_source_id"
     t.index ["url"], name: "index_feed_monitor_items_on_url"
   end
@@ -108,6 +109,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_12_090000) do
     t.index ["created_at"], name: "index_feed_monitor_scrape_logs_on_created_at"
     t.index ["item_id"], name: "index_feed_monitor_scrape_logs_on_item_id"
     t.index ["source_id"], name: "index_feed_monitor_scrape_logs_on_source_id"
+    t.index ["started_at"], name: "index_feed_monitor_scrape_logs_on_started_at"
     t.index ["success"], name: "index_feed_monitor_scrape_logs_on_success"
   end
 
@@ -156,6 +158,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_12_090000) do
     t.decimal "health_auto_pause_threshold", precision: 5, scale: 4
     t.index ["active"], name: "index_feed_monitor_sources_on_active"
     t.index ["auto_paused_until"], name: "index_feed_monitor_sources_on_auto_paused_until"
+    t.index ["created_at"], name: "index_feed_monitor_sources_on_created_at"
     t.index ["feed_url"], name: "index_feed_monitor_sources_on_feed_url", unique: true
     t.index ["fetch_circuit_until"], name: "index_feed_monitor_sources_on_fetch_circuit_until"
     t.index ["fetch_retry_attempt"], name: "index_feed_monitor_sources_on_fetch_retry_attempt"

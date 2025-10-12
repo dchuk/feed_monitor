@@ -38,7 +38,7 @@ module FeedMonitor
           }
         end
 
-        item_events = Item.order(created_at: :desc).limit(limit).map do |item|
+        item_events = Item.includes(:source).order(created_at: :desc).limit(limit).map do |item|
           {
             time: item.created_at,
             label: item.title.presence || "New Item",

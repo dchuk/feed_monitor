@@ -478,11 +478,11 @@
 
 ### 14.01 Database Performance
 
-- [ ] 14.01.01 Verify all indexes from migrations
-- [ ] 14.01.02 Add missing indexes based on query analysis
-- [ ] 14.01.03 Optimize counter caches (items_count)
-- [ ] 14.01.04 Eliminate N+1 queries with includes
-- [ ] 14.01.05 Add query performance tests
+- [x] 14.01.01 Verify all indexes from migrations
+- [x] 14.01.02 Add missing indexes based on query analysis
+- [x] 14.01.03 Optimize counter caches (items_count)
+- [x] 14.01.04 Eliminate N+1 queries with includes
+- [x] 14.01.05 Add query performance tests
 
 ### 14.02 Caching Strategy
 
