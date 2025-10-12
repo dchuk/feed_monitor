@@ -620,6 +620,9 @@ Modify the admin interface:
 - Additional views and actions
 - Integration with host app navigation
 - White-label branding
+- Stimulus controllers ship as ES modules via Importmap (`feed_monitor/application`); host apps can override controller registrations with `importmap.rb`
+- Dropdown interactions use `stimulus-use` transitions when available and automatically fall back to class toggling when the module is not pinned
+- `bin/rails app:feed_monitor:assets:build` and `app:feed_monitor:assets:verify` keep Tailwind builds current; verification runs before `rails test`
 
 ---
 

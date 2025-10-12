@@ -10,6 +10,18 @@ module FeedMonitor
       app.config.assets.paths << root.join("app/assets/builds")
     end
 
+    initializer "feed_monitor.assets.precompile" do |app|
+      next unless app.config.respond_to?(:assets)
+
+      app.config.assets.precompile += %w[ feed_monitor/application.js feed_monitor/stimulus-use.js ]
+    end
+
+    initializer "feed_monitor.importmap", before: "importmap" do |app|
+      next unless app.config.respond_to?(:importmap)
+
+      app.config.importmap.paths << root.join("config/importmap.rb")
+    end
+
     initializer "feed_monitor.metrics" do
       FeedMonitor::Metrics.setup_subscribers!
     end

@@ -187,8 +187,37 @@ module FeedMonitor
           find("button[aria-label='Source actions']").click
           assert_link "View"
           assert_link "Edit"
+
+          menu = find("[data-dropdown-target='menu']", visible: :all)
+          assert_not menu[:class].to_s.split.include?("hidden"), "dropdown menu should be visible after toggle"
+
+          find(:xpath, "//body").click
+          assert menu[:class].to_s.split.include?("hidden"), "dropdown menu should be hidden after click outside"
         end
       end
+    end
+
+    test "source dropdown links navigate to view and edit pages" do
+      FeedMonitor::Source.delete_all
+      source = create_source!(name: "Nav Feed", feed_url: "https://nav.example.com/feed.xml")
+
+      visit feed_monitor.sources_path
+
+      within "turbo-frame#feed_monitor_sources_table" do
+        find("button[aria-label='Source actions']").click
+        click_link "View"
+      end
+
+      assert_current_path feed_monitor.source_path(source)
+
+      visit feed_monitor.sources_path
+
+      within "turbo-frame#feed_monitor_sources_table" do
+        find("button[aria-label='Source actions']").click
+        click_link "Edit"
+      end
+
+      assert_current_path feed_monitor.edit_source_path(source)
     end
 
     private

@@ -578,10 +578,10 @@
 
 ### 17.07 Front-End Pipeline Modernization
 
-- [ ] 17.07.01 Convert Stimulus controllers to ES module/importmap loading and remove global registration, with smoke/system tests
-- [ ] 17.07.02 Provide graceful fallback when optional dropdown dependency is missing, including documentation and JS tests
-- [ ] 17.07.03 Replace or realign the transition shim with maintained stimulus-use utilities and verify behaviour via integration tests
-- [ ] 17.07.04 Automate Tailwind rebuilds and add asset verification scripts to the development/CI workflow
+- [x] 17.07.01 Convert Stimulus controllers to ES module/importmap loading and remove global registration, with smoke/system tests
+- [x] 17.07.02 Provide graceful fallback when optional dropdown dependency is missing, including documentation and JS tests
+- [x] 17.07.03 Replace or realign the transition shim with maintained stimulus-use utilities and verify behaviour via integration tests
+- [x] 17.07.04 Automate Tailwind rebuilds and add asset verification scripts to the development/CI workflow
 
 ### 17.08 Tooling & Coverage Guardrails
 

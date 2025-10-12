@@ -1,55 +1,53 @@
-(() => {
-  if (!window.FeedMonitorControllers) {
-    window.FeedMonitorControllers = {};
+import { Controller } from "@hotwired/stimulus";
+
+export default class extends Controller {
+  static values = {
+    delay: { default: 5000, type: Number }
+  };
+
+  connect() {
+    if (!window.FeedMonitorControllers) {
+      window.FeedMonitorControllers = {};
+    }
+
+    this.clearTimeout();
+    this.registerController();
+    this.startTimer();
   }
 
-  class NotificationController extends Stimulus.Controller {
-    static values = {
-      delay: { default: 5000, type: Number }
-    };
+  disconnect() {
+    this.clearTimeout();
+  }
 
-    connect() {
-      this._clearTimeout();
-      this._register();
-      this._startTimer();
-    }
+  hide(event) {
+    if (event) event.preventDefault();
+    this.clearTimeout();
+    this.dismiss();
+  }
 
-    disconnect() {
-      this._clearTimeout();
-    }
+  registerController() {
+    window.FeedMonitorControllers.notification = this;
+  }
 
-    hide(event) {
-      if (event) event.preventDefault();
-      this._clearTimeout();
-      this._dismiss();
-    }
+  startTimer() {
+    if (this.delayValue <= 0) return;
+    this.timeoutId = window.setTimeout(() => this.dismiss(), this.delayValue);
+  }
 
-    _register() {
-      window.FeedMonitorControllers.notification = this;
-    }
-
-    _startTimer() {
-      if (this.delayValue <= 0) return;
-      this.timeoutId = window.setTimeout(() => this._dismiss(), this.delayValue);
-    }
-
-    _dismiss() {
-      if (!this.element) return;
-      this.element.classList.add("opacity-0", "translate-y-2");
-      window.setTimeout(() => {
-        if (this.element && this.element.remove) {
-          this.element.remove();
-        }
-      }, 200);
-    }
-
-    _clearTimeout() {
-      if (this.timeoutId) {
-        window.clearTimeout(this.timeoutId);
-        this.timeoutId = null;
+  dismiss() {
+    if (!this.element) return;
+    this.element.classList.add("opacity-0", "translate-y-2");
+    window.setTimeout(() => {
+      if (this.element && this.element.remove) {
+        this.element.remove();
       }
-    }
+    }, 200);
   }
 
-  window.FeedMonitorNotificationController = NotificationController;
-})();
+  clearTimeout() {
+    if (!this.timeoutId) return;
+
+    window.clearTimeout(this.timeoutId);
+    this.timeoutId = null;
+  }
+}

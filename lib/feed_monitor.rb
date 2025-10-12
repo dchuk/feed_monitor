@@ -17,6 +17,12 @@ rescue LoadError
 end
 
 begin
+  require "importmap-rails"
+rescue LoadError
+  # Importmap allows engines to ship modern ES modules when available.
+end
+
+begin
   require "ransack"
 rescue LoadError
   # Ransack powers search forms when available.
@@ -71,6 +77,7 @@ require "feed_monitor/fetching/fetch_runner"
 require "feed_monitor/scheduler"
 require "feed_monitor/items/item_creator"
 require "feed_monitor/health"
+require "feed_monitor/assets"
 
 module FeedMonitor
   class << self

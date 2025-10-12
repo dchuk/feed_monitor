@@ -1,32 +1,21 @@
-(() => {
-  if (!window.Stimulus || !window.Stimulus.Application) {
-    console.error("FeedMonitor: Stimulus is not available. Ensure stimulus.umd.js is loaded before feed_monitor/application.js.");
-    return;
-  }
+import { Application } from "@hotwired/stimulus";
+import AsyncSubmitController from "feed_monitor/controllers/async_submit_controller";
+import NotificationController from "feed_monitor/controllers/notification_controller";
+import DropdownController from "feed_monitor/controllers/dropdown_controller";
 
-  const existingApp = window.FeedMonitorStimulus;
-  const application = existingApp || window.Stimulus.Application.start();
+const existingApplication = window.FeedMonitorStimulus;
+const application = existingApplication || Application.start();
 
-  if (!existingApp) {
-    window.FeedMonitorStimulus = application;
-    window.FeedMonitorRegisteredControllers = new Set();
-  }
+if (!existingApplication) {
+  window.FeedMonitorStimulus = application;
+}
 
-  const registry = window.FeedMonitorRegisteredControllers;
+application.register("notification", NotificationController);
+application.register("async-submit", AsyncSubmitController);
+application.register("dropdown", DropdownController);
 
-  function register(identifier, controller) {
-    if (!controller) return;
-    if (!registry.has(identifier)) {
-      application.register(identifier, controller);
-      registry.add(identifier);
-    }
-  }
+document.addEventListener("turbo:submit-end", () => {
+  document.dispatchEvent(new CustomEvent("feed-monitor:form-finished"));
+});
 
-  register("notification", window.FeedMonitorNotificationController);
-  register("async-submit", window.FeedMonitorAsyncSubmitController);
-  register("dropdown", window.FeedMonitorDropdownController);
-
-  document.addEventListener("turbo:submit-end", () => {
-    document.dispatchEvent(new CustomEvent("feed-monitor:form-finished"));
-  });
-})();
+export default application;
