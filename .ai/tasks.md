@@ -613,11 +613,11 @@
 
 ### 18.02 Example Applications
 
-- [ ] 18.02.01 Create basic example app
-- [ ] 18.02.02 Add advanced integration example
-- [ ] 18.02.03 Show custom adapter example
-- [ ] 18.02.04 Include Docker configuration
-- [ ] 18.02.05 Document production deployment
+- [x] 18.02.01 Create basic example app
+- [x] 18.02.02 Add advanced integration example
+- [x] 18.02.03 Show custom adapter example
+- [x] 18.02.04 Include Docker configuration
+- [x] 18.02.05 Document production deployment
 
 ### 18.03 Release Package
 

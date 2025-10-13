@@ -29,6 +29,14 @@ FeedMonitor is a production-ready Rails 8 mountable engine for ingesting, normal
 
 Detailed instructions, optional flags, and verification steps live in [docs/installation.md](docs/installation.md).
 
+## Example Applications
+- `examples/basic_host/template.rb` – Minimal host that seeds a Rails blog source and redirects `/` to the dashboard.
+- `examples/advanced_host/template.rb` – Production-style integration with Mission Control, Redis realtime, Solid Queue tuning, and metrics endpoint.
+- `examples/custom_adapter/template.rb` – Registers the sample Markdown scraper adapter and seeds a Markdown-based source.
+- `examples/docker` – Dockerfile, Compose stack, and entrypoint script that run any generated example alongside Postgres and Redis.
+
+See [examples/README.md](examples/README.md) for usage instructions.
+
 ## Architecture at a Glance
 - **Source Lifecycle** – `FeedMonitor::Fetching::FetchRunner` coordinates advisory locking, fetch execution, retention pruning, and scrape enqueues. Source models store health metrics, failure states, and adaptive scheduling parameters.
 - **Item Processing** – `FeedMonitor::Items::RetentionPruner`, `FeedMonitor::Scraping::Enqueuer`, and `FeedMonitor::Scraping::ItemScraper` keep content fresh, ensure deduplicated storage, and capture scrape metadata/logs.

@@ -55,3 +55,7 @@ FeedMonitor assumes the standard Rails 8 process split:
 - Rebuild assets if you deploy to ephemeral filesystems.
 
 Keep this guide alongside your platform runbooks so teams can confidently deploy and operate FeedMonitor in any environment.
+
+## Container Reference Stack
+
+The repository ships a reusable Docker stack under `examples/docker` that mirrors the recommended process model. It builds a Ruby 3.3 image with Node, mounts your generated example via `APP_PATH`, and launches three services (`web`, `worker`, `scheduler`) alongside Postgres and Redis. Use it to trial production settings locally or as a baseline for ECS/Kubernetes manifests.

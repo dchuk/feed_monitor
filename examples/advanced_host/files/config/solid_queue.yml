@@ -1,0 +1,17 @@
+default: &default
+  queues:
+    feed_monitor_fetch:
+      concurrency: <%= ENV.fetch("FEED_MONITOR_FETCH_CONCURRENCY", 2) %>
+    feed_monitor_scrape:
+      concurrency: <%= ENV.fetch("FEED_MONITOR_SCRAPE_CONCURRENCY", 2) %>
+    default:
+      concurrency: <%= ENV.fetch("RAILS_QUEUE_CONCURRENCY", 2) %>
+
+development:
+  <<: *default
+
+test:
+  <<: *default
+
+production:
+  <<: *default
