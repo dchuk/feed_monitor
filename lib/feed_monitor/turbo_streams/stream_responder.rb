@@ -31,6 +31,15 @@ module FeedMonitor
         replace(dom_id(record, :row), partial:, locals:)
       end
 
+      def remove(target)
+        operations << Operation.new(action: :remove, target:, partial: nil, locals: nil)
+        self
+      end
+
+      def remove_row(record)
+        remove(dom_id(record, :row))
+      end
+
       def toast(message:, level: :info, title: nil, delay_ms: 5000)
         append(
           "feed_monitor_notifications",
@@ -46,12 +55,19 @@ module FeedMonitor
 
       def render(view_context)
         operations.map do |operation|
-          view_context.turbo_stream.public_send(
-            operation.action,
-            operation.target,
-            partial: operation.partial,
-            locals: operation.locals
-          )
+          if operation.partial
+            view_context.turbo_stream.public_send(
+              operation.action,
+              operation.target,
+              partial: operation.partial,
+              locals: operation.locals || {}
+            )
+          else
+            view_context.turbo_stream.public_send(
+              operation.action,
+              operation.target
+            )
+          end
         end
       end
     end

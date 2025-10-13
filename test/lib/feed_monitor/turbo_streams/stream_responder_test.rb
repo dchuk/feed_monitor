@@ -21,6 +21,18 @@ module FeedMonitor
         assert_equal({ source: @source }, operation.locals)
       end
 
+      test "records remove operations for resource rows" do
+        responder = FeedMonitor::TurboStreams::StreamResponder.new
+        responder.remove_row(@source)
+
+        operation = responder.operations.first
+
+        assert_equal :remove, operation.action
+        assert_equal ActionView::RecordIdentifier.dom_id(@source, :row), operation.target
+        assert_nil operation.partial
+        assert_nil operation.locals
+      end
+
       test "records toast notification append" do
         responder = FeedMonitor::TurboStreams::StreamResponder.new
         responder.toast(message: "Queued", level: :info, delay_ms: 1234)

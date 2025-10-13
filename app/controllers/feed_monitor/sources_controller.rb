@@ -81,8 +81,65 @@ module FeedMonitor
     end
 
     def destroy
+      search_params = sanitized_search_params
       @source.destroy
-      redirect_to feed_monitor.sources_path, notice: "Source deleted"
+      message = "Source deleted"
+
+      respond_to do |format|
+        format.turbo_stream do
+          base_scope = Source.all
+          query = base_scope.ransack(search_params)
+          query.sorts = [ "created_at desc" ] if query.sorts.blank?
+          sources = query.result
+
+          metrics = FeedMonitor::Analytics::SourcesIndexMetrics.new(
+            base_scope:,
+            result_scope: sources,
+            search_params:
+          )
+
+          redirect_location = safe_redirect_path(params[:redirect_to])
+
+          responder = FeedMonitor::TurboStreams::StreamResponder.new
+          responder.remove_row(@source)
+          responder.remove("feed_monitor_sources_empty_state")
+          responder.replace(
+            "feed_monitor_sources_heatmap",
+            partial: "feed_monitor/sources/fetch_interval_heatmap",
+            locals: {
+              fetch_interval_distribution: metrics.fetch_interval_distribution,
+              selected_bucket: metrics.selected_fetch_interval_bucket,
+              search_params:
+            }
+          )
+
+          unless sources.exists?
+            responder.append(
+              "feed_monitor_sources_table_body",
+              partial: "feed_monitor/sources/empty_state_row"
+            )
+          end
+
+          if redirect_location
+            responder.append(
+              "feed_monitor_redirects",
+              partial: "feed_monitor/shared/turbo_visit",
+              locals: {
+                url: redirect_location,
+                action: "replace"
+              }
+            )
+          end
+
+          responder.toast(message:, level: :success)
+
+          render turbo_stream: responder.render(view_context)
+        end
+
+        format.html do
+          redirect_to feed_monitor.sources_path, notice: message
+        end
+      end
     end
 
     def fetch
@@ -287,6 +344,13 @@ module FeedMonitor
 
     def scrape_all_params
       params.fetch(:bulk_scrape, {}).permit(:selection)
+    end
+
+    def safe_redirect_path(raw_value)
+      return if raw_value.blank?
+
+      sanitized = FeedMonitor::Security::ParameterSanitizer.sanitize(raw_value.to_s)
+      sanitized.start_with?("/") ? sanitized : nil
     end
   end
 end

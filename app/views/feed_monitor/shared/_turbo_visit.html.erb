@@ -1,0 +1,8 @@
+<% url = local_assigns.fetch(:url) %>
+<% action = local_assigns[:action] || "advance" %>
+<script>
+  (() => {
+    const options = { action: "<%= action %>" };
+    Turbo.visit("<%= j url %>", options);
+  })();
+</script>

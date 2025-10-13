@@ -645,10 +645,10 @@
 
 ### 19.03 Add Source Deletion from Index Table
 
-- [ ] 19.03.01 Specify the destructive action UX (button location, confirmation modal/text, tooltip) for deleting a source directly from the index list
-- [ ] 19.03.02 Implement the delete button using standard Rails RESTful routes, ensuring Turbo seamlessly removes the row and updates counters without full refreshes
-- [ ] 19.03.03 Validate that dependent records (items, logs, schedules) are handled according to existing retention/deletion rules and document any follow-up work
-- [ ] 19.03.04 Add controller and system tests covering successful deletion, cancellation, and unauthorized attempts
+- [x] 19.03.01 Specify the destructive action UX (button location, confirmation modal/text, tooltip) for deleting a source directly from the index list
+- [x] 19.03.02 Implement the delete button using standard Rails RESTful routes, ensuring Turbo seamlessly removes the row and updates counters without full refreshes
+- [x] 19.03.03 Validate that dependent records (items, logs, schedules) are handled according to existing retention/deletion rules and document any follow-up work
+- [x] 19.03.04 Add controller and system tests covering successful deletion, cancellation, and unauthorized attempts
 
 ### 19.04 Consolidate Fetch & Scrape Logs
 

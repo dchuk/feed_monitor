@@ -18,7 +18,8 @@
 
   <div class="mt-6 flex items-center gap-4">
     <%= link_to "Back", feed_monitor.source_path(@source), class: "text-blue-600 hover:underline" %>
-    <%= form_with url: feed_monitor.source_path(@source), method: :delete, data: { turbo_confirm: "Delete this source?" }, class: "inline" do %>
+    <%= form_with url: feed_monitor.source_path(@source), method: :delete, data: { turbo_confirm: "Delete this source and remove all associated data?", turbo_frame: "_top" }, class: "inline" do %>
+      <%= hidden_field_tag :redirect_to, feed_monitor.sources_path %>
       <button type="submit" class="text-rose-600 hover:text-rose-500">
         Delete
       </button>

@@ -86,9 +86,12 @@ module FeedMonitor
       end
 
       visit feed_monitor.source_path(source)
-      accept_confirm do
-        click_button "Delete"
-      end
+      delete_form = find("form[action='#{feed_monitor.source_path(source)}']")
+      assert_equal "Delete this source and remove all associated data?", delete_form["data-turbo-confirm"]
+
+      page.execute_script("window.__feedMonitorConfirm = window.confirm; window.confirm = () => true;")
+      click_button "Delete"
+      page.execute_script("window.confirm = window.__feedMonitorConfirm || window.confirm; window.__feedMonitorConfirm = undefined;")
       assert_no_text "Updated Source"
       refute FeedMonitor::Source.exists?(source.id)
 
@@ -218,6 +221,49 @@ module FeedMonitor
       end
 
       assert_current_path feed_monitor.edit_source_path(source)
+    end
+
+    test "deleting a source from the index removes the row and refreshes heatmap" do
+      FeedMonitor::Source.delete_all
+
+      keep_source = create_source!(
+        name: "Keep Feed",
+        feed_url: "https://keep.example.com/feed.xml",
+        fetch_interval_minutes: 90
+      )
+      delete_source = create_source!(
+        name: "Discard Feed",
+        feed_url: "https://discard.example.com/feed.xml",
+        fetch_interval_minutes: 45
+      )
+
+      visit feed_monitor.sources_path
+
+      within "[data-testid='fetch-interval-bucket-30-60']" do
+        assert_text "1"
+      end
+      within "[data-testid='fetch-interval-bucket-60-120']" do
+        assert_text "1"
+      end
+
+      within find("tr", text: delete_source.name) do
+        find("button[aria-label='Source actions']").click
+        delete_link = find("a", text: "Delete", match: :first)
+        assert_equal "Delete this source and remove all associated data?", delete_link["data-turbo-confirm"]
+        page.execute_script("window.__feedMonitorConfirm = window.confirm; window.confirm = () => true;")
+        delete_link.click
+        page.execute_script("window.confirm = window.__feedMonitorConfirm || window.confirm; window.__feedMonitorConfirm = undefined;")
+      end
+
+      assert_no_selector "tr", text: delete_source.name
+      assert FeedMonitor::Source.exists?(keep_source.id), "expected other sources to remain"
+
+      within "[data-testid='fetch-interval-bucket-30-60']" do
+        assert_text "0"
+      end
+      within "[data-testid='fetch-interval-bucket-60-120']" do
+        assert_text "1"
+      end
     end
 
     test "source show renders scrape status badges and consumes turbo broadcasts" do
