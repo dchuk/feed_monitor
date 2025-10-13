@@ -49,12 +49,10 @@ module FeedMonitor
 
       def self.selection_counts(source:, preview_items:, preview_limit: 10)
         preview_collection = Array(preview_items).compact
-        in_flight_statuses = FeedMonitor::Scraping::State::IN_FLIGHT_STATUSES
-
         base_scope = FeedMonitor::Item.where(source_id: source.id)
         {
           current: preview_collection.size.clamp(0, preview_limit.to_i.nonzero? || preview_collection.size),
-          unscraped: base_scope.where(scraped_at: nil).where.not(scrape_status: in_flight_statuses).count,
+          unscraped: base_scope.merge(unscraped_scope).count,
           all: base_scope.count
         }
       end
@@ -134,7 +132,7 @@ module FeedMonitor
         when :current
           base_scope.limit(preview_limit)
         when :unscraped
-          base_scope.merge(FeedMonitor::Item.pending_scrape)
+          base_scope.merge(unscraped_scope)
         when :all
           base_scope
         else
@@ -153,6 +151,19 @@ module FeedMonitor
         statuses = FeedMonitor::Scraping::State::IN_FLIGHT_STATUSES
         column = FeedMonitor::Item.arel_table[:scrape_status]
         scope.where(column.eq(nil).or(column.not_in(statuses)))
+      end
+
+      def self.unscraped_scope
+        item_table = FeedMonitor::Item.arel_table
+        failed_statuses = %w[failed partial]
+        FeedMonitor::Item.where(
+          item_table[:scraped_at].eq(nil)
+            .or(item_table[:scrape_status].in(failed_statuses))
+        )
+      end
+
+      def unscraped_scope
+        self.class.unscraped_scope
       end
 
       def apply_batch_limit(scope)

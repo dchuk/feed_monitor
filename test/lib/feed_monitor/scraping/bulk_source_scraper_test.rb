@@ -107,7 +107,7 @@ module FeedMonitor
 
       test "selection counts ignore association cache limits" do
         source = create_source!(scraping_enabled: true)
-        12.times do
+        11.times do
           create_item!(
             source:,
             scrape_status: nil,
@@ -115,6 +115,12 @@ module FeedMonitor
             published_at: Time.current
           )
         end
+        create_item!(
+          source:,
+          scrape_status: "failed",
+          scraped_at: Time.current,
+          published_at: Time.current
+        )
 
         cached_preview = source.items.recent.limit(5).to_a
         assert_equal 5, cached_preview.size
@@ -127,6 +133,7 @@ module FeedMonitor
 
         assert_equal 5, counts[:current]
         assert_equal 12, counts[:all]
+        assert_equal 12, counts[:unscraped]
       end
 
       private
