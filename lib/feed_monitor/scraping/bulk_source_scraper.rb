@@ -51,10 +51,10 @@ module FeedMonitor
         preview_collection = Array(preview_items).compact
         in_flight_statuses = FeedMonitor::Scraping::State::IN_FLIGHT_STATUSES
 
-        base_scope = source.items.where.not(scrape_status: in_flight_statuses)
+        base_scope = FeedMonitor::Item.where(source_id: source.id)
         {
-          current: preview_collection.size,
-          unscraped: base_scope.where(scraped_at: nil).count,
+          current: preview_collection.size.clamp(0, preview_limit.to_i.nonzero? || preview_collection.size),
+          unscraped: base_scope.where(scraped_at: nil).where.not(scrape_status: in_flight_statuses).count,
           all: base_scope.count
         }
       end
@@ -146,7 +146,7 @@ module FeedMonitor
       end
 
       def base_scope
-        source.items.recent
+        FeedMonitor::Item.where(source_id: source.id).order(Arel.sql("published_at DESC NULLS LAST, created_at DESC"))
       end
 
       def without_inflight(scope)

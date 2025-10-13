@@ -105,6 +105,30 @@ module FeedMonitor
         end
       end
 
+      test "selection counts ignore association cache limits" do
+        source = create_source!(scraping_enabled: true)
+        12.times do
+          create_item!(
+            source:,
+            scrape_status: nil,
+            scraped_at: nil,
+            published_at: Time.current
+          )
+        end
+
+        cached_preview = source.items.recent.limit(5).to_a
+        assert_equal 5, cached_preview.size
+
+        counts = FeedMonitor::Scraping::BulkSourceScraper.selection_counts(
+          source:,
+          preview_items: cached_preview,
+          preview_limit: 10
+        )
+
+        assert_equal 5, counts[:current]
+        assert_equal 12, counts[:all]
+      end
+
       private
 
       def create_item!(source:, **attrs)

@@ -26,7 +26,7 @@
       </div>
       <p class="mt-2 text-sm text-slate-500">Feed URL: <%= source.feed_url %></p>
     </div>
-    <div class="flex gap-3">
+    <div class="flex flex-wrap items-center justify-end gap-3">
       <% fetch_disabled = %w[queued fetching].include?(source.fetch_status) %>
       <%= button_to "Fetch Now",
             feed_monitor.fetch_source_path(source),
@@ -47,6 +47,10 @@
                 action: "turbo:submit-start->async-submit#start turbo:submit-end->async-submit#finish"
               }
             } %>
+      <%= render "feed_monitor/sources/bulk_scrape_modal",
+            source: source,
+            selected: (@bulk_scrape_selection || :current),
+            preview_limit: preview_limit %>
       <% if source.fetch_circuit_open? %>
         <%= button_to "Retry Now",
               feed_monitor.retry_source_path(source),
@@ -234,17 +238,6 @@
         <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
           <h2 class="text-lg font-medium">Items</h2>
           <%= link_to "View all items", feed_monitor.items_path, class: "text-sm font-medium text-blue-600 hover:text-blue-500" %>
-        </div>
-        <% selection_counts = FeedMonitor::Scraping::BulkSourceScraper.selection_counts(
-             source: source,
-             preview_items: items,
-             preview_limit: preview_limit
-           ) %>
-        <div class="border-b border-slate-200 px-5 py-4">
-          <%= render "feed_monitor/sources/bulk_scrape_form",
-                source: source,
-                counts: selection_counts,
-                selected: (@bulk_scrape_selection || :current) %>
         </div>
         <% if items.any? %>
           <div class="overflow-x-auto">

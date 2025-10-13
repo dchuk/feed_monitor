@@ -261,7 +261,7 @@ module FeedMonitor
       end
     end
 
-    test "bulk scrape form enqueues selections and handles empty scopes" do
+    test "bulk scrape modal enqueues selections and handles empty scopes" do
       FeedMonitor.configure do |config|
         config.scraping.max_in_flight_per_source = 5
       end
@@ -279,34 +279,36 @@ module FeedMonitor
 
       visit feed_monitor.source_path(source)
 
-      within "[data-testid='bulk-scrape-form']" do
+      find("[data-testid='bulk-scrape-button']").click
+
+      within "[data-testid='bulk-scrape-modal']" do
         assert_selector "label[data-testid='bulk-scrape-option-current']", text: /Current view/i
         assert_selector "label[data-testid='bulk-scrape-option-unscraped']", text: /Unscraped items/i
-      end
 
-      within "[data-testid='bulk-scrape-form']" do
-        accept_confirm do
-          click_button "Scrape Selected"
-        end
+        click_button "Scrape Items"
       end
 
       assert_text "Queued scraping for 3 items"
+      assert_equal 3, enqueued_jobs.size
+      clear_enqueued_jobs
       source.reload
-      assert_equal 3, source.items.where(scrape_status: "pending").count
+      assert_equal 3, FeedMonitor::Item.where(source: source, scrape_status: "pending").count
+
       within "[data-testid='source-items-table'] tbody tr:first-child" do
         assert_selector "[data-testid='item-scrape-status-badge'][data-status='pending']"
       end
 
-      within "[data-testid='bulk-scrape-form']" do
+      find("[data-testid='bulk-scrape-button']").click
+
+      within "[data-testid='bulk-scrape-modal']" do
         find("label[data-testid='bulk-scrape-option-unscraped']").click
-        accept_confirm do
-          click_button "Scrape Selected"
-        end
+        click_button "Scrape Items"
       end
 
       assert_text "No items match the selected scope"
+      assert_equal 0, enqueued_jobs.size
       source.reload
-      assert_equal 3, source.items.where(scrape_status: "pending").count
+      assert_equal 3, FeedMonitor::Item.where(source: source, scrape_status: "pending").count
     end
 
     private
