@@ -104,6 +104,12 @@ FeedMonitor.configure do |config|
   config.retention.max_items = nil
   # config.retention.strategy = :destroy # or :soft_delete
 
+  # ---- Scraping controls -------------------------------------------------
+  # Limit how many scrapes can be in-flight per source and cap the size of
+  # bulk enqueue operations. Set to nil to disable a limit.
+  # config.scraping.max_in_flight_per_source = 25
+  # config.scraping.max_bulk_batch_size = 100
+
   # ---- Event callbacks ---------------------------------------------------
   # Integrate with host workflows by responding to engine events. Handlers
   # receive a single event object with helpful context. For example:

@@ -261,6 +261,54 @@ module FeedMonitor
       end
     end
 
+    test "bulk scrape form enqueues selections and handles empty scopes" do
+      FeedMonitor.configure do |config|
+        config.scraping.max_in_flight_per_source = 5
+      end
+
+      source = create_source!(name: "Bulk Scrape", scraping_enabled: true, auto_scrape: false)
+      3.times do |index|
+        FeedMonitor::Item.create!(
+          source: source,
+          guid: "bulk-item-#{index}",
+          url: "https://example.com/bulk/#{index}",
+          title: "Bulk Item #{index}",
+          published_at: Time.current - index.minutes
+        )
+      end
+
+      visit feed_monitor.source_path(source)
+
+      within "[data-testid='bulk-scrape-form']" do
+        assert_selector "label[data-testid='bulk-scrape-option-current']", text: /Current view/i
+        assert_selector "label[data-testid='bulk-scrape-option-unscraped']", text: /Unscraped items/i
+      end
+
+      within "[data-testid='bulk-scrape-form']" do
+        accept_confirm do
+          click_button "Scrape Selected"
+        end
+      end
+
+      assert_text "Queued scraping for 3 items"
+      source.reload
+      assert_equal 3, source.items.where(scrape_status: "pending").count
+      within "[data-testid='source-items-table'] tbody tr:first-child" do
+        assert_selector "[data-testid='item-scrape-status-badge'][data-status='pending']"
+      end
+
+      within "[data-testid='bulk-scrape-form']" do
+        find("label[data-testid='bulk-scrape-option-unscraped']").click
+        accept_confirm do
+          click_button "Scrape Selected"
+        end
+      end
+
+      assert_text "No items match the selected scope"
+      source.reload
+      assert_equal 3, source.items.where(scrape_status: "pending").count
+    end
+
     private
 
     def assert_source_order(expected)

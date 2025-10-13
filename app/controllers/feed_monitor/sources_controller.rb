@@ -5,7 +5,9 @@ module FeedMonitor
     include ActionView::RecordIdentifier
     include FeedMonitor::SanitizesSearchParams
 
-    before_action :set_source, only: %i[show edit update destroy fetch retry]
+    ITEMS_PREVIEW_LIMIT = FeedMonitor::Scraping::BulkSourceScraper::DEFAULT_PREVIEW_LIMIT
+
+    before_action :set_source, only: %i[show edit update destroy fetch retry scrape_all]
 
     SEARCH_FIELD = :name_or_feed_url_or_website_url_cont
 
@@ -35,7 +37,22 @@ module FeedMonitor
     def show
       @recent_fetch_logs = @source.fetch_logs.order(started_at: :desc).limit(5)
       @recent_scrape_logs = @source.scrape_logs.order(started_at: :desc).limit(5)
-      @items = @source.items.recent.limit(10)
+      @items = @source.items.recent.limit(ITEMS_PREVIEW_LIMIT)
+      @bulk_scrape_selection = :current
+    end
+
+    def scrape_all
+      selection = scrape_all_params[:selection]
+      normalized_selection = FeedMonitor::Scraping::BulkSourceScraper.normalize_selection(selection) || :current
+      @bulk_scrape_selection = normalized_selection
+
+      result = FeedMonitor::Scraping::BulkSourceScraper.new(
+        source: @source,
+        selection: normalized_selection,
+        preview_limit: ITEMS_PREVIEW_LIMIT
+      ).call
+
+      respond_to_bulk_scrape(result)
     end
 
     def new
@@ -172,6 +189,104 @@ module FeedMonitor
           redirect_to feed_monitor.source_path(refreshed), notice: message
         end
       end
+    end
+
+    def respond_to_bulk_scrape(result)
+      refreshed = @source.reload
+      @bulk_scrape_selection = result.selection
+      payload = bulk_scrape_flash_payload(result)
+      status = result.error? ? :unprocessable_entity : :ok
+
+      respond_to do |format|
+        format.turbo_stream do
+          responder = FeedMonitor::TurboStreams::StreamResponder.new
+
+          responder.replace_details(
+            refreshed,
+            partial: "feed_monitor/sources/details_wrapper",
+            locals: { source: refreshed }
+          )
+
+          responder.replace_row(
+            refreshed,
+            partial: "feed_monitor/sources/row",
+            locals: {
+              source: refreshed,
+              item_activity_rates: { refreshed.id => FeedMonitor::Analytics::SourceActivityRates.rate_for(refreshed) }
+            }
+          )
+
+          if payload[:message].present?
+            responder.toast(
+              message: payload[:message],
+              level: payload[:level],
+              delay_ms: 6000
+            )
+          end
+
+          render turbo_stream: responder.render(view_context), status: status
+        end
+
+        format.html do
+          if payload[:message].present?
+            redirect_to feed_monitor.source_path(refreshed), flash: { payload[:flash_key] => payload[:message] }
+          else
+            redirect_to feed_monitor.source_path(refreshed)
+          end
+        end
+      end
+    end
+
+    def bulk_scrape_flash_payload(result)
+      label = FeedMonitor::Scraping::BulkSourceScraper.selection_label(result.selection)
+      pluralized_enqueued = view_context.pluralize(result.enqueued_count, "item")
+      pluralized_already = view_context.pluralize(result.already_enqueued_count, "item")
+
+      case result.status
+      when :success
+        message = "Queued scraping for #{pluralized_enqueued} from the #{label}."
+        if result.already_enqueued_count.positive?
+          message = "#{message} #{pluralized_already.capitalize} already in progress."
+        end
+
+        { flash_key: :notice, message:, level: :success }
+      when :partial
+        parts = []
+        if result.enqueued_count.positive?
+          parts << "Queued #{pluralized_enqueued} from the #{label}"
+        end
+
+        if result.already_enqueued_count.positive?
+          parts << "#{pluralized_already.capitalize} already in progress"
+        end
+
+        if result.rate_limited?
+          limit = FeedMonitor.config.scraping.max_in_flight_per_source
+          parts << "Stopped after reaching the per-source limit#{" of #{limit}" if limit}"
+        end
+
+        other_failures = result.failure_details.except(:rate_limited)
+        if other_failures.values.sum.positive?
+          skipped = other_failures.map do |status, count|
+            label_key = status.to_s.tr("_", " ")
+            "#{view_context.pluralize(count, label_key)}"
+          end.join(", ")
+          parts << "Skipped #{skipped}"
+        end
+
+        if parts.empty?
+          parts << "No new scrapes were queued from the #{label}"
+        end
+
+        { flash_key: :notice, message: parts.join(". ") + ".", level: :warning }
+      else
+        message = result.messages.presence&.first || "No items were queued because nothing matched the selected scope."
+        { flash_key: :alert, message:, level: :error }
+      end
+    end
+
+    def scrape_all_params
+      params.fetch(:bulk_scrape, {}).permit(:selection)
     end
   end
 end

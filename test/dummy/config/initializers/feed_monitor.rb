@@ -12,6 +12,8 @@ FeedMonitor.configure do |config|
   config.scrape_queue_name = "#{config.queue_namespace}_scrape"
   config.fetch_queue_concurrency = 2
   config.scrape_queue_concurrency = 2
+  config.scraping.max_in_flight_per_source = 10
+  config.scraping.max_bulk_batch_size = 40
 
   # The dashboard should surface queue metrics in development.
   config.job_metrics_enabled = true

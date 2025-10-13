@@ -42,6 +42,8 @@ module FeedMonitor
         end
 
         already_queued = false
+        rate_limited = false
+        rate_limit_info = nil
 
         item.with_lock do
           item.reload
@@ -52,12 +54,25 @@ module FeedMonitor
             next
           end
 
+          exhausted, info = rate_limit_exhausted?
+          if exhausted
+            rate_limited = true
+            rate_limit_info = info
+            next
+          end
+
           FeedMonitor::Scraping::State.mark_pending!(item, broadcast: false, lock: false)
         end
 
         if already_queued
           log("enqueue:already_enqueued", item:, status: item.scrape_status)
           return Result.new(status: :already_enqueued, message: "Scrape already in progress for this item.", item: item)
+        end
+
+        if rate_limited
+          message = rate_limit_message(rate_limit_info)
+          log("enqueue:rate_limited", item:, limit: rate_limit_info&.fetch(:limit, nil), in_flight: rate_limit_info&.fetch(:in_flight, nil))
+          return Result.new(status: :rate_limited, message:, item: item)
         end
 
         job_class.perform_later(item.id)
@@ -88,6 +103,22 @@ module FeedMonitor
         Rails.logger.info("[FeedMonitor::ManualScrape] #{payload.to_json}")
       rescue StandardError
         nil
+      end
+
+      def rate_limit_exhausted?
+        limit = FeedMonitor.config.scraping.max_in_flight_per_source
+        return [ false, nil ] unless limit
+
+        in_flight = source.items.where(scrape_status: FeedMonitor::Scraping::State::IN_FLIGHT_STATUSES).count
+        [ in_flight >= limit, { limit:, in_flight: in_flight } ]
+      end
+
+      def rate_limit_message(info)
+        return "Scraping queue is full for this source." unless info
+
+        limit = info[:limit]
+        in_flight = info[:in_flight]
+        "Unable to enqueue scrape: scraping queue is full for this source (#{in_flight}/#{limit} jobs in flight)."
       end
     end
   end

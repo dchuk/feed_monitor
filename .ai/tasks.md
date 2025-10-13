@@ -637,10 +637,11 @@
 
 ### 19.02 Add "Scrape All" Control to Source Show
 
-- [ ] 19.02.01 Define UX placement, confirmation copy, and authorization expectations for a "Scrape All" button on the source detail page
-- [ ] 19.02.02 Wire the control to enqueue scraping for eligible items via the existing `FeedMonitor::Scraping::Enqueuer`, respecting auto-scrape settings and avoiding duplicate jobs
-- [ ] 19.02.03 Provide user feedback (flash/turbo partial) summarizing how many items were enqueued and expose errors when nothing qualifies
-- [ ] 19.02.04 Cover the new control with system and service tests, including a regression case for sources with no scrape-eligible items
+- [x] 19.02.01 Define UX placement, confirmation copy, and authorization expectations for a "Scrape All" button on the source detail page. Default to scraping all items on the current page of the table, with a radio button, and another option for "all unscraped items for this source ([count])" and also "All items (even those previously scraped) ([count])" that the user can toggle
+- [x] 19.02.02 Wire the control to enqueue scraping for eligible items via the existing `FeedMonitor::Scraping::Enqueuer`, respecting auto-scrape settings and avoiding duplicate jobs
+- [x] 19.02.03 Provide user feedback (flash/turbo partial) summarizing how many items were enqueued and expose errors when nothing qualifies
+- [x] 19.02.04 Ensure the system allows per-source scraping rate limits so that the queue is properly metered to not denial of service the source to scrape their items
+- [x] 19.02.05 Cover the new control with system and service tests, including a regression case for sources with no scrape-eligible items
 
 ### 19.03 Add Source Deletion from Index Table
 

@@ -70,6 +70,24 @@ module FeedMonitor
         assert_enqueued_jobs 0
       end
 
+      test "enforces per-source in-flight rate limit" do
+        source = create_source(scraping_enabled: true)
+        create_item(source:, scrape_status: "pending")
+        item = create_item(source:)
+
+        FeedMonitor.configure do |config|
+          config.scraping.max_in_flight_per_source = 1
+        end
+
+        result = Enqueuer.enqueue(item: item, reason: :manual)
+
+        assert result.failure?
+        assert_equal :rate_limited, result.status
+        assert_match(/scraping queue is full/i, result.message)
+        assert_enqueued_jobs 0
+        assert_nil item.reload.scrape_status
+      end
+
       private
 
       def create_source(scraping_enabled:, auto_scrape: false)

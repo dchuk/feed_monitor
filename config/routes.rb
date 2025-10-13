@@ -10,5 +10,6 @@ FeedMonitor::Engine.routes.draw do
   resources :sources do
     post :fetch, on: :member
     post :retry, on: :member
+    post :scrape_all, on: :member
   end
 end

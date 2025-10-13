@@ -50,6 +50,8 @@ module FeedMonitor
         assert_match(/config.mission_control_dashboard_path = nil/, content)
         assert_match(/config.health.window_size = 20/, content)
         assert_match(/config.health.auto_pause_threshold = 0.2/, content)
+        assert_match(/config\.scraping\.max_in_flight_per_source/, content)
+        assert_match(/config\.scraping\.max_bulk_batch_size/, content)
       end
     end
 

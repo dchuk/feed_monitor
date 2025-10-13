@@ -1,0 +1,62 @@
+<% counts = (local_assigns[:counts] || {}).with_indifferent_access %>
+<% selected = (local_assigns[:selected] || :current).to_sym %>
+<% scraping_enabled = source.scraping_enabled? %>
+<% options = [
+     { value: :current, label: "Current view", count: counts[:current] || 0 },
+     { value: :unscraped, label: "Unscraped items", count: counts[:unscraped] || 0 },
+     { value: :all, label: "All items", count: counts[:all] || 0 }
+   ] %>
+
+<%= form_with url: feed_monitor.scrape_all_source_path(source),
+      method: :post,
+      scope: :bulk_scrape,
+      data: {
+        controller: "async-submit",
+        action: "turbo:submit-start->async-submit#start turbo:submit-end->async-submit#finish"
+      },
+      class: "flex flex-col gap-4 md:flex-row md:items-center md:justify-between",
+      html: { "data-testid" => "bulk-scrape-form" } do |form| %>
+  <fieldset class="flex flex-col gap-2 md:flex-row md:items-center md:gap-3" role="radiogroup">
+    <legend class="text-xs font-semibold uppercase tracking-wider text-slate-500">Scrape scope</legend>
+    <div class="flex flex-wrap gap-2">
+      <% options.each do |option| %>
+        <% value = option[:value] %>
+        <% is_selected = (selected == value) %>
+        <% count_label = number_with_delimiter(option[:count]) %>
+        <label class="group inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2
+                       <%= is_selected ? "border-blue-500 bg-blue-50 text-blue-700" : "border-slate-200 bg-white text-slate-600" %>"
+               data-testid="bulk-scrape-option-<%= value %>">
+          <%= form.radio_button :selection,
+                value,
+                checked: is_selected,
+                class: "peer sr-only",
+                data: { testid: "bulk-scrape-radio-#{value}" } %>
+          <span class="flex items-center gap-2">
+            <span class="font-semibold"><%= option[:label] %></span>
+            <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-500 group-hover:bg-slate-200
+                         <%= is_selected ? "bg-blue-100 text-blue-700" : "" %>">
+              <%= count_label %>
+            </span>
+          </span>
+        </label>
+      <% end %>
+    </div>
+  </fieldset>
+
+  <% if scraping_enabled %>
+    <div class="flex items-center gap-3">
+      <%= form.submit "Scrape Selected",
+            class: "inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
+            data: {
+              "async-submit-target": "button",
+              "async-submit-loading-text-value": "Enqueuing...",
+              turbo_confirm: "Queue scraping jobs for the selected items?"
+            } %>
+    </div>
+  <% else %>
+    <div class="flex flex-col gap-1 text-xs text-slate-500">
+      <span class="font-semibold">Scraping Disabled</span>
+      <span>Enable scraping for this source to queue bulk scrapes.</span>
+    </div>
+  <% end %>
+<% end %>
