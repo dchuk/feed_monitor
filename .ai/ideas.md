@@ -1,9 +1,5 @@
-- Make sure that feed fetching is a separate action from item fetching when ran in background jobs (when manually ran in the admin, both feeds and items should be fetched in realtime)
-- button rendering is not clean (could be fixed with better overall styling of components)
-- need to show categories and tags on the item show view
-- add delete button to source list view
-- consolidate all logs into a single table/section, with filters for log types, times, sources, searching, etc
-- for the sources interval heatmap, clicking any box should filter the table to those sources
-- job queues table needs to be rethought
+- job queues stats cards needs to be rethought
 - add opml import/export
 - clean upgrade strategy
+- growl notifications are spamming the user when taking bulk actions
+- add ability to manage per-source scraping rate limits to override configuration defaults

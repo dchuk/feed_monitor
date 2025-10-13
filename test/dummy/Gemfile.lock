@@ -97,6 +97,8 @@ GEM
     base64 (0.3.0)
     benchmark (0.4.1)
     bigdecimal (3.3.1)
+    brakeman (7.1.0)
+      racc
     builder (3.3.0)
     capybara (3.40.0)
       addressable
@@ -114,6 +116,7 @@ GEM
       rexml
     crass (1.0.6)
     date (3.4.1)
+    docile (1.4.1)
     drb (2.2.3)
     erb (5.0.3)
     erubi (1.13.1)
@@ -311,6 +314,12 @@ GEM
       rexml (~> 3.2, >= 3.2.5)
       rubyzip (>= 1.2.2, < 4.0)
       websocket (~> 1.0)
+    simplecov (0.22.0)
+      docile (~> 1.1)
+      simplecov-html (~> 0.11)
+      simplecov_json_formatter (~> 0.1)
+    simplecov-html (0.13.2)
+    simplecov_json_formatter (0.1.4)
     solid_cable (3.0.12)
       actioncable (>= 7.2)
       activejob (>= 7.2)
@@ -364,6 +373,7 @@ PLATFORMS
   arm64-darwin
 
 DEPENDENCIES
+  brakeman
   capybara
   feed_monitor!
   mission_control-jobs (~> 1.1)
@@ -372,6 +382,7 @@ DEPENDENCIES
   puma
   rubocop-rails-omakase
   selenium-webdriver
+  simplecov
   vcr
   webmock
 
