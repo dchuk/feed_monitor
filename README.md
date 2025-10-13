@@ -1,159 +1,89 @@
 # FeedMonitor
-Short description and motivation.
 
-## Usage
-How to use my plugin.
+FeedMonitor is a production-ready Rails 8 mountable engine for ingesting, normalising, scraping, and monitoring RSS/Atom/JSON feeds. It ships with a Tailwind-powered admin UI, Solid Queue job orchestration, Solid Cable realtime broadcasting, and an extensible configuration layer so host applications can offer full-stack feed operations without rebuilding infrastructure.
 
-## Installation
-Add this line to your application's Gemfile:
+## Highlights
+- Full-featured source and item administration backed by Turbo Streams and Tailwind UI components
+- Adaptive fetch pipeline (Feedjira + Faraday) with conditional GETs, retention pruning, and scrape orchestration
+- Realtime dashboard metrics, batching/caching query layer, and Mission Control integration hooks
+- Extensible scraper adapters (Readability included) with per-source settings and structured result metadata
+- Declarative configuration DSL covering queues, HTTP, retention, events, model extensions, authentication, and realtime transports
+- First-class observability through ActiveSupport notifications and `FeedMonitor::Metrics` counters/gauges
 
-```ruby
-gem "feed_monitor"
-```
+## Requirements
+- Ruby 3.4.4 (manage with `rbenv install 3.4.4` and `rbenv local 3.4.4`)
+- Rails ≥ 8.0.2.1 in the host application
+- PostgreSQL 13+ (engine migrations use JSONB, SKIP LOCKED, advisory locks, and Solid Cable tables)
+- Node.js 18+ (npm or Yarn) for asset linting and optional Tailwind rebuilds
+- Solid Queue workers (Rails 8 default) and Solid Cable (default realtime adapter)
+- Optional: Mission Control Jobs for dashboard linking, Redis if you opt into the Redis realtime adapter
 
-And then execute:
-```bash
-$ bundle
-```
+## Quick Start (Host Application)
+1. Add `gem "feed_monitor", github: "darrindemchuk/feed_monitor"` to your Gemfile and run `rbenv exec bundle install`.
+2. Install the engine: `rbenv exec bin/rails generate feed_monitor:install --mount-path=/feed_monitor`.
+3. Copy migrations: `rbenv exec bin/rails railties:install:migrations FROM=feed_monitor`.
+4. Apply migrations: `rbenv exec bin/rails db:migrate` (creates sources/items/logs tables, Solid Cable messages, and Solid Queue schema when required).
+5. Install frontend tooling if you plan to extend engine assets: `npm install`.
+6. Start background workers: `rbenv exec bin/rails solid_queue:start` (or your preferred process manager).
+7. Boot your app and visit `/feed_monitor` (or the mount path you chose) to explore the dashboard.
 
-Mount the engine inside your host application's routes with the install generator:
+Detailed instructions, optional flags, and verification steps live in [docs/installation.md](docs/installation.md).
 
-```bash
-$ bin/rails generate feed_monitor:install
-```
+## Architecture at a Glance
+- **Source Lifecycle** – `FeedMonitor::Fetching::FetchRunner` coordinates advisory locking, fetch execution, retention pruning, and scrape enqueues. Source models store health metrics, failure states, and adaptive scheduling parameters.
+- **Item Processing** – `FeedMonitor::Items::RetentionPruner`, `FeedMonitor::Scraping::Enqueuer`, and `FeedMonitor::Scraping::ItemScraper` keep content fresh, ensure deduplicated storage, and capture scrape metadata/logs.
+- **Scraping Pipeline** – Adapters inherit from `FeedMonitor::Scrapers::Base`, merging default + source + invocation settings and returning structured results. The bundled Readability adapter composes `FeedMonitor::Scrapers::Fetchers::HttpFetcher` and `FeedMonitor::Scrapers::Parsers::ReadabilityParser`.
+- **Realtime Dashboard** – `FeedMonitor::Dashboard::Queries` batches SQL, caches per-request responses, emits instrumentation (`feed_monitor.dashboard.*`), and coordinates Turbo broadcasts via Solid Cable.
+- **Observability** – `FeedMonitor::Metrics` tracks counters/gauges for fetches, scheduler runs, and dashboard activity. ActiveSupport notifications (`feed_monitor.fetch.*`, `feed_monitor.scheduler.run`, etc.) let you instrument external systems without monkey patches.
+- **Extensibility** – `FeedMonitor.configure` exposes namespaces for queue tuning, HTTP defaults, scraper registry, retention, event callbacks, model extensions, authentication hooks, realtime transports, health thresholds, and job metrics.
 
-By default the engine mounts at `/feed_monitor`. Provide a custom mount point with the `--mount-path` option:
+## Admin Experience
+- Dashboard cards summarising source counts, recent activity, queue visibility, and upcoming fetch schedules
+- Source CRUD with scraping toggles, adaptive fetch controls, manual fetch triggers, and detailed fetch log timelines
+- Item explorer showing feed vs scraped content, scrape status badges, and manual scrape actions via Turbo
+- Fetch/scrape log viewers with HTTP status, duration, backtrace, and Solid Queue job references
 
-```bash
-$ bin/rails generate feed_monitor:install --mount-path=/admin/feeds
-```
+## Background Jobs & Scheduling
+- Solid Queue becomes the Active Job adapter when the host app still uses the inline `:async` adapter; queue names default to `feed_monitor_fetch` and `feed_monitor_scrape` and honour `ActiveJob.queue_name_prefix`.
+- `config/recurring.yml` schedules minute-level fetches and scrapes. Run `bin/jobs --recurring_schedule_file=config/recurring.yml` (or set `SOLID_QUEUE_RECURRING_SCHEDULE_FILE`) to load recurring tasks. Disable with `SOLID_QUEUE_SKIP_RECURRING=true`.
+- Retry/backoff behaviour is driven by `FeedMonitor.configure.fetching`. Fetch completion events and item processors allow you to chain downstream workflows (indexing, notifications, etc.).
 
-## Configuration
+## Configuration & API Surface
+The generated initializer documents every setting. Key areas:
 
-Feed Monitor exposes a lightweight configuration DSL so host applications can tune queue names, HTTP behaviour, scraper adapters, and retention defaults without monkey patches. The install generator drops `config/initializers/feed_monitor.rb` with commented defaults—update that file to match your environment:
+- Queue namespace/concurrency helpers (`FeedMonitor.queue_name(:fetch)`)
+- HTTP, retry, and proxy settings (Faraday-backed)
+- Scraper registry (`config.scrapers.register(:my_adapter, "MyApp::Scrapers::Custom")`)
+- Retention defaults (`config.retention.items_retention_days`, `config.retention.strategy`)
+- Lifecycle hooks (`config.events.after_item_created`, `config.events.register_item_processor`)
+- Model extensions (table prefixes, included concerns, custom validations)
+- Realtime adapter selection (`config.realtime.adapter = :solid_cable | :redis | :async`)
+- Authentication helpers (`config.authentication.authenticate_with`, `authorize_with`, etc.)
+- Mission Control toggles (`config.mission_control_enabled`, `config.mission_control_dashboard_path`)
+- Health thresholds driving automatic pause/resume
 
-```ruby
-FeedMonitor.configure do |config|
-  # Queue names and concurrency (Solid Queue by default)
-  config.queue_namespace = "feed_monitor"
-  config.fetch_queue_name = "#{config.queue_namespace}_fetch"
-  config.fetch_queue_concurrency = 2
+See [docs/configuration.md](docs/configuration.md) for exhaustive coverage and examples.
 
-  # Realtime transport (Action Cable)
-  config.realtime.adapter = :solid_cable
-  config.realtime.solid_cable.message_retention = "12.hours"
-  # config.realtime.adapter = :redis
-  # config.realtime.redis_url = ENV.fetch("REDIS_URL")
+## Deployment Considerations
+- Copy engine migrations before every deploy and run `bin/rails db:migrate`.
+- Precompile assets so FeedMonitor's Tailwind build and importmap entries are available at runtime.
+- Run dedicated Solid Queue worker processes; consider a separate scheduler process for recurring jobs.
+- Configure Action Cable (Solid Cable by default) and expose `/cable` through your load balancer.
+- Monitor gauges/counters emitted by `FeedMonitor::Metrics` and subscribe to notifications for alerting.
 
-  # HTTP client defaults (Faraday)
-  config.http.timeout = 15
-  config.http.open_timeout = 5
-  config.http.headers = { "X-Request-ID" => -> { SecureRandom.uuid } }
-  config.http.retry_max = 6
+More production guidance, including process topology and scaling tips, is available in [docs/deployment.md](docs/deployment.md).
 
-  # Scraper adapters (inherit from FeedMonitor::Scrapers::Base)
-  config.scrapers.register(:readability, FeedMonitor::Scrapers::Readability)
-  # config.scrapers.register(:custom, "MyApp::Scrapers::Custom")
+## Troubleshooting & Support
+Common installation and runtime issues (missing migrations, realtime not streaming, scraping failures, queue visibility gaps) are documented in [docs/troubleshooting.md](docs/troubleshooting.md). When you report bugs, include your `FeedMonitor::VERSION`, Rails version, configuration snippet, and relevant fetch/scrape logs so we can reproduce quickly.
 
-  # Retention defaults applied when a source leaves fields blank
-  config.retention.items_retention_days = nil
-  config.retention.max_items = nil
-  config.retention.strategy = :soft_delete
+## Development & Testing (Engine Repository)
+- Install dependencies with `rbenv exec bundle install` and `npm install`.
+- Use `test/dummy/bin/dev` to boot the dummy app with Tailwind watcher, Solid Queue worker, and Rails server.
+- Run tests via `bin/test-coverage` (SimpleCov-enforced), or `bin/rails test` for targeted suites.
+- Quality checks: `bin/rubocop`, `bin/brakeman --no-pager`, `bin/lint-assets`.
+- Record HTTP fixtures with VCR under `test/vcr_cassettes/` and keep coverage ≥ 90% for new code.
 
-  # Event callbacks and item processors (each handler receives an event object)
-  config.events.after_item_created do |event|
-    NewItemPublisher.publish(event.item, source: event.source)
-  end
-
-  config.events.after_fetch_completed do |event|
-    Rails.logger.info("[FeedMonitor] #{event.source.name} fetch finished with #{event.status}")
-  end
-
-  config.events.register_item_processor ->(context) { SearchIndexer.index(context.item) }
-end
-```
-
-HTTP settings feed directly into the Faraday client (timeouts, retry policy, default headers). Scraper registrations override the built-in constant lookup so you can swap the adapter per source name. Retention defaults act as fallbacks—leave them as `nil` to retain items indefinitely or set explicit values to opt every new source into pruning.
-
-Feed Monitor ships with [Solid Cable](https://github.com/rails/solid_cable) enabled by default so Turbo Streams work without Redis. The engine creates the `solid_cable_messages` table through its migrations and configures Action Cable to use Solid Cable in every environment. Hosts that prefer Redis can flip `config.realtime.adapter = :redis` (and optionally `config.realtime.redis_url`) in the initializer and restart.
-
-**Action Cable requirement**: Real-time UI updates require Action Cable base classes in your host application. If they don't already exist, create them:
-
-```ruby
-# app/channels/application_cable/connection.rb
-module ApplicationCable
-  class Connection < ActionCable::Connection::Base
-  end
-end
-
-# app/channels/application_cable/channel.rb
-module ApplicationCable
-  class Channel < ActionCable::Channel::Base
-  end
-end
-```
-
-These are standard Rails boilerplate required by Action Cable. The engine will auto-configure the adapter and mount routes, but Rails expects these classes to exist in the host application.
-
-The event layer lets host apps plug into the engine without monkey patches. Use `config.events.after_item_created`, `after_item_scraped`, and `after_fetch_completed` to react to new data or errors, and register lightweight item processors for denormalization or indexing. Each handler receives a structured event object so you can inspect the item, source, and status safely.
-
-## Model Extensions
-
-Feed Monitor models are now configurable so host apps can add behaviour without reopening engine classes:
-
-- **Custom table prefixes** – `config.models.table_name_prefix` defaults to `feed_monitor_`. Override it (e.g. `"tenant_feed_monitor_"`) before running the engine migrations when you need bespoke naming or multi-tenant schemas.
-- **Mix in concerns** – `config.models.source.include_concern "MyApp::FeedMonitor::SourceExtensions"` includes modules that add associations, scopes, or helpers. Concerns can hold reusable validation methods or callbacks.
-- **Register validations** – attach validation methods or callables with `config.models.source.validate :ensure_metadata_rules` or `config.models.item.validate ->(record) { … }`. Blocks receive the record instance so you can reuse shared helpers.
-- **Single Table Inheritance** – the `feed_monitor_sources` table now includes a `type` column, enabling subclasses like `FeedMonitor::SponsoredSource < FeedMonitor::Source`. Combine STI with per-type validations or background workflows through the configuration hooks above.
-
-The dummy host app demonstrates these features by mixing in a concern that adds `testing_notes` metadata, validating the field length, and enforcing a minimum fetch cadence for `FeedMonitor::SponsoredSource` records.
-
-## Retention Strategies
-
-Feed Monitor now ships with per-source retention controls so historical data stays within the limits you set:
-
-- **Retention window** – set `items_retention_days` (via the admin UI or `FeedMonitor::Source`) to automatically prune items older than the specified number of days.
-- **Maximum stored items** – set `max_items` to keep only the newest N items for a source.
-
-Both policies run immediately after each successful fetch. The engine destroys pruned items alongside their associated scraped content and logs, keeping counter caches accurate without any additional cron jobs. Leave either field blank when you want to retain items indefinitely.
-
-Feed Monitor also ships with nightly maintenance jobs (`FeedMonitor::ItemCleanupJob` and `FeedMonitor::LogCleanupJob`) that you can trigger manually via `rake feed_monitor:cleanup:items` and `rake feed_monitor:cleanup:logs`, or schedule via Solid Queue recurring tasks. Pass `SOFT_DELETE=true` to soft delete items while reviewing, or override `FETCH_LOG_DAYS` / `SCRAPE_LOG_DAYS` to trim logs with custom windows.
-
-## Dashboard Configuration
-
-The dashboard pulls all statistics through `FeedMonitor::Dashboard::Queries`, which batches SQL calls and caches results per request. Each query emits instrumentation events (`feed_monitor.dashboard.stats`, `feed_monitor.dashboard.recent_activity`, `feed_monitor.dashboard.job_metrics`, `feed_monitor.dashboard.upcoming_fetch_schedule`) and records gauges via `FeedMonitor::Metrics`. Hosts can subscribe to those events or read gauges such as `dashboard_stats_duration_ms`, `dashboard_recent_activity_events_count`, and `dashboard_job_metrics_queue_count` to feed Mission Control or other observability pipelines.
-
-Queue metrics rely on Solid Queue's tables. Install the engine's `20251009140000_create_solid_queue_tables.rb` migration (or run `rails solid_queue:install`) so `FeedMonitor::Jobs::SolidQueueMetrics` can surface ready/scheduled/failed counts. When Solid Queue isn't available the dashboard renders an availability notice instead of empty numbers.
-
-To display a "Open Mission Control" shortcut, enable the feature flags dropped by the install generator:
-
-```ruby
-# config/initializers/feed_monitor.rb
-FeedMonitor.configure do |config|
-  config.mission_control_enabled = true
-  config.mission_control_dashboard_path = :mission_control_jobs_path # host route helper
-end
-```
-
-`config.mission_control_dashboard_path` should point at a host route helper that resolves to your Mission Control dashboard (for example, the path generated by mounting `MissionControl::Jobs`). Leave the path blank to keep the integration disabled even when the mission control flag is true.
-
-## Development
-
-Run `bin/setup` to install Ruby dependencies and prepare the dummy host application. Install frontend tooling once after cloning:
-
-```bash
-npm install
-```
-
-Quality checks mirror the CI pipeline:
-
-- `bin/rubocop` (auto-correct with `bin/rubocop -A`)
-- `bin/brakeman --no-pager`
-- `bin/lint-assets`
-- `bin/test-coverage` (wraps `bin/rails test` with SimpleCov gating)
-
-## Contributing
-Contribution directions go here.
+Contributions follow the clean architecture and TDD guidelines in `.ai/project_overview.md`. Review `.ai/tasks.md` to align with the active roadmap slice before opening a pull request.
 
 ## License
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+FeedMonitor is released under the [MIT License](MIT-LICENSE).
