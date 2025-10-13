@@ -19,7 +19,7 @@
   </div>
   <div class="flex min-h-screen flex-col">
     <header class="bg-slate-800 text-white shadow">
-      <div class="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
+      <div class="mx-auto flex w-full max-w-6xl lg:max-w-7xl 2xl:max-w-[110rem] items-center justify-between px-6 py-4">
         <div class="text-lg font-semibold tracking-tight">Feed Monitor</div>
         <% nav_items = [
           ["Dashboard", feed_monitor.dashboard_path],
@@ -40,12 +40,12 @@
       </div>
     </header>
 
-    <main class="mx-auto flex w-full max-w-6xl flex-1 flex-col px-6 py-8">
+    <main class="mx-auto flex w-full max-w-6xl lg:max-w-7xl 2xl:max-w-[110rem] flex-1 flex-col px-6 py-8">
       <%= yield %>
     </main>
 
     <footer class="bg-slate-900 py-4">
-      <div class="mx-auto flex w-full max-w-6xl justify-between px-6 text-xs text-slate-300">
+      <div class="mx-auto flex w-full max-w-6xl lg:max-w-7xl 2xl:max-w-[110rem] justify-between px-6 text-xs text-slate-300">
         <span>&copy; <%= Time.current.year %> Feed Monitor</span>
         <span>v<%= FeedMonitor::VERSION %></span>
       </div>
