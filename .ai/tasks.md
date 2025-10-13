@@ -593,9 +593,9 @@
 
 ### 17.09 Dashboard Performance Enhancements
 
-- [ ] 17.09.01 Refactor `FeedMonitor::Dashboard::Queries` to batch/cache queries and separate routing/presentation concerns, with performance-focused tests
-- [ ] 17.09.02 Add instrumentation for dashboard query durations and expose metrics for Mission Control integration
-- [ ] 17.09.03 Document dashboard configuration expectations for host apps, including Mission Control linking prerequisites
+- [x] 17.09.01 Refactor `FeedMonitor::Dashboard::Queries` to batch/cache queries and separate routing/presentation concerns, with performance-focused tests
+- [x] 17.09.02 Add instrumentation for dashboard query durations and expose metrics for Mission Control integration
+- [x] 17.09.03 Document dashboard configuration expectations for host apps, including Mission Control linking prerequisites
 
 ---
 

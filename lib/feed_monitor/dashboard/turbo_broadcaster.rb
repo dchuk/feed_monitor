@@ -25,10 +25,13 @@ module FeedMonitor
       def broadcast_dashboard_updates
         return unless turbo_streams_available?
 
+        queries = FeedMonitor::Dashboard::Queries.new
+        url_helpers = FeedMonitor::Engine.routes.url_helpers
+
         Turbo::StreamsChannel.broadcast_replace_to(
           STREAM_NAME,
           target: "feed_monitor_dashboard_stats",
-          html: render_partial("feed_monitor/dashboard/stats", stats: FeedMonitor::Dashboard::Queries.stats)
+          html: render_partial("feed_monitor/dashboard/stats", stats: queries.stats)
         )
 
         Turbo::StreamsChannel.broadcast_replace_to(
@@ -36,11 +39,14 @@ module FeedMonitor
           target: "feed_monitor_dashboard_recent_activity",
           html: render_partial(
             "feed_monitor/dashboard/recent_activity",
-            recent_activity: FeedMonitor::Dashboard::Queries.recent_activity
+            recent_activity: FeedMonitor::Dashboard::RecentActivityPresenter.new(
+              queries.recent_activity,
+              url_helpers:
+            ).to_a
           )
         )
 
-        fetch_schedule = FeedMonitor::Dashboard::Queries.upcoming_fetch_schedule
+        fetch_schedule = queries.upcoming_fetch_schedule
         Turbo::StreamsChannel.broadcast_replace_to(
           STREAM_NAME,
           target: "feed_monitor_dashboard_fetch_schedule",

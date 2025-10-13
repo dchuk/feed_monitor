@@ -94,8 +94,10 @@ module FeedMonitor
         )
       end
 
+      queries = FeedMonitor::Dashboard::Queries.new
+
       query_count = count_sql_queries do
-        FeedMonitor::Dashboard::Queries.recent_activity(limit: 3)
+        queries.recent_activity(limit: 3)
       end
 
       assert_operator query_count, :<=, 4, "expected recent_activity to execute at most four SQL queries"
