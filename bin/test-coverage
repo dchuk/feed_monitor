@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+COVERAGE=true rbenv exec bundle exec rails test "$@"

@@ -1,0 +1,133 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/setup"
+require "json"
+require "open3"
+require "set"
+require "simplecov"
+
+THRESHOLD = (ENV["DIFF_COVERAGE_THRESHOLD"] || "0.9").to_f
+ROOT = Dir.pwd
+COVERAGE_RESULT_PATH = File.join(ROOT, "coverage", ".resultset.json")
+BASELINE_PATH = File.join(ROOT, "config", "coverage_baseline.json")
+RAIL_TREES = %w[app/ lib/].freeze
+EMPTY_SET = Set.new.freeze
+
+unless File.exist?(COVERAGE_RESULT_PATH)
+  abort "Coverage result not found at #{COVERAGE_RESULT_PATH}. Run the test suite with coverage enabled first."
+end
+
+def capture(command)
+  stdout, status = Open3.capture2e(*command)
+  [stdout, status.success?]
+end
+
+base_ref = ENV["COVERAGE_BASE"] || "origin/main"
+merge_base_output, merge_base_ok = capture(%w[git merge-base HEAD] + [base_ref])
+diff_range =
+  if merge_base_ok
+    "#{merge_base_output.strip}..HEAD"
+  else
+    "#{base_ref}..HEAD"
+  end
+
+diff_output, diff_ok = capture(%w[git diff --unified=0] + [diff_range])
+unless diff_ok
+  fallback_range = ENV["COVERAGE_FALLBACK_RANGE"] || "HEAD~1..HEAD"
+  diff_output, diff_ok = capture(%w[git diff --unified=0] + [fallback_range])
+  abort "Unable to compute git diff against #{diff_range} or fallback #{fallback_range}: #{diff_output}" unless diff_ok
+  diff_range = fallback_range
+end
+
+changed_lines = Hash.new { |hash, key| hash[key] = Set.new }
+current_file = nil
+
+diff_output.each_line do |line|
+  if line.start_with?("+++ ")
+    path = line.split(/\s+/, 2).last&.strip
+    next unless path&.start_with?("b/")
+
+    current_file = path.delete_prefix("b/").strip
+    current_file = nil if current_file == "/dev/null"
+  elsif line.start_with?("@@")
+    next unless current_file
+
+    hunk_data = line[/\+(\d+)(?:,(\d+))?/, 0]
+    next unless hunk_data
+
+    start_line = Regexp.last_match(1).to_i
+    count = (Regexp.last_match(2) || "1").to_i
+    count.times { |offset| changed_lines[current_file] << (start_line + offset) }
+  end
+end
+
+if changed_lines.empty?
+  puts "No changed Ruby files found for coverage check."
+  exit 0
+end
+
+result_data = JSON.parse(File.read(COVERAGE_RESULT_PATH))
+coverage_result = SimpleCov::Result.from_hash(result_data).first
+
+failures = []
+baseline_sets =
+  if File.exist?(BASELINE_PATH)
+    JSON.parse(File.read(BASELINE_PATH)).transform_values { |lines| Set.new(lines) }
+  else
+    {}
+  end
+
+changed_lines.each do |relative_path, line_numbers|
+  next unless relative_path.end_with?(".rb")
+  next unless RAIL_TREES.any? { |prefix| relative_path.start_with?(prefix) }
+
+  baseline_lines = baseline_sets.fetch(relative_path, EMPTY_SET)
+
+  effective_lines = line_numbers - baseline_lines
+  next if effective_lines.empty?
+
+  absolute_path = File.expand_path(relative_path, ROOT)
+  source_file = coverage_result.files.find { |file| file.filename == absolute_path }
+
+  if source_file.nil?
+    failures << "#{relative_path}: no coverage data (#{effective_lines.size} new lines)"
+    next
+  end
+
+  relevant_lines = []
+  uncovered = []
+
+  effective_lines.sort.each do |line_number|
+    line = source_file.lines[line_number - 1]
+    if line.nil?
+      relevant_lines << line_number
+      uncovered << line_number
+      next
+    end
+
+    next if line.never? || line.skipped?
+
+    relevant_lines << line_number
+    uncovered << line_number unless line.covered?
+  end
+
+  next if relevant_lines.empty?
+
+  covered_count = relevant_lines.length - uncovered.length
+  coverage_ratio = covered_count.to_f / relevant_lines.length
+
+  if coverage_ratio < THRESHOLD
+    formatted_ratio = (coverage_ratio * 100).round(2)
+    failures << "#{relative_path}: #{formatted_ratio}% (#{covered_count}/#{relevant_lines.length}) lines covered. Uncovered: #{uncovered.join(', ')}"
+  end
+end
+
+if failures.empty?
+  puts "Diff coverage check passed (threshold #{(THRESHOLD * 100).round(2)}%)."
+  exit 0
+else
+  puts "Diff coverage check failed:"
+  failures.each { |message| puts "  - #{message}" }
+  exit 1
+end

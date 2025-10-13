@@ -33,8 +33,8 @@ module FeedMonitor
           FeedMonitor::Scraping::Scheduler.run(limit: 10)
         end
 
-        assert_enqueued_with(job: FeedMonitor::ScrapeItemJob, args: [item_one.id])
-        assert_enqueued_with(job: FeedMonitor::ScrapeItemJob, args: [item_two.id])
+        assert_enqueued_with(job: FeedMonitor::ScrapeItemJob, args: [ item_one.id ])
+        assert_enqueued_with(job: FeedMonitor::ScrapeItemJob, args: [ item_two.id ])
       end
 
       test "respects the provided limit" do
@@ -46,7 +46,7 @@ module FeedMonitor
           FeedMonitor::Scraping::Scheduler.run(limit: 1)
         end
 
-        assert_enqueued_with(job: FeedMonitor::ScrapeItemJob, args: [first_item.id])
+        assert_enqueued_with(job: FeedMonitor::ScrapeItemJob, args: [ first_item.id ])
       end
 
       private

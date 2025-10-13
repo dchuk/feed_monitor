@@ -21,7 +21,7 @@ module FeedMonitor
 
         result = nil
 
-        assert_enqueued_with(job: FeedMonitor::ScrapeItemJob, args: [item.id]) do
+        assert_enqueued_with(job: FeedMonitor::ScrapeItemJob, args: [ item.id ]) do
           result = Enqueuer.enqueue(item: item, reason: :manual)
         end
 

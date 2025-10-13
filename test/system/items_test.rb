@@ -48,7 +48,7 @@ module FeedMonitor
       assert_text "First Article"
       assert_text "Second Post"
 
-      assert_item_order ["First Article", "Second Post"]
+      assert_item_order [ "First Article", "Second Post" ]
 
       fill_in "Search items", with: "First"
       click_button "Search"
@@ -134,7 +134,7 @@ module FeedMonitor
 
       visit feed_monitor.items_path
 
-      assert_item_order ["Newer Item", "Older Item"]
+      assert_item_order [ "Newer Item", "Older Item" ]
       within "turbo-frame#feed_monitor_items_table thead th[data-sort-column='published_at']" do
         assert_text "▼"
       end
@@ -142,7 +142,7 @@ module FeedMonitor
       within "turbo-frame#feed_monitor_items_table thead" do
         click_link "Published"
       end
-      assert_item_order ["Older Item", "Newer Item"]
+      assert_item_order [ "Older Item", "Newer Item" ]
       within "turbo-frame#feed_monitor_items_table thead th[data-sort-column='published_at']" do
         assert_text "▲"
       end
@@ -150,7 +150,7 @@ module FeedMonitor
       within "turbo-frame#feed_monitor_items_table thead" do
         click_link "Published"
       end
-      assert_item_order ["Newer Item", "Older Item"]
+      assert_item_order [ "Newer Item", "Older Item" ]
       within "turbo-frame#feed_monitor_items_table thead th[data-sort-column='published_at']" do
         assert_text "▼"
       end

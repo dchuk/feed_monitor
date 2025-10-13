@@ -1,3 +1,16 @@
+# Enable coverage reporting in CI or when explicitly requested.
+if ENV["CI"] || ENV["COVERAGE"]
+  require "simplecov"
+
+  SimpleCov.start "rails" do
+    enable_coverage :branch
+    refuse_coverage_drop :line
+    add_filter %r{^/test/}
+  end
+
+  SimpleCov.enable_for_subprocesses true
+end
+
 # Configure Rails Environment
 ENV["RAILS_ENV"] = "test"
 

@@ -56,7 +56,7 @@ module FeedMonitor
 
       assert_includes Item.failed_scrape, failed
 
-      assert_equal [recent, failed, unpublished], Item.recent.to_a
+      assert_equal [ recent, failed, unpublished ], Item.recent.to_a
     end
 
     test "increments counter cache when created" do

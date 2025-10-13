@@ -119,6 +119,21 @@ Both policies run immediately after each successful fetch. The engine destroys p
 
 Feed Monitor also ships with nightly maintenance jobs (`FeedMonitor::ItemCleanupJob` and `FeedMonitor::LogCleanupJob`) that you can trigger manually via `rake feed_monitor:cleanup:items` and `rake feed_monitor:cleanup:logs`, or schedule via Solid Queue recurring tasks. Pass `SOFT_DELETE=true` to soft delete items while reviewing, or override `FETCH_LOG_DAYS` / `SCRAPE_LOG_DAYS` to trim logs with custom windows.
 
+## Development
+
+Run `bin/setup` to install Ruby dependencies and prepare the dummy host application. Install frontend tooling once after cloning:
+
+```bash
+npm install
+```
+
+Quality checks mirror the CI pipeline:
+
+- `bin/rubocop` (auto-correct with `bin/rubocop -A`)
+- `bin/brakeman --no-pager`
+- `bin/lint-assets`
+- `bin/test-coverage` (wraps `bin/rails test` with SimpleCov gating)
+
 ## Contributing
 Contribution directions go here.
 

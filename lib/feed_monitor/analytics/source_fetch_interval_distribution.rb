@@ -50,7 +50,7 @@ module FeedMonitor
       end
 
       def bucket_key(definition)
-        [definition[:min], definition[:max]]
+        [ definition[:min], definition[:max] ]
       end
     end
   end

@@ -35,7 +35,7 @@ module FeedMonitor
           .joins(:source)
           .merge(FeedMonitor::Source.active.where(scraping_enabled: true, auto_scrape: true))
           .where(scraped_at: nil)
-          .where(scrape_status: [nil, ""])
+          .where(scrape_status: [ nil, "" ])
           .order(Arel.sql("feed_monitor_items.created_at ASC"))
       end
     end

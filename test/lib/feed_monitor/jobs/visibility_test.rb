@@ -38,7 +38,7 @@ module FeedMonitor
 
         probe_events = []
         probe_subscriber = ActiveSupport::Notifications.subscribe("enqueue.active_job") { |*_args| probe_events << true }
-        ActiveSupport::Notifications.instrument("enqueue.active_job", job: job) {}
+        ActiveSupport::Notifications.instrument("enqueue.active_job", job: job) { }
         ActiveSupport::Notifications.unsubscribe(probe_subscriber)
         assert_equal 1, probe_events.size
 
@@ -48,17 +48,17 @@ module FeedMonitor
         assert FeedMonitor::Jobs::Visibility.trackable_job?(job)
         assert_equal 0, FeedMonitor::Jobs::Visibility.queue_depth(queue_name)
 
-        ActiveSupport::Notifications.instrument("enqueue.active_job", job: job) {}
+        ActiveSupport::Notifications.instrument("enqueue.active_job", job: job) { }
 
         assert_equal 1, FeedMonitor::Jobs::Visibility.queue_depth(queue_name)
         assert_kind_of ActiveSupport::TimeWithZone, FeedMonitor::Jobs::Visibility.last_enqueued_at(queue_name)
 
-        ActiveSupport::Notifications.instrument("perform_start.active_job", job: job) {}
+        ActiveSupport::Notifications.instrument("perform_start.active_job", job: job) { }
 
         assert_equal 0, FeedMonitor::Jobs::Visibility.queue_depth(queue_name)
         assert_kind_of ActiveSupport::TimeWithZone, FeedMonitor::Jobs::Visibility.last_started_at(queue_name)
 
-        ActiveSupport::Notifications.instrument("perform.active_job", job: job) {}
+        ActiveSupport::Notifications.instrument("perform.active_job", job: job) { }
 
         assert_kind_of ActiveSupport::TimeWithZone, FeedMonitor::Jobs::Visibility.last_finished_at(queue_name)
       end

@@ -20,7 +20,7 @@ module FeedMonitor
           .group(:source_id)
           .count
 
-        days = [lookback.in_days, 1].max
+        days = [ lookback.in_days, 1 ].max
 
         counts.transform_values { |count| count.to_f / days }.tap do |results|
           source_ids.each { |source_id| results[source_id] ||= 0.0 }
@@ -40,9 +40,9 @@ module FeedMonitor
       def source_ids
         @source_ids ||= if scope.respond_to?(:pluck)
                           scope.pluck(:id)
-                        else
+        else
                           Array(scope).map { |record| record.respond_to?(:id) ? record.id : record }
-                        end
+        end
       end
 
       def window_start

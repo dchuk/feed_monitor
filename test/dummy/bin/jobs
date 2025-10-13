@@ -12,7 +12,7 @@ args = ARGV.dup
 unless ENV["SOLID_QUEUE_SKIP_RECURRING"]&.casecmp("true")&.zero? ||
     ENV["SOLID_QUEUE_RECURRING_SCHEDULE_FILE"].present? ||
     args.any? { |argument| argument == "--skip-recurring" || argument.start_with?("--recurring_schedule_file") }
-  args += ["--recurring_schedule_file=#{default_schedule}"] if default_schedule.exist?
+  args += [ "--recurring_schedule_file=#{default_schedule}" ] if default_schedule.exist?
 end
 
 SolidQueue::Cli.start(args)

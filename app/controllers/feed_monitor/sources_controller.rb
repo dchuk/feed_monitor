@@ -13,7 +13,7 @@ module FeedMonitor
       base_scope = Source.all
       @search_params = sanitized_search_params
       @q = base_scope.ransack(@search_params)
-      @q.sorts = ["created_at desc"] if @q.sorts.blank?
+      @q.sorts = [ "created_at desc" ] if @q.sorts.blank?
 
       @sources = @q.result
 
@@ -173,6 +173,5 @@ module FeedMonitor
         end
       end
     end
-
   end
 end

@@ -15,7 +15,7 @@ module FeedMonitor
       base_scope = Item.includes(:source)
       @search_params = sanitized_search_params
       @q = base_scope.ransack(@search_params)
-      @q.sorts = ["published_at desc", "created_at desc"] if @q.sorts.blank?
+      @q.sorts = [ "published_at desc", "created_at desc" ] if @q.sorts.blank?
 
       scope = @q.result(distinct: true)
       paginator = FeedMonitor::Pagination::Paginator.new(
@@ -96,11 +96,11 @@ module FeedMonitor
     def scrape_flash_payload(result)
       case result.status
       when :enqueued
-        [:notice, "Scrape has been enqueued and will run shortly."]
+        [ :notice, "Scrape has been enqueued and will run shortly." ]
       when :already_enqueued
-        [:notice, result.message]
+        [ :notice, result.message ]
       else
-        [:alert, result.message || "Unable to enqueue scrape for this item."]
+        [ :alert, result.message || "Unable to enqueue scrape for this item." ]
       end
     end
 
@@ -112,6 +112,5 @@ module FeedMonitor
     rescue StandardError
       nil
     end
-
   end
 end

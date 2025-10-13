@@ -42,4 +42,3 @@ module FeedMonitor
     end
   end
 end
-

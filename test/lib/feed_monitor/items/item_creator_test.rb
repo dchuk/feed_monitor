@@ -63,7 +63,7 @@ module FeedMonitor
           assert created_item.content_fingerprint.present?
           assert_equal created_item.url, created_item.canonical_url
           assert_equal entry.title.strip, created_item.title if entry.respond_to?(:title) && entry.title.present?
-          assert_includes [Time, ActiveSupport::TimeWithZone, DateTime, NilClass], created_item.published_at.class
+          assert_includes [ Time, ActiveSupport::TimeWithZone, DateTime, NilClass ], created_item.published_at.class
           assert created_item.metadata.present?, "metadata should include feedjira entry snapshot"
         end
       end
@@ -104,10 +104,10 @@ module FeedMonitor
         item = result.item
 
         assert_equal "John Creator", item.author
-        assert_equal ["jane@example.com (Jane Author)", "John Creator"], item.authors
-        assert_equal ["Technology", "Ruby"], item.categories
-        assert_equal ["Technology", "Ruby"], item.tags
-        assert_equal ["feed monitoring", "rss"], item.keywords
+        assert_equal [ "jane@example.com (Jane Author)", "John Creator" ], item.authors
+        assert_equal [ "Technology", "Ruby" ], item.categories
+        assert_equal [ "Technology", "Ruby" ], item.tags
+        assert_equal [ "feed monitoring", "rss" ], item.keywords
         assert_equal "https://example.com/assets/thumb.jpg", item.media_thumbnail_url
         assert_equal(
           [
@@ -149,9 +149,9 @@ module FeedMonitor
         item = result.item
 
         assert_equal "JSON Primary Author", item.author
-        assert_equal ["JSON Primary Author", "JSON Secondary Author"], item.authors
-        assert_equal ["JSON", "Feeds"], item.categories
-        assert_equal ["JSON", "Feeds"], item.tags
+        assert_equal [ "JSON Primary Author", "JSON Secondary Author" ], item.authors
+        assert_equal [ "JSON", "Feeds" ], item.categories
+        assert_equal [ "JSON", "Feeds" ], item.tags
         assert_equal(
           [
             {

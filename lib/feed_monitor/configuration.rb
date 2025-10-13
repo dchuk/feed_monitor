@@ -54,7 +54,7 @@ module FeedMonitor
       delimiter = ActiveJob::Base.queue_name_delimiter
 
       if prefix && !prefix.empty?
-        [prefix, explicit_name].join(delimiter)
+        [ prefix, explicit_name ].join(delimiter)
       else
         explicit_name
       end
@@ -567,11 +567,11 @@ module FeedMonitor
 
         def build_signature(concern, block)
           if block
-            [:anonymous_module, block.object_id]
+            [ :anonymous_module, block.object_id ]
           elsif concern.is_a?(Module)
-            [:module, concern.object_id]
+            [ :module, concern.object_id ]
           else
-            [:constant, concern.to_s]
+            [ :constant, concern.to_s ]
           end
         end
 
@@ -599,14 +599,14 @@ module FeedMonitor
         handler_key =
           case handler
           when Symbol
-            [:symbol, handler]
+            [ :symbol, handler ]
           when String
-            [:symbol, handler.to_sym]
+            [ :symbol, handler.to_sym ]
           else
-            [:callable, handler.object_id]
+            [ :callable, handler.object_id ]
           end
 
-        [handler_key, options]
+        [ handler_key, options ]
       end
 
       def symbol?

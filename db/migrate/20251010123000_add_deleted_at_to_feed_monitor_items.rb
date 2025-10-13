@@ -6,4 +6,3 @@ class AddDeletedAtToFeedMonitorItems < ActiveRecord::Migration[8.0]
     add_index :feed_monitor_items, :deleted_at
   end
 end
-

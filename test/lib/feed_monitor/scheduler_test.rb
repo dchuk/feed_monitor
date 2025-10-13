@@ -116,6 +116,5 @@ module FeedMonitor
 
       statements
     end
-
   end
 end

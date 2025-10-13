@@ -59,15 +59,15 @@ module FeedMonitor
 
         if raw_guid_present
           existing = find_item_by_guid(guid)
-          return [existing, :guid] if existing
+          return [ existing, :guid ] if existing
         end
 
         if fingerprint.present?
           existing = find_item_by_fingerprint(fingerprint)
-          return [existing, :fingerprint] if existing
+          return [ existing, :fingerprint ] if existing
         end
 
-        [nil, nil]
+        [ nil, nil ]
       end
 
       def find_item_by_guid(guid)
@@ -135,7 +135,7 @@ module FeedMonitor
       end
 
       def process_feed_content(raw_content, title:)
-        return [raw_content, nil] unless should_process_feed_content?(raw_content)
+        return [ raw_content, nil ] unless should_process_feed_content?(raw_content)
 
         parser = feed_content_parser_class.new
         html = wrap_content_for_readability(raw_content, title: title)
@@ -144,7 +144,7 @@ module FeedMonitor
         processed_content = result.content.presence || raw_content
         metadata = build_feed_content_metadata(result: result, raw_content: raw_content, processed_content: processed_content)
 
-        [processed_content, metadata.presence]
+        [ processed_content, metadata.presence ]
       rescue StandardError => error
         metadata = {
           "status" => "failed",
@@ -154,7 +154,7 @@ module FeedMonitor
           "error_class" => error.class.name,
           "error_message" => error.message
         }
-        [raw_content, metadata]
+        [ raw_content, metadata ]
       end
 
       def should_process_feed_content?(raw_content)
@@ -188,13 +188,7 @@ module FeedMonitor
         default = FeedMonitor::Scrapers::Readability.default_settings[:readability]
         return {} unless default
 
-        if default.respond_to?(:deep_dup)
-          default.deep_dup
-        else
-          Marshal.load(Marshal.dump(default))
-        end
-      rescue TypeError
-        default.dup
+        deep_copy(default)
       end
 
       def build_feed_content_metadata(result:, raw_content:, processed_content:)
@@ -215,6 +209,25 @@ module FeedMonitor
 
       def html_fragment?(value)
         value.to_s.match?(/<\s*\w+/)
+      end
+
+      def deep_copy(value)
+        if value.respond_to?(:deep_dup)
+          return value.deep_dup
+        end
+
+        case value
+        when Hash
+          value.each_with_object(value.class.new) do |(key, nested), copy|
+            copy[key] = deep_copy(nested)
+          end
+        when Array
+          value.map { |element| deep_copy(element) }
+        else
+          value.dup
+        end
+      rescue TypeError
+        value
       end
 
       def build_attributes

@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -18,8 +20,35 @@ jobs:
           ruby-version: 3.4.4
           bundler-cache: true
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Lint frontend assets
+        run: npm run lint
+
       - name: Lint code for consistent style
         run: bin/rubocop -f github
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.4.4
+          bundler-cache: true
+
+      - name: Run Brakeman security scanner
+        run: bin/brakeman --no-pager
 
   test:
     runs-on: ubuntu-latest
@@ -48,6 +77,16 @@ jobs:
           RAILS_ENV: test
           # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test
+
+      - name: Enforce diff coverage
+        run: bundle exec ruby bin/check-diff-coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage
+          if-no-files-found: ignore
 
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@v4

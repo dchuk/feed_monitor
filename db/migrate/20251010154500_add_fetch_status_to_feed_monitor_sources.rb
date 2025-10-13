@@ -7,4 +7,3 @@ class AddFetchStatusToFeedMonitorSources < ActiveRecord::Migration[8.0]
     add_index :feed_monitor_sources, :fetch_status
   end
 end
-

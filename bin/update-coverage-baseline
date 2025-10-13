@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/setup"
+require "json"
+require "simplecov"
+
+ROOT = Dir.pwd
+COVERAGE_RESULT_PATH = File.join(ROOT, "coverage", ".resultset.json")
+BASELINE_PATH = File.join(ROOT, "config", "coverage_baseline.json")
+RAIL_TREES = %w[app/ lib/].freeze
+
+unless File.exist?(COVERAGE_RESULT_PATH)
+  abort "Coverage result not found at #{COVERAGE_RESULT_PATH}. Run the test suite with coverage enabled first."
+end
+
+result_data = JSON.parse(File.read(COVERAGE_RESULT_PATH))
+coverage_result = SimpleCov::Result.from_hash(result_data).first
+
+baseline = {}
+
+coverage_result.files.each do |source_file|
+  relative_path = source_file.filename.delete_prefix("#{ROOT}/")
+  next unless RAIL_TREES.any? { |prefix| relative_path.start_with?(prefix) }
+
+  uncovered_lines = source_file.lines.each_with_object([]) do |line, lines|
+    next if line.never? || line.skipped?
+    lines << line.line_number unless line.covered?
+  end
+
+  baseline[relative_path] = uncovered_lines unless uncovered_lines.empty?
+end
+
+File.write(BASELINE_PATH, JSON.pretty_generate(baseline))
+puts "Coverage baseline written to #{BASELINE_PATH} (#{baseline.keys.size} files)."

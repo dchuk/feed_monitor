@@ -106,7 +106,7 @@ module FeedMonitor
 
           synchronize do
             state = queue_state[queue_name]
-            state[:depth] = [state[:depth] - 1, 0].max
+            state[:depth] = [ state[:depth] - 1, 0 ].max
             state[:last_started_at] = Time.current
             FeedMonitor::Metrics.gauge("jobs_queue_depth_#{queue_name}", state[:depth])
             FeedMonitor::Metrics.gauge("jobs_last_started_at_#{queue_name}", state[:last_started_at])

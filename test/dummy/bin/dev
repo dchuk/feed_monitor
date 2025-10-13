@@ -28,7 +28,7 @@ commands = [
     name: "jobs",
     dir: DUMMY_ROOT,
     env: { "BUNDLE_GEMFILE" => File.join(DUMMY_ROOT, "Gemfile") },
-    command: ["bin/jobs", "start"]
+    command: [ "bin/jobs", "start" ]
   }
 ]
 

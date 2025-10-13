@@ -36,7 +36,7 @@ module FeedMonitor
           .flat_map do |entry|
             case entry
             when Integer
-              [entry]
+              [ entry ]
             when Array
               entry
             else

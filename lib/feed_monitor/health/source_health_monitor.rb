@@ -63,7 +63,7 @@ module FeedMonitor
       end
 
       def recent_logs
-        limit = [config.window_size.to_i, 1].max
+        limit = [ config.window_size.to_i, 1 ].max
         source.fetch_logs.order(started_at: :desc).limit(limit)
       end
 
@@ -97,7 +97,7 @@ module FeedMonitor
       end
 
       def compute_auto_pause_until(existing_until)
-        cooldown = [config.auto_pause_cooldown_minutes.to_i, 1].max
+        cooldown = [ config.auto_pause_cooldown_minutes.to_i, 1 ].max
         proposed = now + cooldown.minutes
 
         return proposed if existing_until.nil?
@@ -133,7 +133,7 @@ module FeedMonitor
         backoff_value = attrs.key?(:backoff_until) ? attrs[:backoff_until] : source.backoff_until
         return if backoff_value.blank?
 
-        fixed_minutes = [source.fetch_interval_minutes.to_i, 1].max
+        fixed_minutes = [ source.fetch_interval_minutes.to_i, 1 ].max
         attrs[:next_fetch_at] = now + fixed_minutes.minutes
         attrs[:backoff_until] = nil
       end
@@ -153,11 +153,11 @@ module FeedMonitor
       end
 
       def auto_resume_threshold
-        [config.auto_resume_threshold.to_f, auto_pause_threshold.to_f].max
+        [ config.auto_resume_threshold.to_f, auto_pause_threshold.to_f ].max
       end
 
       def healthy_threshold
-        [config.healthy_threshold.to_f, warning_threshold].max
+        [ config.healthy_threshold.to_f, warning_threshold ].max
       end
 
       def warning_threshold
@@ -173,7 +173,7 @@ module FeedMonitor
       end
 
       def minimum_sample_size
-        [config.window_size.to_i, 1].max
+        [ config.window_size.to_i, 1 ].max
       end
     end
   end

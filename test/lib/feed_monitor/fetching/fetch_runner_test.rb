@@ -27,9 +27,9 @@ module FeedMonitor
           created: 1,
           updated: 0,
           failed: 0,
-          items: [item],
+          items: [ item ],
           errors: [],
-          created_items: [item],
+          created_items: [ item ],
           updated_items: []
         )
         result = FeedMonitor::Fetching::FeedFetcher::Result.new(
@@ -45,7 +45,7 @@ module FeedMonitor
           define_method(:call) { result }
         end
 
-        assert_enqueued_with(job: FeedMonitor::ScrapeItemJob, args: [item.id]) do
+        assert_enqueued_with(job: FeedMonitor::ScrapeItemJob, args: [ item.id ]) do
           FetchRunner.new(source:, fetcher_class: stub_fetcher).run
         end
 
@@ -114,9 +114,9 @@ module FeedMonitor
           created: 1,
           updated: 0,
           failed: 0,
-          items: [item],
+          items: [ item ],
           errors: [],
-          created_items: [item],
+          created_items: [ item ],
           updated_items: []
         )
         result = FeedMonitor::Fetching::FeedFetcher::Result.new(
@@ -191,7 +191,7 @@ module FeedMonitor
 
         runner.run
 
-        assert_equal [source], retention_spy.calls
+        assert_equal [ source ], retention_spy.calls
       end
 
       test "delegates completion to injected handlers" do

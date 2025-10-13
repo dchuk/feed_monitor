@@ -52,10 +52,10 @@ module FeedMonitor
       end
 
       travel_to Time.zone.local(2025, 10, 4, 12, 0, 0) do
-        FeedMonitor::ItemCleanupJob.perform_now(now: Time.current, source_ids: [target.id])
+        FeedMonitor::ItemCleanupJob.perform_now(now: Time.current, source_ids: [ target.id ])
 
         assert_equal [], target.reload.items.pluck(:guid)
-        assert_equal ["other-old"], other.reload.items.pluck(:guid)
+        assert_equal [ "other-old" ], other.reload.items.pluck(:guid)
       end
     end
 

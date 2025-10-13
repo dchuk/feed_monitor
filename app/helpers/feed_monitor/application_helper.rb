@@ -105,21 +105,21 @@ module FeedMonitor
 
       label, classes, spinner = case status_str
       when "queued"
-        ["Queued", "bg-amber-100 text-amber-700", show_spinner]
+        [ "Queued", "bg-amber-100 text-amber-700", show_spinner ]
       when "pending"
-        ["Pending", "bg-amber-100 text-amber-700", show_spinner]
+        [ "Pending", "bg-amber-100 text-amber-700", show_spinner ]
       when "fetching", "processing"
-        ["Processing", "bg-blue-100 text-blue-700", show_spinner]
+        [ "Processing", "bg-blue-100 text-blue-700", show_spinner ]
       when "success"
-        ["Completed", "bg-green-100 text-green-700", false]
+        [ "Completed", "bg-green-100 text-green-700", false ]
       when "failed"
-        ["Failed", "bg-rose-100 text-rose-700", false]
+        [ "Failed", "bg-rose-100 text-rose-700", false ]
       when "partial"
-        ["Partial", "bg-amber-100 text-amber-700", false]
+        [ "Partial", "bg-amber-100 text-amber-700", false ]
       when "idle"
-        ["Idle", "bg-slate-100 text-slate-600", false]
+        [ "Idle", "bg-slate-100 text-slate-600", false ]
       else
-        ["Ready", "bg-slate-100 text-slate-600", false]
+        [ "Ready", "bg-slate-100 text-slate-600", false ]
       end
 
       { label: label, classes: classes, show_spinner: spinner }
@@ -192,7 +192,7 @@ module FeedMonitor
     end
 
     def table_sort_link(search_object, attribute, label, frame:, default_order:, secondary: [], html_options: {})
-      sort_targets = [attribute, *Array(secondary)]
+      sort_targets = [ attribute, *Array(secondary) ]
       options = {
         default_order: default_order,
         hide_indicator: true

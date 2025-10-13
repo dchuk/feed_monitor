@@ -585,11 +585,11 @@
 
 ### 17.08 Tooling & Coverage Guardrails
 
-- [ ] 17.08.01 Establish Rubocop autocorrect baseline and enforce lint step in CI with developer documentation
-- [ ] 17.08.02 Add Brakeman to the bundle, configure ignore list if needed, and wire into CI security stage
-- [ ] 17.08.03 Enable SimpleCov with coverage gating (≥90% for new/changed lines) and surface reports in CI
-- [ ] 17.08.04 Add asset lint/test commands (e.g., eslint/stylelint or equivalent) and integrate into CI
-- [ ] 17.08.05 Update contributor docs with new lint/test workflows and ensure bin scripts support local runs
+- [x] 17.08.01 Establish Rubocop autocorrect baseline and enforce lint step in CI with developer documentation
+- [x] 17.08.02 Add Brakeman to the bundle, configure ignore list if needed, and wire into CI security stage
+- [x] 17.08.03 Enable SimpleCov with coverage gating (≥90% for new/changed lines) and surface reports in CI
+- [x] 17.08.04 Add asset lint/test commands (e.g., eslint/stylelint or equivalent) and integrate into CI
+- [x] 17.08.05 Update contributor docs with new lint/test workflows and ensure bin scripts support local runs
 
 ### 17.09 Dashboard Performance Enhancements
 

@@ -26,7 +26,7 @@ module FeedMonitor
 
     def resolve_scope(options)
       relation = options[:source_scope] || FeedMonitor::Source.all
-      ids = FeedMonitor::Jobs::CleanupOptions.extract_ids([options[:source_ids], options[:source_id]])
+      ids = FeedMonitor::Jobs::CleanupOptions.extract_ids([ options[:source_ids], options[:source_id] ])
 
       if ids.any?
         relation.where(id: ids)
