@@ -1,9 +1,8 @@
 <% item = local_assigns.fetch(:item) %>
 <% source = item.source %>
 <% manual_scrape_disabled = !source&.scraping_enabled? %>
-<% inflight_scrape = %w[pending processing].include?(item.scrape_status.to_s) %>
-<% scrape_status = async_status_badge(item.scrape_status) %>
-<% scrape_status[:label] = "Scraped" if item.scrape_status.to_s == "success" %>
+<% scrape_badge = item_scrape_status_badge(item: item, source: source) %>
+<% inflight_scrape = %w[pending processing].include?(scrape_badge[:status]) %>
 <% recent_scrape_logs = item.scrape_logs.order(started_at: :desc).limit(5) %>
 <% latest_scrape_log = recent_scrape_logs.first %>
 
@@ -12,9 +11,13 @@
     <div>
       <h1 class="text-3xl font-semibold text-slate-900"><%= item.title.presence || "(untitled)" %></h1>
       <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
-        <span data-testid="scrape-status-badge" class="inline-flex items-center rounded-full px-3 py-1 font-semibold <%= scrape_status[:classes] %>">
-          <%= loading_spinner_svg if scrape_status[:show_spinner] %>
-          <%= scrape_status[:label] %>
+        <span
+          data-testid="scrape-status-badge"
+          data-status="<%= scrape_badge[:status] %>"
+          class="inline-flex items-center gap-1 rounded-full px-3 py-1 font-semibold <%= scrape_badge[:classes] %>"
+        >
+          <%= loading_spinner_svg if scrape_badge[:show_spinner] %>
+          <%= scrape_badge[:label] %>
         </span>
         <% if item.scraped_at.present? %>
           <span class="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-600">

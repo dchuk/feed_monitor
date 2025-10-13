@@ -619,16 +619,45 @@
 - [x] 18.02.04 Include Docker configuration
 - [x] 18.02.05 Document production deployment
 
-### 18.03 Release Package
-
-- [ ] 18.03.01 Set version 1.0.0
-- [ ] 18.03.02 Write CHANGELOG
-- [ ] 18.03.03 Add MIT License
-- [ ] 18.03.04 Publish to RubyGems
-- [ ] 18.03.05 Announce release
-
 **Deliverable: Production-ready, well-documented gem**
 **Test: Install in fresh Rails 8 app using published gem**
+
+---
+
+## Phase 19: Admin UI Refinements
+
+**Goal: Streamline source management workflows and centralize log visibility without adding complexity**
+
+### 19.01 Surface Item Scraping Status on Source Detail
+
+- [x] 19.01.01 Audit the source show item table partials to confirm which attributes are available for display and document the intended status states (pending, processing, success, failure, disabled)
+- [x] 19.01.02 Update the item rows to render a scraping status badge/icon that reflects the latest `scrape_status` and gracefully handles items that have never been scraped
+- [x] 19.01.03 Ensure Turbo/Hotwire updates push status changes in real time after scrapes complete, covering manual and background flows
+- [x] 19.01.04 Add system coverage verifying that newly scraped items show the correct status badge and that status changes broadcast without full page reloads
+
+### 19.02 Add "Scrape All" Control to Source Show
+
+- [ ] 19.02.01 Define UX placement, confirmation copy, and authorization expectations for a "Scrape All" button on the source detail page
+- [ ] 19.02.02 Wire the control to enqueue scraping for eligible items via the existing `FeedMonitor::Scraping::Enqueuer`, respecting auto-scrape settings and avoiding duplicate jobs
+- [ ] 19.02.03 Provide user feedback (flash/turbo partial) summarizing how many items were enqueued and expose errors when nothing qualifies
+- [ ] 19.02.04 Cover the new control with system and service tests, including a regression case for sources with no scrape-eligible items
+
+### 19.03 Add Source Deletion from Index Table
+
+- [ ] 19.03.01 Specify the destructive action UX (button location, confirmation modal/text, tooltip) for deleting a source directly from the index list
+- [ ] 19.03.02 Implement the delete button using standard Rails RESTful routes, ensuring Turbo seamlessly removes the row and updates counters without full refreshes
+- [ ] 19.03.03 Validate that dependent records (items, logs, schedules) are handled according to existing retention/deletion rules and document any follow-up work
+- [ ] 19.03.04 Add controller and system tests covering successful deletion, cancellation, and unauthorized attempts
+
+### 19.04 Consolidate Fetch & Scrape Logs
+
+- [ ] 19.04.01 Inventory current fetch and scrape log views/partials to outline the combined layout, including shared columns and log-type specific metadata
+- [ ] 19.04.02 Design a unified log query object/presenter that supports filtering by log type, timeframe ranges, source selection, search terms, and pagination
+- [ ] 19.04.03 Implement the consolidated table/section in the UI with filter controls and ensure the controller accepts/validates the new params without duplicating logic
+- [ ] 19.04.04 Update instrumentation and documentation to reflect the merged log view and add automated coverage (unit + system) for filtering, searching, and pagination paths
+
+**Deliverable: Source management UI exposes clear scraping controls and a single consolidated log explorer**
+**Test: Drive the new controls via system specs to confirm status rendering, bulk scraping, deletions, and log filtering behave as expected**
 
 ---
 

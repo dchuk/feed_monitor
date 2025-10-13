@@ -220,6 +220,47 @@ module FeedMonitor
       assert_current_path feed_monitor.edit_source_path(source)
     end
 
+    test "source show renders scrape status badges and consumes turbo broadcasts" do
+      source = create_source!(
+        name: "Turbo Status",
+        feed_url: "https://turbo.example.com/feed.xml",
+        scraping_enabled: true
+      )
+      item = source.items.create!(
+        guid: "turbo-item-1",
+        title: "Turbo Item",
+        url: "https://turbo.example.com/articles/1",
+        published_at: Time.current
+      )
+
+      visit feed_monitor.source_path(source)
+
+      within "[data-testid='source-items-table'] tbody tr:first-child" do
+        badge = find("[data-testid='item-scrape-status-badge']")
+        assert_equal "idle", badge["data-status"]
+        assert_text "Not scraped"
+        assert_no_text "Scraped"
+      end
+
+      item.update!(scrape_status: "success", scraped_at: Time.current)
+      source.reload
+
+      payloads = capture_turbo_stream_broadcasts([source, :details]) do
+        FeedMonitor::Realtime.broadcast_source(source)
+      end
+      assert_not_empty payloads, "expected a turbo-stream broadcast for source details"
+
+      payloads.each do |payload|
+        page.execute_script("Turbo.renderStreamMessage(arguments[0])", payload.to_html)
+      end
+
+      within "[data-testid='source-items-table'] tbody tr:first-child" do
+        badge = find("[data-testid='item-scrape-status-badge']")
+        assert_equal "success", badge["data-status"]
+        assert_text "Scraped"
+      end
+    end
+
     private
 
     def assert_source_order(expected)

@@ -100,6 +100,19 @@ module FeedMonitor
     end
 
     # Unified status badge helper for both fetch and scrape operations
+    ITEM_SCRAPE_STATUS_LABELS = {
+      "pending" => "Pending",
+      "processing" => "Processing",
+      "success" => "Scraped",
+      "failed" => "Failed",
+      "partial" => "Partial",
+      "disabled" => "Disabled",
+      "idle" => "Not scraped"
+    }.freeze
+
+    # Maps asynchronous workflow states to badge styling/labels shared across the
+    # engine. Item scraping builds on these core states, reusing the same colors
+    # so the UI stays consistent across sources, items, and job dashboards.
     def async_status_badge(status, show_spinner: true)
       status_str = status.to_s
 
@@ -116,6 +129,8 @@ module FeedMonitor
         [ "Failed", "bg-rose-100 text-rose-700", false ]
       when "partial"
         [ "Partial", "bg-amber-100 text-amber-700", false ]
+      when "disabled"
+        [ "Disabled", "bg-slate-200 text-slate-600", false ]
       when "idle"
         [ "Idle", "bg-slate-100 text-slate-600", false ]
       else
@@ -123,6 +138,24 @@ module FeedMonitor
       end
 
       { label: label, classes: classes, show_spinner: spinner }
+    end
+
+    # Returns a normalized badge payload for the source show/item pages. The
+    # status derives from the item's recorded scrape_status, falls back to the
+    # source configuration, and always lands inside the known status set:
+    # pending, processing, success, failed, partial, disabled, or idle.
+    def item_scrape_status_badge(item:, source: nil, show_spinner: true)
+      status = derive_item_scrape_status(item:, source: source)
+      base_badge = async_status_badge(status, show_spinner: show_spinner)
+      label = ITEM_SCRAPE_STATUS_LABELS.fetch(status) { base_badge[:label] }
+      spinner = base_badge[:show_spinner] && %w[pending processing].include?(status)
+
+      {
+        status: status,
+        label: label,
+        classes: base_badge[:classes],
+        show_spinner: spinner
+      }
     end
 
     # Legacy helper for backwards compatibility
@@ -204,6 +237,21 @@ module FeedMonitor
       sort_link(search_object, attribute, sort_targets, options) do
         tag.span(label, class: "inline-flex items-center gap-1")
       end
+    end
+
+    private
+
+    def derive_item_scrape_status(item:, source: nil)
+      return "idle" unless item
+
+      status = item.scrape_status.to_s.presence
+      return status if status.present?
+
+      source ||= item.source
+      return "disabled" if source&.scraping_enabled? == false
+      return "success" if item.scraped_at.present?
+
+      "idle"
     end
   end
 end

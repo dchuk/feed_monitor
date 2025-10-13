@@ -265,9 +265,15 @@
                       <%= item.published_at ? item.published_at.strftime("%b %d, %Y %H:%M") : "Unpublished" %>
                     </td>
                     <td class="px-5 py-4 text-xs">
-                      <% item_status = async_status_badge(item.scrape_status, show_spinner: false) %>
-                      <% item_status[:label] = "Scraped" if item.scrape_status.to_s == "success" %>
-                      <span class="inline-flex items-center rounded-full px-3 py-1 font-semibold <%= item_status[:classes] %>"><%= item_status[:label] %></span>
+                      <% scrape_badge = item_scrape_status_badge(item: item, source: source) %>
+                      <span
+                        class="inline-flex items-center gap-1 rounded-full px-3 py-1 font-semibold <%= scrape_badge[:classes] %>"
+                        data-testid="item-scrape-status-badge"
+                        data-status="<%= scrape_badge[:status] %>"
+                      >
+                        <%= loading_spinner_svg(css_class: "h-3.5 w-3.5 animate-spin text-blue-500") if scrape_badge[:show_spinner] %>
+                        <%= scrape_badge[:label] %>
+                      </span>
                     </td>
                   </tr>
                 <% end %>
