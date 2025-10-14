@@ -4,3 +4,4 @@
 - growl notifications are spamming the user when taking bulk actions
 - add ability to manage per-source scraping rate limits to override configuration defaults
 - ensure adaptive scheduling only reacts to truly new content (fetching a feed should use hashing on the summary or scrape to determine the item has really been updated, otherwise don't update anything)
+- automatically extract transcripts from content that is mostly video or audio

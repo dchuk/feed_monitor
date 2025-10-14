@@ -6,7 +6,7 @@
       <p class="mt-1 text-sm text-slate-500">Manage feed endpoints and scraping settings.</p>
     </div>
     <div class="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
-      <%= search_form_for @q, url: feed_monitor.sources_path, method: :get, html: { class: "w-full sm:w-auto" } do |form| %>
+      <%= search_form_for @q, url: feed_monitor.sources_path, method: :get, html: { class: "w-full sm:w-auto", data: { turbo_frame: "feed_monitor_sources_table" } } do |form| %>
         <%= form.label @search_field, "Search sources", class: "sr-only" %>
         <div class="flex rounded-md shadow-sm">
           <%= form.search_field @search_field, placeholder: "Search name or URL…", class: "w-full rounded-l-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:min-w-[16rem]" %>
@@ -17,35 +17,6 @@
     </div>
   </div>
 
-  <% if @search_term.present? || @fetch_interval_filter.present? %>
-    <div class="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-700">
-      <% if @search_term.present? %>
-        <% clear_search_query = @search_params.dup %>
-        <% clear_search_query.delete("name_or_feed_url_or_website_url_cont") %>
-        <% clear_search_query = if clear_search_query.respond_to?(:compact_blank)
-          clear_search_query.compact_blank
-        else
-          clear_search_query.reject { |_key, value| value.respond_to?(:blank?) ? value.blank? : value.nil? }
-        end %>
-        <% clear_search_path = clear_search_query.empty? ? feed_monitor.sources_path : feed_monitor.sources_path(q: clear_search_query) %>
-        <div>
-          Showing results for “<%= @search_term %>”.
-          <%= link_to "Clear search", clear_search_path, class: "ml-2 font-medium text-blue-600 hover:text-blue-500" %>
-        </div>
-      <% end %>
-
-      <% if @fetch_interval_filter.present? %>
-        <% filter_label = fetch_interval_filter_label(@selected_fetch_interval_bucket, @fetch_interval_filter) %>
-        <div class="mt-1 flex items-center justify-between gap-2">
-          <span>Filtered by fetch interval <%= filter_label %>.</span>
-          <%= link_to "Clear interval filter",
-                fetch_interval_bucket_path(@selected_fetch_interval_bucket, @search_params, selected: true),
-                class: "font-medium text-blue-600 hover:text-blue-500" %>
-        </div>
-      <% end %>
-    </div>
-  <% end %>
-
   <%= render "feed_monitor/sources/fetch_interval_heatmap",
         fetch_interval_distribution: @fetch_interval_distribution,
         selected_bucket: @selected_fetch_interval_bucket,
@@ -53,6 +24,34 @@
 
   <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
     <%= turbo_frame_tag "feed_monitor_sources_table" do %>
+      <% if @search_term.present? || @fetch_interval_filter.present? %>
+        <div class="rounded-t-lg border-b border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-700">
+          <% if @search_term.present? %>
+            <% clear_search_query = @search_params.dup %>
+            <% clear_search_query.delete("name_or_feed_url_or_website_url_cont") %>
+            <% clear_search_query = if clear_search_query.respond_to?(:compact_blank)
+              clear_search_query.compact_blank
+            else
+              clear_search_query.reject { |_key, value| value.respond_to?(:blank?) ? value.blank? : value.nil? }
+            end %>
+            <% clear_search_path = clear_search_query.empty? ? feed_monitor.sources_path : feed_monitor.sources_path(q: clear_search_query) %>
+            <div>
+              Showing results for "<%= @search_term %>".
+              <%= link_to "Clear search", clear_search_path, class: "ml-2 font-medium text-blue-600 hover:text-blue-500", data: { turbo_frame: "feed_monitor_sources_table" } %>
+            </div>
+          <% end %>
+
+          <% if @fetch_interval_filter.present? %>
+            <% filter_label = fetch_interval_filter_label(@selected_fetch_interval_bucket, @fetch_interval_filter) %>
+            <div class="mt-1 flex items-center justify-between gap-2">
+              <span>Filtered by fetch interval <%= filter_label %>.</span>
+              <%= link_to "Clear interval filter",
+                    fetch_interval_bucket_path(@selected_fetch_interval_bucket, @search_params, selected: true),
+                    class: "font-medium text-blue-600 hover:text-blue-500" %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
       <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
         <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
           <tr>

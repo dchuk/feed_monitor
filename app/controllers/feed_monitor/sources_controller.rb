@@ -188,7 +188,12 @@ module FeedMonitor
         :adaptive_fetching_enabled,
         :health_auto_pause_threshold,
         scrape_settings: [
-          { selectors: %i[content title] }
+          :include_plain_text,
+          :timeout,
+          :javascript_enabled,
+          { selectors: %i[content title],
+            http: [],
+            readability: [] }
         ]
       )
 

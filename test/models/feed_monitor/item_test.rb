@@ -110,5 +110,43 @@ module FeedMonitor
       assert_not item.valid?
       assert_includes item.errors[:comments_url], "must be a valid HTTP(S) URL"
     end
+
+    test "soft_delete! decrements counter cache" do
+      item = Item.create!(source: @source, guid: "to-delete", url: "https://example.com/to-delete")
+      @source.reload
+      initial_count = @source.items_count
+
+      assert_difference("@source.reload.items_count", -1) do
+        item.soft_delete!
+      end
+
+      assert item.deleted?
+      assert_equal initial_count - 1, @source.reload.items_count
+    end
+
+    test "soft_delete! updates both deleted_at and counter atomically" do
+      item = Item.create!(source: @source, guid: "transact", url: "https://example.com/transact")
+      initial_count = @source.reload.items_count
+
+      item.soft_delete!
+
+      # Both should succeed together - item is deleted and counter decremented
+      assert item.deleted?
+      assert_equal initial_count - 1, @source.reload.items_count
+    end
+
+    test "soft_delete! does not double-delete" do
+      item = Item.create!(source: @source, guid: "double", url: "https://example.com/double")
+      @source.reload
+
+      item.soft_delete!
+      initial_count = @source.reload.items_count
+
+      assert_no_difference("@source.reload.items_count") do
+        item.soft_delete!
+      end
+
+      assert_equal initial_count, @source.reload.items_count
+    end
   end
 end

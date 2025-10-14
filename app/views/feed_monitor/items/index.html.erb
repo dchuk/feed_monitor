@@ -4,7 +4,7 @@
       <h1 class="text-3xl font-semibold text-slate-900">Items</h1>
       <p class="mt-1 text-sm text-slate-500">Browse recently ingested entries across all sources.</p>
     </div>
-    <%= search_form_for @q, url: feed_monitor.items_path, method: :get, html: { class: "w-full max-w-sm sm:w-auto" } do |form| %>
+    <%= search_form_for @q, url: feed_monitor.items_path, method: :get, html: { class: "w-full max-w-sm sm:w-auto", data: { turbo_frame: "feed_monitor_items_table" } } do |form| %>
       <%= form.label @search_field, "Search items", class: "sr-only" %>
       <div class="flex rounded-md shadow-sm">
         <%= form.search_field @search_field, placeholder: "Search title, summary, or source…", class: "w-full rounded-l-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" %>
@@ -13,15 +13,14 @@
     <% end %>
   </div>
 
-  <% if @search_term.present? %>
-    <div class="rounded-md border border-blue-100 bg-blue-50 px-4 py-2 text-xs text-blue-700">
-      Showing results for “<%= @search_term %>”.
-      <%= link_to "Clear search", feed_monitor.items_path, class: "ml-2 font-medium text-blue-600 hover:text-blue-500" %>
-    </div>
-  <% end %>
-
   <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
     <%= turbo_frame_tag "feed_monitor_items_table" do %>
+      <% if @search_term.present? %>
+        <div class="rounded-t-lg border-b border-blue-100 bg-blue-50 px-4 py-2 text-xs text-blue-700">
+          Showing results for "<%= @search_term %>".
+          <%= link_to "Clear search", feed_monitor.items_path, class: "ml-2 font-medium text-blue-600 hover:text-blue-500", data: { turbo_frame: "feed_monitor_items_table" } %>
+        </div>
+      <% end %>
       <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
         <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
           <tr>
@@ -120,30 +119,29 @@
           <% end %>
         </tbody>
       </table>
+      <div class="flex flex-col items-center gap-3 border-t border-slate-200 px-6 py-4 sm:flex-row sm:justify-between">
+        <div class="text-xs text-slate-500">
+          Page <%= @page %>
+        </div>
+        <div class="flex gap-2">
+          <% prev_params = { page: @page - 1 } %>
+          <% prev_params[:q] = @search_params if @search_params.present? %>
+          <% next_params = { page: @page + 1 } %>
+          <% next_params[:q] = @search_params if @search_params.present? %>
+
+          <% if @has_previous_page %>
+            <%= link_to "Previous", feed_monitor.items_path(prev_params), class: "inline-flex items-center rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50", data: { turbo_frame: "feed_monitor_items_table" } %>
+          <% else %>
+            <span class="inline-flex items-center rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-300">Previous</span>
+          <% end %>
+
+          <% if @has_next_page %>
+            <%= link_to "Next", feed_monitor.items_path(next_params), class: "inline-flex items-center rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50", data: { turbo_frame: "feed_monitor_items_table" } %>
+          <% else %>
+            <span class="inline-flex items-center rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-300">Next</span>
+          <% end %>
+        </div>
+      </div>
     <% end %>
-  </div>
-
-  <div class="flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
-    <div class="text-xs text-slate-500">
-      Page <%= @page %>
-    </div>
-    <div class="flex gap-2">
-      <% prev_params = { page: @page - 1 } %>
-      <% prev_params[:q] = @search_params if @search_params.present? %>
-      <% next_params = { page: @page + 1 } %>
-      <% next_params[:q] = @search_params if @search_params.present? %>
-
-      <% if @has_previous_page %>
-        <%= link_to "Previous", feed_monitor.items_path(prev_params), class: "inline-flex items-center rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" %>
-      <% else %>
-        <span class="inline-flex items-center rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-300">Previous</span>
-      <% end %>
-
-      <% if @has_next_page %>
-        <%= link_to "Next", feed_monitor.items_path(next_params), class: "inline-flex items-center rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" %>
-      <% else %>
-        <span class="inline-flex items-center rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-300">Next</span>
-      <% end %>
-    </div>
   </div>
 </div>

@@ -17,10 +17,6 @@ module FeedMonitor
 
     # Scopes for common source states
     scope :active, -> { where(active: true) }
-    scope :due_for_fetch, lambda {
-      now = Time.current
-      active.where(arel_table[:next_fetch_at].eq(nil).or(arel_table[:next_fetch_at].lteq(now)))
-    }
     scope :failed, lambda {
       failure = arel_table[:failure_count].gt(0)
       error_present = arel_table[:last_error].not_eq(nil)
@@ -29,9 +25,12 @@ module FeedMonitor
     }
     scope :healthy, -> { active.where(failure_count: 0, last_error: nil, last_error_at: nil) }
 
-    after_initialize :ensure_hash_defaults, if: :new_record?
-    after_initialize :ensure_fetch_status_default
-    after_initialize :ensure_health_defaults
+    # Use Rails attribute API for default values instead of after_initialize callbacks
+    attribute :scrape_settings, default: -> { {} }
+    attribute :custom_headers, default: -> { {} }
+    attribute :metadata, default: -> { {} }
+    attribute :fetch_status, :string, default: "idle"
+    attribute :health_status, :string, default: "healthy"
 
     sanitizes_string_attributes :name, :feed_url, :website_url, :scraper_adapter
     sanitizes_hash_attributes :scrape_settings, :custom_headers, :metadata
@@ -52,6 +51,12 @@ module FeedMonitor
     FeedMonitor::ModelExtensions.register(self, :source)
 
     class << self
+      # Convert scope to class method to make reference_time parameter explicit
+      # Scopes with internal variables should be class methods per Rails best practices
+      def due_for_fetch(reference_time: Time.current)
+        active.where(arel_table[:next_fetch_at].eq(nil).or(arel_table[:next_fetch_at].lteq(reference_time)))
+      end
+
       def ransackable_attributes(_auth_object = nil)
         %w[name feed_url website_url created_at fetch_interval_minutes items_count last_fetched_at]
       end
@@ -88,21 +93,13 @@ module FeedMonitor
       auto_paused_until.present? && auto_paused_until.future?
     end
 
+    def reset_items_counter!
+      # Recalculate items_count from actual active (non-deleted) items
+      actual_count = items.count
+      update_columns(items_count: actual_count)
+    end
+
     private
-
-    def ensure_hash_defaults
-      self.scrape_settings ||= {}
-      self.custom_headers ||= {}
-      self.metadata ||= {}
-    end
-
-    def ensure_fetch_status_default
-      self.fetch_status = "idle" if fetch_status.blank?
-    end
-
-    def ensure_health_defaults
-      self.health_status = "healthy" if health_status.blank?
-    end
 
     def health_auto_pause_threshold_within_bounds
       return if health_auto_pause_threshold.nil?

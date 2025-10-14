@@ -104,5 +104,126 @@ module FeedMonitor
 
       assert_not source.auto_paused?
     end
+
+    test "initializes with default hash attributes" do
+      source = Source.new(name: "Test", feed_url: "https://example.com/feed")
+
+      assert_equal({}, source.scrape_settings)
+      assert_equal({}, source.custom_headers)
+      assert_equal({}, source.metadata)
+    end
+
+    test "initializes with default fetch_status" do
+      source = Source.new(name: "Test", feed_url: "https://example.com/feed")
+
+      assert_equal "idle", source.fetch_status
+    end
+
+    test "initializes with default health_status" do
+      source = Source.new(name: "Test", feed_url: "https://example.com/feed")
+
+      assert_equal "healthy", source.health_status
+    end
+
+    test "allows overriding default hash attributes" do
+      custom_settings = { "key" => "value" }
+      source = Source.new(
+        name: "Test",
+        feed_url: "https://example.com/feed",
+        scrape_settings: custom_settings
+      )
+
+      assert_equal custom_settings, source.scrape_settings
+    end
+
+    test "allows overriding default fetch_status" do
+      source = Source.new(
+        name: "Test",
+        feed_url: "https://example.com/feed",
+        fetch_status: "queued"
+      )
+
+      assert_equal "queued", source.fetch_status
+    end
+
+    test "allows overriding default health_status" do
+      source = Source.new(
+        name: "Test",
+        feed_url: "https://example.com/feed",
+        health_status: "degraded"
+      )
+
+      assert_equal "degraded", source.health_status
+    end
+
+    test "due_for_fetch uses current time by default" do
+      past = Source.create!(name: "Past", feed_url: "https://example.com/past", next_fetch_at: 1.minute.ago)
+      future = Source.create!(name: "Future", feed_url: "https://example.com/future", next_fetch_at: 10.minutes.from_now)
+
+      assert_includes Source.due_for_fetch, past
+      assert_not_includes Source.due_for_fetch, future
+    end
+
+    test "due_for_fetch accepts custom reference_time" do
+      source = Source.create!(name: "Source", feed_url: "https://example.com/feed", next_fetch_at: 5.minutes.from_now)
+
+      # Not due yet with current time
+      assert_not_includes Source.due_for_fetch, source
+
+      # Due when using future reference time
+      assert_includes Source.due_for_fetch(reference_time: 10.minutes.from_now), source
+    end
+
+    test "due_for_fetch includes sources with nil next_fetch_at" do
+      source = Source.create!(name: "No Schedule", feed_url: "https://example.com/feed", next_fetch_at: nil)
+
+      assert_includes Source.due_for_fetch, source
+    end
+
+    test "reset_items_counter! recalculates counter cache from database" do
+      source = Source.create!(name: "Counter Test", feed_url: "https://example.com/counter")
+
+      # Create some items
+      3.times do |i|
+        Item.create!(source: source, guid: "item-#{i}", url: "https://example.com/item-#{i}")
+      end
+
+      source.reload
+      assert_equal 3, source.items_count
+
+      # Manually corrupt the counter
+      source.update_columns(items_count: 99)
+      assert_equal 99, source.reload.items_count
+
+      # Reset should fix it
+      source.reset_items_counter!
+      assert_equal 3, source.reload.items_count
+    end
+
+    test "reset_items_counter! only counts active items" do
+      source = Source.create!(name: "Soft Delete Counter", feed_url: "https://example.com/soft-delete")
+
+      # Create 5 items
+      items = 5.times.map do |i|
+        Item.create!(source: source, guid: "item-#{i}", url: "https://example.com/item-#{i}")
+      end
+
+      source.reload
+      assert_equal 5, source.items_count
+
+      # Soft delete 2 items
+      items[0].soft_delete!
+      items[1].soft_delete!
+
+      source.reload
+      assert_equal 3, source.items_count
+
+      # Corrupt counter
+      source.update_columns(items_count: 10)
+
+      # Reset should count only active items (3)
+      source.reset_items_counter!
+      assert_equal 3, source.reload.items_count
+    end
   end
 end

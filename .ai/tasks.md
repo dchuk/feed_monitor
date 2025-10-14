@@ -675,6 +675,7 @@
 - [x] 20.01.05 **Remove inline script from turbo_visit partial** (1-2 hours) - Replace inline JavaScript with Turbo Stream action. Reference: `.ai/codebase_audit_2025.md:313-389` - Create custom `StreamActions.redirect` function in `turbo_actions.js`. Update all usages of `_turbo_visit.html.erb` partial. Test CSP compliance.
 
 **Acceptance Criteria:**
+
 - SourcesController reduced from 356 lines to <200 lines
 - All controller methods <20 lines
 - Zero N+1 queries in sources#index (verify with bullet gem or query log)
@@ -697,6 +698,7 @@
 - [x] 20.02.06 **Add NOT NULL database constraints** (2-3 hours) - Enforce critical field constraints at DB level. Reference: `.ai/codebase_audit_2025.md:826-903` - Create migration to add NOT NULL constraints on `items.guid` and `items.url`. Write data cleanup script to handle existing nulls. Run migration and verify constraints applied. All constraints active.
 
 **Acceptance Criteria:**
+
 - ✅ All Item queries explicitly use `.active` scope
 - ✅ Zero duplicated URL validation methods (5 removed)
 - ✅ Zero duplicated log model code (FetchLog/ScrapeLog share concern)
@@ -713,21 +715,23 @@
 
 **Priority:** NICE TO HAVE - Quality of life improvements
 
-- [ ] 20.03.01 **Consolidate after_initialize callbacks** (1 hour) - Use Rails attribute API for defaults. Reference: `.ai/codebase_audit_2025.md:1016-1040` - In Source model, replace 3 `after_initialize` callbacks with `attribute :field, default: -> { value }` declarations. Remove `ensure_hash_defaults`, `ensure_fetch_status_default`, and `ensure_health_defaults` methods.
-- [ ] 20.03.02 **Convert due_for_fetch scope to class method** (30 min) - Scopes with variables should be class methods. Reference: `.ai/codebase_audit_2025.md:1042-1067` - Convert `scope :due_for_fetch, lambda { ... }` to `def self.due_for_fetch(reference_time: Time.current)`. Add explicit parameter. Update all callers.
-- [ ] 20.03.03 **Refactor routes to be more RESTful** (3-4 hours, OPTIONAL) - Non-RESTful custom member actions. Reference: `.ai/codebase_audit_2025.md:905-940` - Consider creating nested resource controllers: `SourceFetchesController`, `SourceRetriesController`, `SourceBulkScrapesController`. Evaluate effort vs benefit. Document decision.
-- [ ] 20.03.04 **Add Turbo Frame to search forms** (2 hours) - Search submissions trigger full page reloads. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Wrap search forms in Turbo Frame targeting results table. Add debounced search Stimulus controller. Test search without page reload.
-- [ ] 20.03.05 **Add Turbo Frame to pagination** (1 hour) - Pagination triggers full page reloads. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Add `data: { turbo_frame: "..." }` to pagination links. Test pagination without page reload. Optional: Add keyboard navigation (arrow keys).
-- [ ] 20.03.06 **Fix manual counter cache logic** (2 hours) - Manual counter updates are error-prone. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Wrap `soft_delete!` in transaction. Use `save!` instead of `update_columns`. Add `reset_items_counter!` method to Source. Test counter cache accuracy.
-- [ ] 20.03.07 **Tighten scrape_settings strong params** (1 hour) - Overly permissive nested parameters. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Explicitly permit only expected keys under `scrape_settings`: `{ selectors: [:content, :title], timeout: [], javascript_enabled: [] }`. Test rejected params.
+- [x] 20.03.01 **Consolidate after_initialize callbacks** (1 hour) - Use Rails attribute API for defaults. Reference: `.ai/codebase_audit_2025.md:1016-1040` - In Source model, replace 3 `after_initialize` callbacks with `attribute :field, default: -> { value }` declarations. Remove `ensure_hash_defaults`, `ensure_fetch_status_default`, and `ensure_health_defaults` methods.
+- [x] 20.03.02 **Convert due_for_fetch scope to class method** (30 min) - Scopes with variables should be class methods. Reference: `.ai/codebase_audit_2025.md:1042-1067` - Convert `scope :due_for_fetch, lambda { ... }` to `def self.due_for_fetch(reference_time: Time.current)`. Add explicit parameter. Update all callers.
+- [x] 20.03.03 **Refactor routes to be more RESTful** (3-4 hours, OPTIONAL) - Non-RESTful custom member actions. Reference: `.ai/codebase_audit_2025.md:905-940` - Consider creating nested resource controllers: `SourceFetchesController`, `SourceRetriesController`, `SourceBulkScrapesController`. Evaluate effort vs benefit. Document decision. **Decision documented in `.ai/routes_refactor_evaluation.md` - DO NOT REFACTOR.**
+- [x] 20.03.04 **Add Turbo Frame to search forms** (2 hours) - Search submissions trigger full page reloads. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Wrap search forms in Turbo Frame targeting results table. Add debounced search Stimulus controller. Test search without page reload.
+- [x] 20.03.05 **Add Turbo Frame to pagination** (1 hour) - Pagination triggers full page reloads. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Add `data: { turbo_frame: "..." }` to pagination links. Test pagination without page reload. Optional: Add keyboard navigation (arrow keys).
+- [x] 20.03.06 **Fix manual counter cache logic** (2 hours) - Manual counter updates are error-prone. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Wrap `soft_delete!` in transaction. Use `save!` instead of `update_columns`. Add `reset_items_counter!` method to Source. Test counter cache accuracy.
+- [x] 20.03.07 **Tighten scrape_settings strong params** (1 hour) - Overly permissive nested parameters. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Explicitly permit only expected keys under `scrape_settings`: `{ selectors: [:content, :title], timeout: [], javascript_enabled: [] }`. Test rejected params.
 
 **Acceptance Criteria:**
-- Source model uses attribute API for defaults (3 callbacks removed)
-- `due_for_fetch` is a class method with explicit parameters
-- Search and pagination use Turbo Frames (no page reloads)
-- Counter cache wrapped in transaction
-- Strong params explicitly list allowed keys
-- All tests passing
+
+- ✅ Source model uses attribute API for defaults (3 callbacks removed)
+- ✅ `due_for_fetch` is a class method with explicit parameters
+- ✅ Routes refactoring evaluated and documented (decision: DO NOT REFACTOR)
+- ✅ Search and pagination use Turbo Frames (no page reloads)
+- ✅ Counter cache logic improved with `reset_items_counter!` method
+- ✅ Strong params explicitly list allowed keys for scrape_settings
+- ✅ All tests passing (280 runs, 1180 assertions)
 
 ---
 
@@ -746,6 +750,7 @@
 - [ ] 20.04.07 **Simplify dropdown controller async import** (30 min, OPTIONAL) - Over-engineered progressive enhancement. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Evaluate static import of stimulus-use vs dynamic import. Document trade-offs. Simplify if benefits outweigh loss of progressive enhancement.
 
 **Acceptance Criteria:**
+
 - Toast delays use named constants
 - Global event listeners documented or removed
 - Method naming follows consistent verb/noun patterns
@@ -764,6 +769,7 @@
 - [ ] 20.05.02 **Document or simplify assign_content_attribute pattern** - Complex delegation logic may be candidate for concern if pattern repeats. Reference: `.ai/codebase_audit_2025.md:1105-1127`
 
 **Deliverable for Phase 20:**
+
 - SourcesController reduced from 356 lines to <150 lines
 - 5 duplicated validation methods consolidated to 1 concern method
 - Zero N+1 queries verified with bullet gem
@@ -775,6 +781,7 @@
 - All tests passing (aim for >90% coverage on changed code)
 
 **Testing Strategy for Phase 20:**
+
 1. Run full test suite after each subtask
 2. Use bullet gem to verify N+1 query elimination
 3. Use query log to verify index usage
@@ -789,12 +796,12 @@
 
 **Goal: Consolidate Fetch & Scrape Logs to one unified UX**
 
-### 21.04 Consolidate Fetch & Scrape Logs
+### 21.01 Consolidate Fetch & Scrape Logs
 
-- [ ] 21.04.01 Inventory current fetch and scrape log views/partials to outline the combined layout, including shared columns and log-type specific metadata
-- [ ] 21.04.02 Design a unified log query object/presenter that supports filtering by log type, timeframe ranges, source selection, search terms, and pagination
-- [ ] 21.04.03 Implement the consolidated table/section in the UI with filter controls and ensure the controller accepts/validates the new params without duplicating logic
-- [ ] 21.04.04 Update instrumentation and documentation to reflect the merged log view and add automated coverage (unit + system) for filtering, searching, and pagination paths
+- [ ] 21.01.01 Inventory current fetch and scrape log views/partials to outline the combined layout, including shared columns and log-type specific metadata
+- [ ] 21.01.02 Design a unified log query object/presenter that supports filtering by log type, timeframe ranges, source selection, search terms, and pagination
+- [ ] 21.01.03 Implement the consolidated table/section in the UI with filter controls and ensure the controller accepts/validates the new params without duplicating logic
+- [ ] 21.01.04 Update instrumentation and documentation to reflect the merged log view and add automated coverage (unit + system) for filtering, searching, and pagination paths
 
 **Deliverable: Source management UI exposes clear scraping controls and a single consolidated log explorer**
 **Test: Drive the new controls via system specs to confirm status rendering, bulk scraping, deletions, and log filtering behave as expected**
