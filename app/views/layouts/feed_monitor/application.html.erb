@@ -9,8 +9,7 @@
 
   <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
   <%= turbo_include_tags %>
-  <%= javascript_importmap_tags %>
-  <%= javascript_import_module_tag "feed_monitor/application" %>
+  <%= javascript_importmap_tags "feed_monitor/application" %>
 </head>
 <body class="fm-admin">
   <%= turbo_stream_from "feed_monitor_notifications" %>
