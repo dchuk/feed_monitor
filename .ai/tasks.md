@@ -739,11 +739,11 @@
 
 **Reference:** `.ai/routes_refactor_evaluation.md`
 
-- [ ] 20.04.01 **Create nested resource controllers** (2 hours) - Extract member actions to dedicated controllers. Reference: `.ai/routes_refactor_evaluation.md:44-48` - Create `SourceFetchesController`, `SourceRetriesController`, `SourceBulkScrapesController`. Move action logic from SourcesController. Preserve all before_action filters and helper methods.
-- [ ] 20.04.02 **Update routes configuration** (1 hour) - Convert member actions to nested resources. Reference: `.ai/routes_refactor_evaluation.md:57-60` - Update `config/routes.rb` to use nested resource syntax: `resource :fetch, only: [:create]`, etc. Document route changes in CHANGELOG.
-- [ ] 20.04.03 **Update all view route helpers** (2 hours) - Update route helpers throughout views. Reference: `.ai/routes_refactor_evaluation.md:62-66` - Update all `link_to` and `button_to` calls from `fetch_source_path` to `source_fetch_path`. Update all Turbo Stream rendering. Update all redirect paths. Verify no broken links.
-- [ ] 20.04.04 **Update test suite for new routes** (2 hours) - Update controller and system tests. Reference: `.ai/routes_refactor_evaluation.md:68-72` - Create controller tests for 3 new controllers. Update integration tests. Update system tests. Update all route helper references. Ensure 100% test coverage maintained.
-- [ ] 20.04.05 **Testing and validation** (1 hour) - Verify behavioral parity. Reference: `.ai/routes_refactor_evaluation.md:74-81` - Run full test suite. Manual testing of fetch, retry, scrape_all actions. Verify Turbo Stream responses work correctly. Load test with 100+ sources. Document any behavioral changes.
+- [x] 20.04.01 **Create nested resource controllers** (2 hours) - Extract member actions to dedicated controllers. Reference: `.ai/routes_refactor_evaluation.md:44-48` - Create `SourceFetchesController`, `SourceRetriesController`, `SourceBulkScrapesController`. Move action logic from SourcesController. Preserve all before_action filters and helper methods.
+- [x] 20.04.02 **Update routes configuration** (1 hour) - Convert member actions to nested resources. Reference: `.ai/routes_refactor_evaluation.md:57-60` - Update `config/routes.rb` to use nested resource syntax: `resource :fetch, only: [:create]`, etc. Document route changes in CHANGELOG.
+- [x] 20.04.03 **Update all view route helpers** (2 hours) - Update route helpers throughout views. Reference: `.ai/routes_refactor_evaluation.md:62-66` - Update all `link_to` and `button_to` calls from `fetch_source_path` to `source_fetch_path`. Update all Turbo Stream rendering. Update all redirect paths. Verify no broken links.
+- [x] 20.04.04 **Update test suite for new routes** (2 hours) - Update controller and system tests. Reference: `.ai/routes_refactor_evaluation.md:68-72` - Create controller tests for 3 new controllers. Update integration tests. Update system tests. Update all route helper references. Ensure 100% test coverage maintained.
+- [x] 20.04.05 **Testing and validation** (1 hour) - Verify behavioral parity. Reference: `.ai/routes_refactor_evaluation.md:74-81` - Run full test suite. Manual testing of fetch, retry, scrape_all actions. Verify Turbo Stream responses work correctly. Load test with 100+ sources. Document any behavioral changes.
 
 **Acceptance Criteria:**
 

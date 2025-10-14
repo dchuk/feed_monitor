@@ -8,8 +8,8 @@ FeedMonitor::Engine.routes.draw do
     post :scrape, on: :member
   end
   resources :sources do
-    post :fetch, on: :member
-    post :retry, on: :member
-    post :scrape_all, on: :member
+    resource :fetch, only: :create, controller: "source_fetches"
+    resource :retry, only: :create, controller: "source_retries"
+    resource :bulk_scrape, only: :create, controller: "source_bulk_scrapes"
   end
 end

@@ -24,6 +24,7 @@ require "turbo-rails"
 require "action_cable/test_helper"
 require "turbo/broadcastable/test_helper"
 require "securerandom"
+require "minitest/mock"
 
 require "capybara/rails"
 require "capybara/minitest"

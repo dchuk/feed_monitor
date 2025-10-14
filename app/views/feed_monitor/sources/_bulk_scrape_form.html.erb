@@ -9,7 +9,7 @@
 
 <div data-testid="bulk-scrape-form">
   <% if scraping_enabled %>
-    <%= form_with url: feed_monitor.scrape_all_source_path(source),
+    <%= form_with url: feed_monitor.source_bulk_scrape_path(source),
           method: :post,
           scope: :bulk_scrape,
           data: {

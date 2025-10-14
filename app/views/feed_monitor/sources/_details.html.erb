@@ -29,7 +29,7 @@
     <div class="flex flex-wrap items-center justify-end gap-3">
       <% fetch_disabled = %w[queued fetching].include?(source.fetch_status) %>
       <%= button_to "Fetch Now",
-            feed_monitor.fetch_source_path(source),
+            feed_monitor.source_fetch_path(source),
             method: :post,
             class: [
               "inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-white shadow",
@@ -53,7 +53,7 @@
             preview_limit: preview_limit %>
       <% if source.fetch_circuit_open? %>
         <%= button_to "Retry Now",
-              feed_monitor.retry_source_path(source),
+              feed_monitor.source_retry_path(source),
               method: :post,
               class: "inline-flex items-center rounded-md bg-amber-600 px-3 py-2 text-sm font-medium text-white shadow hover:bg-amber-500",
               data: {
