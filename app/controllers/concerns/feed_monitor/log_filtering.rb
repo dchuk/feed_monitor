@@ -6,32 +6,32 @@ module FeedMonitor
 
     private
 
-    def log_filter_status
-      return @log_filter_status if defined?(@log_filter_status)
+    def status_filter
+      return @status_filter if defined?(@status_filter)
 
       raw_status = params[:status].to_s
       sanitized = FeedMonitor::Security::ParameterSanitizer.sanitize(raw_status)
-      @log_filter_status = sanitized.presence_in(%w[success failed])
+      @status_filter = sanitized.presence_in(%w[success failed])
     end
 
-    def log_filter_item_id
+    def item_id_filter
       integer_param(:item_id)
     end
 
-    def log_filter_source_id
+    def source_id_filter
       integer_param(:source_id)
     end
 
-    def filter_fetch_logs(scope)
-      scope = scope.where(success: true) if log_filter_status == "success"
-      scope = scope.where(success: false) if log_filter_status == "failed"
+    def apply_fetch_log_filters(scope)
+      scope = scope.where(success: true) if status_filter == "success"
+      scope = scope.where(success: false) if status_filter == "failed"
       scope
     end
 
-    def filter_scrape_logs(scope)
-      scope = filter_fetch_logs(scope)
-      scope = scope.where(item_id: log_filter_item_id) if log_filter_item_id
-      scope = scope.where(source_id: log_filter_source_id) if log_filter_source_id
+    def apply_scrape_log_filters(scope)
+      scope = apply_fetch_log_filters(scope)
+      scope = scope.where(item_id: item_id_filter) if item_id_filter
+      scope = scope.where(source_id: source_id_filter) if source_id_filter
       scope
     end
 

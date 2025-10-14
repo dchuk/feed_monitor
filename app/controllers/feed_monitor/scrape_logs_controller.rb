@@ -5,10 +5,10 @@ module FeedMonitor
     include FeedMonitor::LogFiltering
 
     def index
-      @status = log_filter_status
-      @item_id = log_filter_item_id
-      @source_id = log_filter_source_id
-      @logs = filter_scrape_logs(base_scope).limit(50)
+      @status = status_filter
+      @item_id = item_id_filter
+      @source_id = source_id_filter
+      @logs = apply_scrape_log_filters(base_scope).limit(50)
     end
 
     def show

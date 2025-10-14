@@ -65,7 +65,7 @@ module FeedMonitor
 
           if flash_message
             level = flash_key == :notice ? :info : :error
-            responder.toast(message: flash_message, level:, delay_ms: 5000)
+            responder.toast(message: flash_message, level:, delay_ms: toast_delay_for(level))
           end
 
           render turbo_stream: responder.render(view_context), status: status

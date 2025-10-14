@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_14_064947) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_14_172525) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -85,6 +85,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_14_064947) do
     t.index ["published_at"], name: "index_feed_monitor_items_on_published_at"
     t.index ["scrape_status"], name: "index_feed_monitor_items_on_scrape_status"
     t.index ["source_id", "content_fingerprint"], name: "index_feed_monitor_items_on_source_id_and_content_fingerprint", unique: true
+    t.index ["source_id", "created_at"], name: "index_items_on_source_and_created_at_for_rates"
     t.index ["source_id", "guid"], name: "index_feed_monitor_items_on_source_id_and_guid", unique: true
     t.index ["source_id", "published_at", "created_at"], name: "index_feed_monitor_items_on_source_and_published_at"
     t.index ["source_id"], name: "index_feed_monitor_items_on_source_id"
@@ -156,9 +157,11 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_14_064947) do
     t.datetime "auto_paused_at"
     t.datetime "auto_paused_until"
     t.decimal "health_auto_pause_threshold", precision: 5, scale: 4
+    t.index ["active", "next_fetch_at"], name: "index_sources_on_active_and_next_fetch", where: "(active = true)"
     t.index ["active"], name: "index_feed_monitor_sources_on_active"
     t.index ["auto_paused_until"], name: "index_feed_monitor_sources_on_auto_paused_until"
     t.index ["created_at"], name: "index_feed_monitor_sources_on_created_at"
+    t.index ["failure_count"], name: "index_sources_on_failures", where: "(failure_count > 0)"
     t.index ["feed_url"], name: "index_feed_monitor_sources_on_feed_url", unique: true
     t.index ["fetch_circuit_until"], name: "index_feed_monitor_sources_on_fetch_circuit_until"
     t.index ["fetch_retry_attempt"], name: "index_feed_monitor_sources_on_fetch_retry_attempt"
@@ -166,6 +169,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_14_064947) do
     t.index ["health_status"], name: "index_feed_monitor_sources_on_health_status"
     t.index ["next_fetch_at"], name: "index_feed_monitor_sources_on_next_fetch_at"
     t.index ["type"], name: "index_feed_monitor_sources_on_type"
+    t.check_constraint "fetch_status::text = ANY (ARRAY['idle'::character varying, 'queued'::character varying, 'fetching'::character varying, 'failed'::character varying]::text[])", name: "check_fetch_status_values"
   end
 
   create_table "solid_cable_messages", force: :cascade do |t|

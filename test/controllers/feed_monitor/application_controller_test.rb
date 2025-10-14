@@ -35,5 +35,20 @@ module FeedMonitor
       assert_equal ActionController::RequestForgeryProtection::ProtectionMethods::Exception,
         FeedMonitor::ApplicationController.forgery_protection_strategy
     end
+
+    test "toast_delay_for returns appropriate delays based on level" do
+      controller = FeedMonitor::ApplicationController.new
+
+      assert_equal 5000, controller.send(:toast_delay_for, :info)
+      assert_equal 5000, controller.send(:toast_delay_for, :success)
+      assert_equal 5000, controller.send(:toast_delay_for, :warning)
+      assert_equal 6000, controller.send(:toast_delay_for, :error)
+    end
+
+    test "toast_delay_for returns default for unknown level" do
+      controller = FeedMonitor::ApplicationController.new
+
+      assert_equal 5000, controller.send(:toast_delay_for, :unknown)
+    end
   end
 end

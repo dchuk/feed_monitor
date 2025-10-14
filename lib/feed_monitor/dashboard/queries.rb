@@ -301,9 +301,11 @@ module FeedMonitor
               #{FeedMonitor::ScrapeLog.quoted_table_name}.scraper_adapter AS scraper_adapter,
               NULL AS item_title,
               NULL AS item_url,
-              (SELECT #{quoted_source_name} FROM #{FeedMonitor::Source.quoted_table_name} WHERE #{FeedMonitor::Source.quoted_table_name}.id = #{FeedMonitor::ScrapeLog.quoted_table_name}.source_id LIMIT 1) AS source_name,
+              #{FeedMonitor::Source.quoted_table_name}.#{quoted_source_name} AS source_name,
               #{FeedMonitor::ScrapeLog.quoted_table_name}.source_id AS source_id
             FROM #{FeedMonitor::ScrapeLog.quoted_table_name}
+            LEFT JOIN #{FeedMonitor::Source.quoted_table_name}
+              ON #{FeedMonitor::Source.quoted_table_name}.id = #{FeedMonitor::ScrapeLog.quoted_table_name}.source_id
           SQL
         end
 
@@ -319,9 +321,11 @@ module FeedMonitor
               NULL AS scraper_adapter,
               #{FeedMonitor::Item.quoted_table_name}.title AS item_title,
               #{FeedMonitor::Item.quoted_table_name}.url AS item_url,
-              (SELECT #{quoted_source_name} FROM #{FeedMonitor::Source.quoted_table_name} WHERE #{FeedMonitor::Source.quoted_table_name}.id = #{FeedMonitor::Item.quoted_table_name}.source_id LIMIT 1) AS source_name,
+              #{FeedMonitor::Source.quoted_table_name}.#{quoted_source_name} AS source_name,
               #{FeedMonitor::Item.quoted_table_name}.source_id AS source_id
             FROM #{FeedMonitor::Item.quoted_table_name}
+            LEFT JOIN #{FeedMonitor::Source.quoted_table_name}
+              ON #{FeedMonitor::Source.quoted_table_name}.id = #{FeedMonitor::Item.quoted_table_name}.source_id
           SQL
         end
 

@@ -29,6 +29,10 @@ export default class extends Controller {
     delete this.element.dataset.dropdownState;
   }
 
+  // Dynamic import provides progressive enhancement: smooth transitions when stimulus-use
+  // is available, graceful fallback to CSS class toggling when not. This complexity is
+  // justified as it allows the engine to work without requiring stimulus-use as a dependency.
+  // Evaluated for simplification in Phase 20.05.07 - Decision: Keep current implementation.
   async loadTransitions() {
     if (!this.hasMenuTarget || this.transitionModuleValue === "") {
       this.logFallback();

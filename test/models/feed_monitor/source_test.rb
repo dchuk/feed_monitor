@@ -225,5 +225,23 @@ module FeedMonitor
       source.reset_items_counter!
       assert_equal 3, source.reload.items_count
     end
+
+    test "database rejects invalid fetch_status values" do
+      source = Source.create!(name: "Status Test", feed_url: "https://example.com/status")
+
+      # Valid statuses work
+      %w[idle queued fetching failed].each do |status|
+        assert_nothing_raised do
+          source.update_columns(fetch_status: status)
+        end
+      end
+
+      # Invalid status is rejected at database level
+      error = assert_raises(ActiveRecord::StatementInvalid) do
+        source.update_columns(fetch_status: "invalid")
+      end
+
+      assert_match(/check_fetch_status_values/i, error.message)
+    end
   end
 end

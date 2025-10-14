@@ -5,8 +5,8 @@ module FeedMonitor
     include FeedMonitor::LogFiltering
 
     def index
-      @status = log_filter_status
-      @logs = filter_fetch_logs(base_scope).limit(50)
+      @status = status_filter
+      @logs = apply_fetch_log_filters(base_scope).limit(50)
     end
 
     def show

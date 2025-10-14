@@ -17,8 +17,4 @@ application.register("async-submit", AsyncSubmitController);
 application.register("dropdown", DropdownController);
 application.register("modal", ModalController);
 
-document.addEventListener("turbo:submit-end", () => {
-  document.dispatchEvent(new CustomEvent("feed-monitor:form-finished"));
-});
-
 export default application;

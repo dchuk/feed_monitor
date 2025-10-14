@@ -18,6 +18,9 @@ module FeedMonitor
       warning: :warning
     }.freeze
 
+    TOAST_DURATION_DEFAULT = 5000
+    TOAST_DURATION_ERROR = 6000
+
     def authenticate_feed_monitor_user
       FeedMonitor::Security::Authentication.authenticate!(self)
     end
@@ -32,6 +35,10 @@ module FeedMonitor
 
     def feed_monitor_user_signed_in?
       FeedMonitor::Security::Authentication.user_signed_in?(self)
+    end
+
+    def toast_delay_for(level)
+      level.to_sym == :error ? TOAST_DURATION_ERROR : TOAST_DURATION_DEFAULT
     end
 
     def broadcast_flash_toasts

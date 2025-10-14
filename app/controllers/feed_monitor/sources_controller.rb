@@ -143,7 +143,7 @@ module FeedMonitor
       respond_to do |format|
         format.turbo_stream do
           responder = FeedMonitor::TurboStreams::StreamResponder.new
-          responder.toast(message: error_message, level: :error, delay_ms: 6000)
+          responder.toast(message: error_message, level: :error, delay_ms: toast_delay_for(:error))
 
           render turbo_stream: responder.render(view_context), status: :unprocessable_entity
         end
@@ -221,7 +221,7 @@ module FeedMonitor
             }
           )
 
-          responder.toast(message:, level: :info, delay_ms: 5000)
+          responder.toast(message:, level: :info, delay_ms: toast_delay_for(:info))
 
           render turbo_stream: responder.render(view_context)
         end
@@ -261,7 +261,7 @@ module FeedMonitor
             responder.toast(
               message: payload[:message],
               level: payload[:level],
-              delay_ms: 6000
+              delay_ms: toast_delay_for(payload[:level])
             )
           end
 
