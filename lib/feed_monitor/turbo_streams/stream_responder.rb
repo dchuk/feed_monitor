@@ -53,9 +53,29 @@ module FeedMonitor
         )
       end
 
+      def redirect(url, action: "advance")
+        operations << Operation.new(
+          action: :redirect,
+          target: "feed_monitor_redirects",
+          partial: nil,
+          locals: { url:, turbo_action: action }
+        )
+        self
+      end
+
       def render(view_context)
         operations.map do |operation|
-          if operation.partial
+          if operation.action == :redirect
+            # Custom redirect action - manually build the turbo-stream tag with URL attribute
+            url = operation.locals[:url]
+            turbo_action = operation.locals[:turbo_action]
+            view_context.tag.send(:"turbo-stream",
+              action: "redirect",
+              target: operation.target,
+              url: url,
+              "visit-action": turbo_action
+            )
+          elsif operation.partial
             view_context.turbo_stream.public_send(
               operation.action,
               operation.target,

@@ -1,6 +1,5 @@
 <% rate_map = local_assigns[:item_activity_rates] || {} %>
-<% activity_rate = rate_map.fetch(source.id, nil) %>
-<% activity_rate = FeedMonitor::Analytics::SourceActivityRates.rate_for(source) if activity_rate.nil? %>
+<% activity_rate = rate_map.fetch(source.id, 0.0) %>
 <% health_status = if !source.active?
     { label: "Paused", classes: "bg-amber-100 text-amber-700" }
   else

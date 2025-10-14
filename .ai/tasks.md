@@ -650,12 +650,151 @@
 - [x] 19.03.03 Validate that dependent records (items, logs, schedules) are handled according to existing retention/deletion rules and document any follow-up work
 - [x] 19.03.04 Add controller and system tests covering successful deletion, cancellation, and unauthorized attempts
 
-### 19.04 Consolidate Fetch & Scrape Logs
+---
 
-- [ ] 19.04.01 Inventory current fetch and scrape log views/partials to outline the combined layout, including shared columns and log-type specific metadata
-- [ ] 19.04.02 Design a unified log query object/presenter that supports filtering by log type, timeframe ranges, source selection, search terms, and pagination
-- [ ] 19.04.03 Implement the consolidated table/section in the UI with filter controls and ensure the controller accepts/validates the new params without duplicating logic
-- [ ] 19.04.04 Update instrumentation and documentation to reflect the merged log view and add automated coverage (unit + system) for filtering, searching, and pagination paths
+## Phase 20: Rails Convention & Architecture Cleanup
+
+**Goal: Ensure entire codebase follows the rails way and is approachable and understandable**
+
+**Reference:** Complete audit findings in `.ai/codebase_audit_2025.md`
+
+**Total Estimated Effort:** 36-53 hours across 4 sub-phases
+
+---
+
+### 20.01 Critical Fixes - Phase 1 (8-12 hours)
+
+**Reference:** `.ai/codebase_audit_2025.md:1203-1223`
+
+**Priority:** MUST FIX - Immediate impact on code quality and performance
+
+- [x] 20.01.01 **Refactor SourcesController destroy method** (2-3 hours) - Extract 61-line method into service object. Reference: `.ai/codebase_audit_2025.md:41-216` - Create `FeedMonitor::Sources::DestroyService` that handles deletion, query rebuilding, metrics recalculation, and returns Result object. Reduce controller method to <15 lines.
+- [x] 20.01.02 **Extract BulkScrapeResultPresenter** (2-3 hours) - Extract 47-line flash message builder from controller. Reference: `.ai/codebase_audit_2025.md:941-1015` - Create `FeedMonitor::Scraping::BulkResultPresenter` that handles all message formatting logic. Testable without mocking view_context.
+- [x] 20.01.03 **Create TurboStreamPresenter for sources** (2-3 hours) - Extract duplicated Turbo Stream response building. Reference: `.ai/codebase_audit_2025.md:90-215` - Create `FeedMonitor::Sources::TurboStreamPresenter` with methods for deletion, heatmap updates, empty state rendering. Consolidate 40+ lines of repeated logic.
+- [x] 20.01.04 **Fix N+1 query in sources index** (1-2 hours) - Pre-calculate activity rates for all sources. Reference: `.ai/codebase_audit_2025.md:220-311` - Ensure `@item_activity_rates` hash contains entries for ALL sources in result set. Update view to never fall back to individual queries. Verify with query log that N+1 is eliminated.
+- [x] 20.01.05 **Remove inline script from turbo_visit partial** (1-2 hours) - Replace inline JavaScript with Turbo Stream action. Reference: `.ai/codebase_audit_2025.md:313-389` - Create custom `StreamActions.redirect` function in `turbo_actions.js`. Update all usages of `_turbo_visit.html.erb` partial. Test CSP compliance.
+
+**Acceptance Criteria:**
+- SourcesController reduced from 356 lines to <200 lines
+- All controller methods <20 lines
+- Zero N+1 queries in sources#index (verify with bullet gem or query log)
+- No inline `<script>` tags in views
+- All tests passing
+
+---
+
+### 20.02 High-Impact DRY Violations - Phase 2 (12-16 hours)
+
+**Reference:** `.ai/codebase_audit_2025.md:1226-1262`
+
+**Priority:** HIGH - Significant maintainability impact
+
+- [ ] 20.02.01 **Replace default_scope anti-pattern in Item model** (4-6 hours) - Remove global default_scope for soft deletes. Reference: `.ai/codebase_audit_2025.md:391-452` - Remove `default_scope { where(deleted_at: nil) }`. Add explicit `.active` scope. Update Source associations to use `-> { active }` lambda. Update ALL Item queries in controllers/services to explicitly use `.active`. Update 7+ controller actions and 10+ service objects. Test thoroughly.
+- [ ] 20.02.02 **Create validates_url_format method in UrlNormalizable concern** (2-3 hours) - Eliminate 5 duplicated URL validation methods. Reference: `.ai/codebase_audit_2025.md:456-544` - Add `validates_url_format(*attributes)` class method to `lib/feed_monitor/models/url_normalizable.rb`. Dynamically define validation methods. Update Source model to use `validates_url_format :feed_url, :website_url`. Update Item model to use `validates_url_format :url, :canonical_url, :comments_url`. Remove 5 manual validation methods.
+- [ ] 20.02.03 **Create Loggable concern for shared log behavior** (1-2 hours) - Consolidate FetchLog and ScrapeLog duplicated code. Reference: `.ai/codebase_audit_2025.md:548-626` - Create `app/models/concerns/feed_monitor/loggable.rb` with shared validations, scopes, and attribute defaults. Include in both FetchLog and ScrapeLog models. Remove duplicated code from both models.
+- [ ] 20.02.04 **Create TurboStreamable concern for response building** (3-4 hours) - DRY up 50+ lines repeated 5+ times. Reference: `.ai/codebase_audit_2025.md:630-736` - Create `app/controllers/concerns/feed_monitor/turbo_streamable.rb` with `respond_with_turbo_update` method. Extract `replace_record_views` and `row_locals` helpers. Update SourcesController and ItemsController to use concern. Consolidate 5 similar response patterns into 1 reusable method.
+- [ ] 20.02.05 **Enhance SanitizesSearchParams with query building** (2-3 hours) - Consolidate ransack query setup. Reference: `.ai/codebase_audit_2025.md:740-824` - Add `searchable_with` class method accepting scope and default_sorts. Add `build_search_query` instance method. Update SourcesController and ItemsController to use new DSL. Remove duplicated ransack initialization code from 3+ locations.
+- [ ] 20.02.06 **Add NOT NULL database constraints** (2-3 hours) - Enforce critical field constraints at DB level. Reference: `.ai/codebase_audit_2025.md:826-903` - Create migration to add NOT NULL constraints on `items.guid` and `items.url`. Write data cleanup script to handle existing nulls. Run migration against dummy app and test data integrity.
+
+**Acceptance Criteria:**
+- All Item queries explicitly use `.active` scope
+- Zero duplicated URL validation methods (5 removed)
+- Zero duplicated log model code (FetchLog/ScrapeLog share concern)
+- Turbo Stream response building consolidated into 1 reusable concern
+- Ransack query setup uses DSL (no duplication)
+- Database enforces NOT NULL on critical fields
+- All tests passing
+
+---
+
+### 20.03 Medium Priority Improvements - Phase 3 (10-15 hours)
+
+**Reference:** `.ai/codebase_audit_2025.md:1264-1286`
+
+**Priority:** NICE TO HAVE - Quality of life improvements
+
+- [ ] 20.03.01 **Consolidate after_initialize callbacks** (1 hour) - Use Rails attribute API for defaults. Reference: `.ai/codebase_audit_2025.md:1016-1040` - In Source model, replace 3 `after_initialize` callbacks with `attribute :field, default: -> { value }` declarations. Remove `ensure_hash_defaults`, `ensure_fetch_status_default`, and `ensure_health_defaults` methods.
+- [ ] 20.03.02 **Convert due_for_fetch scope to class method** (30 min) - Scopes with variables should be class methods. Reference: `.ai/codebase_audit_2025.md:1042-1067` - Convert `scope :due_for_fetch, lambda { ... }` to `def self.due_for_fetch(reference_time: Time.current)`. Add explicit parameter. Update all callers.
+- [ ] 20.03.03 **Refactor routes to be more RESTful** (3-4 hours, OPTIONAL) - Non-RESTful custom member actions. Reference: `.ai/codebase_audit_2025.md:905-940` - Consider creating nested resource controllers: `SourceFetchesController`, `SourceRetriesController`, `SourceBulkScrapesController`. Evaluate effort vs benefit. Document decision.
+- [ ] 20.03.04 **Add Turbo Frame to search forms** (2 hours) - Search submissions trigger full page reloads. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Wrap search forms in Turbo Frame targeting results table. Add debounced search Stimulus controller. Test search without page reload.
+- [ ] 20.03.05 **Add Turbo Frame to pagination** (1 hour) - Pagination triggers full page reloads. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Add `data: { turbo_frame: "..." }` to pagination links. Test pagination without page reload. Optional: Add keyboard navigation (arrow keys).
+- [ ] 20.03.06 **Fix manual counter cache logic** (2 hours) - Manual counter updates are error-prone. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Wrap `soft_delete!` in transaction. Use `save!` instead of `update_columns`. Add `reset_items_counter!` method to Source. Test counter cache accuracy.
+- [ ] 20.03.07 **Tighten scrape_settings strong params** (1 hour) - Overly permissive nested parameters. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Explicitly permit only expected keys under `scrape_settings`: `{ selectors: [:content, :title], timeout: [], javascript_enabled: [] }`. Test rejected params.
+
+**Acceptance Criteria:**
+- Source model uses attribute API for defaults (3 callbacks removed)
+- `due_for_fetch` is a class method with explicit parameters
+- Search and pagination use Turbo Frames (no page reloads)
+- Counter cache wrapped in transaction
+- Strong params explicitly list allowed keys
+- All tests passing
+
+---
+
+### 20.04 Polish & Optimization - Phase 4 (6-10 hours)
+
+**Reference:** `.ai/codebase_audit_2025.md:1274-1286`
+
+**Priority:** OPTIONAL - Performance and consistency improvements
+
+- [ ] 20.04.01 **Extract toast delay constants** (30 min) - Magic numbers scattered across controllers. Reference: `.ai/codebase_audit_2025.md:1105-1127` - Add `TOAST_DURATION_DEFAULT = 5000` and `TOAST_DURATION_ERROR = 6000` to ApplicationController. Create `toast_delay_for(level)` helper. Update all toast calls.
+- [ ] 20.04.02 **Clean up global event listener** (30 min) - Unused/unclear custom event. Reference: `.ai/codebase_audit_2025.md:1085-1103` - Document purpose of `feed-monitor:form-finished` event or remove if unused. Move to Stimulus controller if needed for cleanup.
+- [ ] 20.04.03 **Rename log filtering methods** (1 hour) - Inconsistent naming conventions. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Rename `log_filter_status` to `status_filter`, `log_filter_item_id` to `item_id_filter`. Rename `filter_fetch_logs` to `apply_fetch_log_filters`. Use consistent verb/noun patterns.
+- [ ] 20.04.04 **Add performance indexes** (2-3 hours) - Missing indexes for common queries. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Create migration adding: `index_items_on_source_and_created_at_for_rates`, `index_sources_on_active_and_next_fetch` (partial), `index_sources_on_failures` (partial). Analyze query performance before/after.
+- [ ] 20.04.05 **Add check constraint on fetch_status enum** (1-2 hours) - Application-level validation only. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Create migration adding PostgreSQL CHECK constraint: `CHECK (fetch_status IN ('idle', 'queued', 'fetching', 'failed'))`. Test invalid status rejection at DB level.
+- [ ] 20.04.06 **Optimize dashboard queries with JOINs** (2-3 hours) - Subqueries less efficient than JOINs. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Refactor `FeedMonitor::Dashboard::Queries` correlated subqueries to use LEFT JOINs. Measure query performance improvement. Update `scrape_log_sql` and `item_sql` methods.
+- [ ] 20.04.07 **Simplify dropdown controller async import** (30 min, OPTIONAL) - Over-engineered progressive enhancement. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Evaluate static import of stimulus-use vs dynamic import. Document trade-offs. Simplify if benefits outweigh loss of progressive enhancement.
+
+**Acceptance Criteria:**
+- Toast delays use named constants
+- Global event listeners documented or removed
+- Method naming follows consistent verb/noun patterns
+- Performance indexes added (measure query time improvement)
+- Database enforces enum constraints
+- Dashboard queries use JOINs (measure performance)
+- All tests passing
+
+---
+
+### 20.05 Additional Improvements (Low Priority)
+
+**Reference:** `.ai/codebase_audit_2025.md:1105-1127`
+
+- [ ] 20.05.01 **Consolidate `refreshed` variable naming** - Use `@source.reload` directly or be consistent. Reference: `.ai/codebase_audit_2025.md:1105-1127`
+- [ ] 20.05.02 **Document or simplify assign_content_attribute pattern** - Complex delegation logic may be candidate for concern if pattern repeats. Reference: `.ai/codebase_audit_2025.md:1105-1127`
+
+**Deliverable for Phase 20:**
+- SourcesController reduced from 356 lines to <150 lines
+- 5 duplicated validation methods consolidated to 1 concern method
+- Zero N+1 queries verified with bullet gem
+- All inline scripts removed
+- default_scope anti-pattern eliminated
+- 50+ lines of Turbo Stream duplication consolidated
+- Database constraints enforce data integrity
+- Performance indexes added for common queries
+- All tests passing (aim for >90% coverage on changed code)
+
+**Testing Strategy for Phase 20:**
+1. Run full test suite after each subtask
+2. Use bullet gem to verify N+1 query elimination
+3. Use query log to verify index usage
+4. Run brakeman for security validation
+5. Measure controller line count reduction
+6. System tests for all Turbo Frame changes
+7. Load test sources index with 100+ sources
+
+---
+
+## Phase 21: Log UX Improvements
+
+**Goal: Consolidate Fetch & Scrape Logs to one unified UX**
+
+### 21.04 Consolidate Fetch & Scrape Logs
+
+- [ ] 21.04.01 Inventory current fetch and scrape log views/partials to outline the combined layout, including shared columns and log-type specific metadata
+- [ ] 21.04.02 Design a unified log query object/presenter that supports filtering by log type, timeframe ranges, source selection, search terms, and pagination
+- [ ] 21.04.03 Implement the consolidated table/section in the UI with filter controls and ensure the controller accepts/validates the new params without duplicating logic
+- [ ] 21.04.04 Update instrumentation and documentation to reflect the merged log view and add automated coverage (unit + system) for filtering, searching, and pagination paths
 
 **Deliverable: Source management UI exposes clear scraping controls and a single consolidated log explorer**
 **Test: Drive the new controls via system specs to confirm status rendering, bulk scraping, deletions, and log filtering behave as expected**

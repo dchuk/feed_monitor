@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require "feed_monitor/sources/turbo_stream_presenter"
+require "feed_monitor/scraping/bulk_result_presenter"
+
 module FeedMonitor
   class SourcesController < ApplicationController
     include ActionView::RecordIdentifier
@@ -90,46 +93,24 @@ module FeedMonitor
           base_scope = Source.all
           query = base_scope.ransack(search_params)
           query.sorts = [ "created_at desc" ] if query.sorts.blank?
-          sources = query.result
 
           metrics = FeedMonitor::Analytics::SourcesIndexMetrics.new(
             base_scope:,
-            result_scope: sources,
+            result_scope: query.result,
             search_params:
           )
 
           redirect_location = safe_redirect_path(params[:redirect_to])
 
           responder = FeedMonitor::TurboStreams::StreamResponder.new
-          responder.remove_row(@source)
-          responder.remove("feed_monitor_sources_empty_state")
-          responder.replace(
-            "feed_monitor_sources_heatmap",
-            partial: "feed_monitor/sources/fetch_interval_heatmap",
-            locals: {
-              fetch_interval_distribution: metrics.fetch_interval_distribution,
-              selected_bucket: metrics.selected_fetch_interval_bucket,
-              search_params:
-            }
+          presenter = FeedMonitor::Sources::TurboStreamPresenter.new(source: @source, responder:)
+
+          presenter.render_deletion(
+            metrics:,
+            query:,
+            search_params:,
+            redirect_location:
           )
-
-          unless sources.exists?
-            responder.append(
-              "feed_monitor_sources_table_body",
-              partial: "feed_monitor/sources/empty_state_row"
-            )
-          end
-
-          if redirect_location
-            responder.append(
-              "feed_monitor_redirects",
-              partial: "feed_monitor/shared/turbo_visit",
-              locals: {
-                url: redirect_location,
-                action: "replace"
-              }
-            )
-          end
 
           responder.toast(message:, level: :success)
 
@@ -295,51 +276,9 @@ module FeedMonitor
     end
 
     def bulk_scrape_flash_payload(result)
-      label = FeedMonitor::Scraping::BulkSourceScraper.selection_label(result.selection)
-      pluralized_enqueued = view_context.pluralize(result.enqueued_count, "item")
-      pluralized_already = view_context.pluralize(result.already_enqueued_count, "item")
-
-      case result.status
-      when :success
-        message = "Queued scraping for #{pluralized_enqueued} from the #{label}."
-        if result.already_enqueued_count.positive?
-          message = "#{message} #{pluralized_already.capitalize} already in progress."
-        end
-
-        { flash_key: :notice, message:, level: :success }
-      when :partial
-        parts = []
-        if result.enqueued_count.positive?
-          parts << "Queued #{pluralized_enqueued} from the #{label}"
-        end
-
-        if result.already_enqueued_count.positive?
-          parts << "#{pluralized_already.capitalize} already in progress"
-        end
-
-        if result.rate_limited?
-          limit = FeedMonitor.config.scraping.max_in_flight_per_source
-          parts << "Stopped after reaching the per-source limit#{" of #{limit}" if limit}"
-        end
-
-        other_failures = result.failure_details.except(:rate_limited)
-        if other_failures.values.sum.positive?
-          skipped = other_failures.map do |status, count|
-            label_key = status.to_s.tr("_", " ")
-            "#{view_context.pluralize(count, label_key)}"
-          end.join(", ")
-          parts << "Skipped #{skipped}"
-        end
-
-        if parts.empty?
-          parts << "No new scrapes were queued from the #{label}"
-        end
-
-        { flash_key: :notice, message: parts.join(". ") + ".", level: :warning }
-      else
-        message = result.messages.presence&.first || "No items were queued because nothing matched the selected scope."
-        { flash_key: :alert, message:, level: :error }
-      end
+      pluralizer = ->(count, word) { view_context.pluralize(count, word) }
+      presenter = FeedMonitor::Scraping::BulkResultPresenter.new(result:, pluralizer:)
+      presenter.to_flash_payload
     end
 
     def scrape_all_params

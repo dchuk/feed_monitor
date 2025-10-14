@@ -1,3 +1,3 @@
 Rails.application.routes.draw do
-  mount FeedMonitor::Engine, at: "/admin/feed_monitor"
+  mount FeedMonitor::Engine, at: "/reader"
 end

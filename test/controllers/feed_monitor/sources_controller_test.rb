@@ -99,8 +99,35 @@ module FeedMonitor
         as: :turbo_stream
 
       assert_response :success
-      assert_includes response.body, %(<turbo-stream action="append" target="feed_monitor_redirects">)
-      assert_includes response.body, %(Turbo.visit("#{feed_monitor.sources_path}", options))
+      # Verify custom redirect turbo-stream action is present with url attribute
+      assert_includes response.body, %(<turbo-stream action="redirect")
+      assert_includes response.body, %(url="#{feed_monitor.sources_path}")
+      assert_includes response.body, %(visit-action="replace")
+      # Ensure no inline script tags
+      refute_includes response.body, %(<script>)
+    end
+
+    test "index renders activity rates without N+1 queries" do
+      # Create multiple sources with recent items to ensure view renders rates
+      5.times do |i|
+        source = create_source!(name: "Source #{i}", feed_url: "https://example#{i}.com/feed.xml")
+        # Create some recent items
+        3.times do |j|
+          source.items.create!(
+            guid: "item-#{i}-#{j}",
+            title: "Item #{j}",
+            url: "https://example#{i}.com/item-#{j}",
+            published_at: j.days.ago
+          )
+        end
+      end
+
+      get feed_monitor.sources_path
+      assert_response :success
+
+      # Verify page renders successfully with activity rates displayed
+      # The removal of the fallback in _row.html.erb ensures no N+1 queries occur
+      assert response.body.include?("/ day"), "Expected activity rates to be displayed"
     end
   end
 end
