@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_12_100000) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_14_064947) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -34,11 +34,11 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_12_100000) do
     t.jsonb "metadata", default: {}, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index [ "created_at" ], name: "index_feed_monitor_fetch_logs_on_created_at"
-    t.index [ "job_id" ], name: "index_feed_monitor_fetch_logs_on_job_id"
-    t.index [ "source_id" ], name: "index_feed_monitor_fetch_logs_on_source_id"
-    t.index [ "started_at" ], name: "index_feed_monitor_fetch_logs_on_started_at"
-    t.index [ "success" ], name: "index_feed_monitor_fetch_logs_on_success"
+    t.index ["created_at"], name: "index_feed_monitor_fetch_logs_on_created_at"
+    t.index ["job_id"], name: "index_feed_monitor_fetch_logs_on_job_id"
+    t.index ["source_id"], name: "index_feed_monitor_fetch_logs_on_source_id"
+    t.index ["started_at"], name: "index_feed_monitor_fetch_logs_on_started_at"
+    t.index ["success"], name: "index_feed_monitor_fetch_logs_on_success"
   end
 
   create_table "feed_monitor_item_contents", force: :cascade do |t|
@@ -47,15 +47,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_12_100000) do
     t.text "scraped_content"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index [ "item_id" ], name: "index_feed_monitor_item_contents_on_item_id", unique: true
+    t.index ["item_id"], name: "index_feed_monitor_item_contents_on_item_id", unique: true
   end
 
   create_table "feed_monitor_items", force: :cascade do |t|
     t.bigint "source_id", null: false
-    t.string "guid"
+    t.string "guid", null: false
     t.string "content_fingerprint"
     t.string "title"
-    t.string "url"
+    t.string "url", null: false
     t.string "canonical_url"
     t.string "author"
     t.jsonb "authors", default: [], null: false
@@ -79,16 +79,16 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_12_100000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "deleted_at"
-    t.index [ "content_fingerprint" ], name: "index_feed_monitor_items_on_content_fingerprint"
-    t.index [ "deleted_at" ], name: "index_feed_monitor_items_on_deleted_at"
-    t.index [ "guid" ], name: "index_feed_monitor_items_on_guid"
-    t.index [ "published_at" ], name: "index_feed_monitor_items_on_published_at"
-    t.index [ "scrape_status" ], name: "index_feed_monitor_items_on_scrape_status"
-    t.index [ "source_id", "content_fingerprint" ], name: "index_feed_monitor_items_on_source_id_and_content_fingerprint", unique: true
-    t.index [ "source_id", "guid" ], name: "index_feed_monitor_items_on_source_id_and_guid", unique: true
-    t.index [ "source_id", "published_at", "created_at" ], name: "index_feed_monitor_items_on_source_and_published_at"
-    t.index [ "source_id" ], name: "index_feed_monitor_items_on_source_id"
-    t.index [ "url" ], name: "index_feed_monitor_items_on_url"
+    t.index ["content_fingerprint"], name: "index_feed_monitor_items_on_content_fingerprint"
+    t.index ["deleted_at"], name: "index_feed_monitor_items_on_deleted_at"
+    t.index ["guid"], name: "index_feed_monitor_items_on_guid"
+    t.index ["published_at"], name: "index_feed_monitor_items_on_published_at"
+    t.index ["scrape_status"], name: "index_feed_monitor_items_on_scrape_status"
+    t.index ["source_id", "content_fingerprint"], name: "index_feed_monitor_items_on_source_id_and_content_fingerprint", unique: true
+    t.index ["source_id", "guid"], name: "index_feed_monitor_items_on_source_id_and_guid", unique: true
+    t.index ["source_id", "published_at", "created_at"], name: "index_feed_monitor_items_on_source_and_published_at"
+    t.index ["source_id"], name: "index_feed_monitor_items_on_source_id"
+    t.index ["url"], name: "index_feed_monitor_items_on_url"
   end
 
   create_table "feed_monitor_scrape_logs", force: :cascade do |t|
@@ -106,11 +106,11 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_12_100000) do
     t.jsonb "metadata", default: {}, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index [ "created_at" ], name: "index_feed_monitor_scrape_logs_on_created_at"
-    t.index [ "item_id" ], name: "index_feed_monitor_scrape_logs_on_item_id"
-    t.index [ "source_id" ], name: "index_feed_monitor_scrape_logs_on_source_id"
-    t.index [ "started_at" ], name: "index_feed_monitor_scrape_logs_on_started_at"
-    t.index [ "success" ], name: "index_feed_monitor_scrape_logs_on_success"
+    t.index ["created_at"], name: "index_feed_monitor_scrape_logs_on_created_at"
+    t.index ["item_id"], name: "index_feed_monitor_scrape_logs_on_item_id"
+    t.index ["source_id"], name: "index_feed_monitor_scrape_logs_on_source_id"
+    t.index ["started_at"], name: "index_feed_monitor_scrape_logs_on_started_at"
+    t.index ["success"], name: "index_feed_monitor_scrape_logs_on_success"
   end
 
   create_table "feed_monitor_sources", force: :cascade do |t|
@@ -156,16 +156,16 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_12_100000) do
     t.datetime "auto_paused_at"
     t.datetime "auto_paused_until"
     t.decimal "health_auto_pause_threshold", precision: 5, scale: 4
-    t.index [ "active" ], name: "index_feed_monitor_sources_on_active"
-    t.index [ "auto_paused_until" ], name: "index_feed_monitor_sources_on_auto_paused_until"
-    t.index [ "created_at" ], name: "index_feed_monitor_sources_on_created_at"
-    t.index [ "feed_url" ], name: "index_feed_monitor_sources_on_feed_url", unique: true
-    t.index [ "fetch_circuit_until" ], name: "index_feed_monitor_sources_on_fetch_circuit_until"
-    t.index [ "fetch_retry_attempt" ], name: "index_feed_monitor_sources_on_fetch_retry_attempt"
-    t.index [ "fetch_status" ], name: "index_feed_monitor_sources_on_fetch_status"
-    t.index [ "health_status" ], name: "index_feed_monitor_sources_on_health_status"
-    t.index [ "next_fetch_at" ], name: "index_feed_monitor_sources_on_next_fetch_at"
-    t.index [ "type" ], name: "index_feed_monitor_sources_on_type"
+    t.index ["active"], name: "index_feed_monitor_sources_on_active"
+    t.index ["auto_paused_until"], name: "index_feed_monitor_sources_on_auto_paused_until"
+    t.index ["created_at"], name: "index_feed_monitor_sources_on_created_at"
+    t.index ["feed_url"], name: "index_feed_monitor_sources_on_feed_url", unique: true
+    t.index ["fetch_circuit_until"], name: "index_feed_monitor_sources_on_fetch_circuit_until"
+    t.index ["fetch_retry_attempt"], name: "index_feed_monitor_sources_on_fetch_retry_attempt"
+    t.index ["fetch_status"], name: "index_feed_monitor_sources_on_fetch_status"
+    t.index ["health_status"], name: "index_feed_monitor_sources_on_health_status"
+    t.index ["next_fetch_at"], name: "index_feed_monitor_sources_on_next_fetch_at"
+    t.index ["type"], name: "index_feed_monitor_sources_on_type"
   end
 
   create_table "solid_cable_messages", force: :cascade do |t|
@@ -173,9 +173,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_12_100000) do
     t.binary "payload", null: false
     t.datetime "created_at", null: false
     t.bigint "channel_hash", null: false
-    t.index [ "channel" ], name: "index_solid_cable_messages_on_channel"
-    t.index [ "channel_hash" ], name: "index_solid_cable_messages_on_channel_hash"
-    t.index [ "created_at" ], name: "index_solid_cable_messages_on_created_at"
+    t.index ["channel"], name: "index_solid_cable_messages_on_channel"
+    t.index ["channel_hash"], name: "index_solid_cable_messages_on_channel_hash"
+    t.index ["created_at"], name: "index_solid_cable_messages_on_created_at"
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|
@@ -185,24 +185,24 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_12_100000) do
     t.string "concurrency_key", null: false
     t.datetime "expires_at", null: false
     t.datetime "created_at", null: false
-    t.index [ "concurrency_key", "priority", "job_id" ], name: "index_solid_queue_blocked_executions_for_release"
-    t.index [ "expires_at", "concurrency_key" ], name: "index_solid_queue_blocked_executions_for_maintenance"
-    t.index [ "job_id" ], name: "index_solid_queue_blocked_executions_on_job_id", unique: true
+    t.index ["concurrency_key", "priority", "job_id"], name: "index_solid_queue_blocked_executions_for_release"
+    t.index ["expires_at", "concurrency_key"], name: "index_solid_queue_blocked_executions_for_maintenance"
+    t.index ["job_id"], name: "index_solid_queue_blocked_executions_on_job_id", unique: true
   end
 
   create_table "solid_queue_claimed_executions", force: :cascade do |t|
     t.bigint "job_id", null: false
     t.bigint "process_id"
     t.datetime "created_at", null: false
-    t.index [ "job_id" ], name: "index_solid_queue_claimed_executions_on_job_id", unique: true
-    t.index [ "process_id", "job_id" ], name: "index_solid_queue_claimed_executions_on_process_id_and_job_id"
+    t.index ["job_id"], name: "index_solid_queue_claimed_executions_on_job_id", unique: true
+    t.index ["process_id", "job_id"], name: "index_solid_queue_claimed_executions_on_process_id_and_job_id"
   end
 
   create_table "solid_queue_failed_executions", force: :cascade do |t|
     t.bigint "job_id", null: false
     t.text "error"
     t.datetime "created_at", null: false
-    t.index [ "job_id" ], name: "index_solid_queue_failed_executions_on_job_id", unique: true
+    t.index ["job_id"], name: "index_solid_queue_failed_executions_on_job_id", unique: true
   end
 
   create_table "solid_queue_jobs", force: :cascade do |t|
@@ -216,17 +216,17 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_12_100000) do
     t.string "concurrency_key"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index [ "active_job_id" ], name: "index_solid_queue_jobs_on_active_job_id"
-    t.index [ "class_name" ], name: "index_solid_queue_jobs_on_class_name"
-    t.index [ "finished_at" ], name: "index_solid_queue_jobs_on_finished_at"
-    t.index [ "queue_name", "finished_at" ], name: "index_solid_queue_jobs_for_filtering"
-    t.index [ "scheduled_at", "finished_at" ], name: "index_solid_queue_jobs_for_alerting"
+    t.index ["active_job_id"], name: "index_solid_queue_jobs_on_active_job_id"
+    t.index ["class_name"], name: "index_solid_queue_jobs_on_class_name"
+    t.index ["finished_at"], name: "index_solid_queue_jobs_on_finished_at"
+    t.index ["queue_name", "finished_at"], name: "index_solid_queue_jobs_for_filtering"
+    t.index ["scheduled_at", "finished_at"], name: "index_solid_queue_jobs_for_alerting"
   end
 
   create_table "solid_queue_pauses", force: :cascade do |t|
     t.string "queue_name", null: false
     t.datetime "created_at", null: false
-    t.index [ "queue_name" ], name: "index_solid_queue_pauses_on_queue_name", unique: true
+    t.index ["queue_name"], name: "index_solid_queue_pauses_on_queue_name", unique: true
   end
 
   create_table "solid_queue_processes", force: :cascade do |t|
@@ -238,9 +238,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_12_100000) do
     t.text "metadata"
     t.datetime "created_at", null: false
     t.string "name", null: false
-    t.index [ "last_heartbeat_at" ], name: "index_solid_queue_processes_on_last_heartbeat_at"
-    t.index [ "name", "supervisor_id" ], name: "index_solid_queue_processes_on_name_and_supervisor_id", unique: true
-    t.index [ "supervisor_id" ], name: "index_solid_queue_processes_on_supervisor_id"
+    t.index ["last_heartbeat_at"], name: "index_solid_queue_processes_on_last_heartbeat_at"
+    t.index ["name", "supervisor_id"], name: "index_solid_queue_processes_on_name_and_supervisor_id", unique: true
+    t.index ["supervisor_id"], name: "index_solid_queue_processes_on_supervisor_id"
   end
 
   create_table "solid_queue_ready_executions", force: :cascade do |t|
@@ -248,9 +248,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_12_100000) do
     t.string "queue_name", null: false
     t.integer "priority", default: 0, null: false
     t.datetime "created_at", null: false
-    t.index [ "job_id" ], name: "index_solid_queue_ready_executions_on_job_id", unique: true
-    t.index [ "priority", "job_id" ], name: "index_solid_queue_poll_all"
-    t.index [ "queue_name", "priority", "job_id" ], name: "index_solid_queue_poll_by_queue"
+    t.index ["job_id"], name: "index_solid_queue_ready_executions_on_job_id", unique: true
+    t.index ["priority", "job_id"], name: "index_solid_queue_poll_all"
+    t.index ["queue_name", "priority", "job_id"], name: "index_solid_queue_poll_by_queue"
   end
 
   create_table "solid_queue_recurring_executions", force: :cascade do |t|
@@ -258,8 +258,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_12_100000) do
     t.string "task_key", null: false
     t.datetime "run_at", null: false
     t.datetime "created_at", null: false
-    t.index [ "job_id" ], name: "index_solid_queue_recurring_executions_on_job_id", unique: true
-    t.index [ "task_key", "run_at" ], name: "index_solid_queue_recurring_executions_on_task_key_and_run_at", unique: true
+    t.index ["job_id"], name: "index_solid_queue_recurring_executions_on_job_id", unique: true
+    t.index ["task_key", "run_at"], name: "index_solid_queue_recurring_executions_on_task_key_and_run_at", unique: true
   end
 
   create_table "solid_queue_recurring_tasks", force: :cascade do |t|
@@ -274,8 +274,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_12_100000) do
     t.text "description"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index [ "key" ], name: "index_solid_queue_recurring_tasks_on_key", unique: true
-    t.index [ "static" ], name: "index_solid_queue_recurring_tasks_on_static"
+    t.index ["key"], name: "index_solid_queue_recurring_tasks_on_key", unique: true
+    t.index ["static"], name: "index_solid_queue_recurring_tasks_on_static"
   end
 
   create_table "solid_queue_scheduled_executions", force: :cascade do |t|
@@ -284,8 +284,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_12_100000) do
     t.integer "priority", default: 0, null: false
     t.datetime "scheduled_at", null: false
     t.datetime "created_at", null: false
-    t.index [ "job_id" ], name: "index_solid_queue_scheduled_executions_on_job_id", unique: true
-    t.index [ "scheduled_at", "priority", "job_id" ], name: "index_solid_queue_dispatch_all"
+    t.index ["job_id"], name: "index_solid_queue_scheduled_executions_on_job_id", unique: true
+    t.index ["scheduled_at", "priority", "job_id"], name: "index_solid_queue_dispatch_all"
   end
 
   create_table "solid_queue_semaphores", force: :cascade do |t|
@@ -294,9 +294,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_12_100000) do
     t.datetime "expires_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index [ "expires_at" ], name: "index_solid_queue_semaphores_on_expires_at"
-    t.index [ "key", "value" ], name: "index_solid_queue_semaphores_on_key_and_value"
-    t.index [ "key" ], name: "index_solid_queue_semaphores_on_key", unique: true
+    t.index ["expires_at"], name: "index_solid_queue_semaphores_on_expires_at"
+    t.index ["key", "value"], name: "index_solid_queue_semaphores_on_key_and_value"
+    t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
   add_foreign_key "feed_monitor_fetch_logs", "feed_monitor_sources", column: "source_id"

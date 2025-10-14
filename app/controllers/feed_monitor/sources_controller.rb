@@ -8,6 +8,8 @@ module FeedMonitor
     include ActionView::RecordIdentifier
     include FeedMonitor::SanitizesSearchParams
 
+    searchable_with scope: -> { Source.all }, default_sorts: ["created_at desc"]
+
     ITEMS_PREVIEW_LIMIT = FeedMonitor::Scraping::BulkSourceScraper::DEFAULT_PREVIEW_LIMIT
 
     before_action :set_source, only: %i[show edit update destroy fetch retry scrape_all]
@@ -15,10 +17,8 @@ module FeedMonitor
     SEARCH_FIELD = :name_or_feed_url_or_website_url_cont
 
     def index
-      base_scope = Source.all
       @search_params = sanitized_search_params
-      @q = base_scope.ransack(@search_params)
-      @q.sorts = [ "created_at desc" ] if @q.sorts.blank?
+      @q = build_search_query
 
       @sources = @q.result
 
@@ -26,7 +26,7 @@ module FeedMonitor
       @search_field = SEARCH_FIELD
 
       metrics = FeedMonitor::Analytics::SourcesIndexMetrics.new(
-        base_scope:,
+        base_scope: Source.all,
         result_scope: @sources,
         search_params: @search_params
       )
@@ -90,12 +90,10 @@ module FeedMonitor
 
       respond_to do |format|
         format.turbo_stream do
-          base_scope = Source.all
-          query = base_scope.ransack(search_params)
-          query.sorts = [ "created_at desc" ] if query.sorts.blank?
+          query = build_search_query(params: search_params)
 
           metrics = FeedMonitor::Analytics::SourcesIndexMetrics.new(
-            base_scope:,
+            base_scope: Source.all,
             result_scope: query.result,
             search_params:
           )

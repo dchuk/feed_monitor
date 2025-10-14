@@ -4,7 +4,38 @@ module FeedMonitor
   module SanitizesSearchParams
     extend ActiveSupport::Concern
 
+    included do
+      class_attribute :_search_scope, instance_writer: false
+      class_attribute :_default_search_sorts, instance_writer: false, default: ["created_at desc"]
+    end
+
+    class_methods do
+      def searchable_with(scope:, default_sorts: ["created_at desc"])
+        self._search_scope = scope
+        self._default_search_sorts = default_sorts
+      end
+    end
+
     private
+
+    def build_search_query(scope = nil, params: sanitized_search_params)
+      base_scope = scope || search_scope
+      query = base_scope.ransack(params)
+      query.sorts = default_search_sorts if query.sorts.blank?
+      query
+    end
+
+    def search_scope
+      if _search_scope.respond_to?(:call)
+        instance_exec(&_search_scope)
+      else
+        _search_scope
+      end
+    end
+
+    def default_search_sorts
+      _default_search_sorts
+    end
 
     def sanitized_search_params
       raw = params[:q]
