@@ -11,7 +11,7 @@ module FeedMonitor
     FETCH_STATUS_VALUES = %w[idle queued fetching failed].freeze
 
     has_many :all_items, class_name: "FeedMonitor::Item", inverse_of: :source, dependent: :destroy
-    has_many :items, -> { where(deleted_at: nil) }, class_name: "FeedMonitor::Item", inverse_of: :source
+    has_many :items, -> { active }, class_name: "FeedMonitor::Item", inverse_of: :source
     has_many :fetch_logs, class_name: "FeedMonitor::FetchLog", inverse_of: :source, dependent: :destroy
     has_many :scrape_logs, class_name: "FeedMonitor::ScrapeLog", inverse_of: :source, dependent: :destroy
 
@@ -36,6 +36,7 @@ module FeedMonitor
     sanitizes_string_attributes :name, :feed_url, :website_url, :scraper_adapter
     sanitizes_hash_attributes :scrape_settings, :custom_headers, :metadata
     normalizes_urls :feed_url, :website_url
+    validates_url_format :feed_url, :website_url
 
     validates :name, presence: true
     validates :feed_url, presence: true, uniqueness: { case_sensitive: false }
@@ -46,8 +47,6 @@ module FeedMonitor
     validates :fetch_status, inclusion: { in: FETCH_STATUS_VALUES }
     validates :fetch_retry_attempt, numericality: { greater_than_or_equal_to: 0, only_integer: true }
 
-    validate :feed_url_must_be_http_or_https
-    validate :website_url_must_be_http_or_https
     validate :health_auto_pause_threshold_within_bounds
 
     FeedMonitor::ModelExtensions.register(self, :source)
@@ -103,18 +102,6 @@ module FeedMonitor
 
     def ensure_health_defaults
       self.health_status = "healthy" if health_status.blank?
-    end
-
-    def feed_url_must_be_http_or_https
-      return if feed_url.blank?
-
-      errors.add(:feed_url, "must be a valid HTTP(S) URL") if url_invalid?(:feed_url)
-    end
-
-    def website_url_must_be_http_or_https
-      return if website_url.blank?
-
-      errors.add(:website_url, "must be a valid HTTP(S) URL") if url_invalid?(:website_url)
     end
 
     def health_auto_pause_threshold_within_bounds

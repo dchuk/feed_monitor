@@ -14,7 +14,8 @@ module FeedMonitor
 
           timestamp = normalized_timestamp(now)
 
-          FeedMonitor::Item.where(id: ids).update_all(
+          # Use with_deleted to update items that may already be marked as deleted
+          FeedMonitor::Item.with_deleted.where(id: ids).update_all(
             deleted_at: timestamp,
             updated_at: timestamp
           )

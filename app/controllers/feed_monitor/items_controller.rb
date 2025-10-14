@@ -12,7 +12,7 @@ module FeedMonitor
     before_action :load_scrape_context, only: :show
 
     def index
-      base_scope = Item.includes(:source)
+      base_scope = Item.active.includes(:source)
       @search_params = sanitized_search_params
       @q = base_scope.ransack(@search_params)
       @q.sorts = [ "published_at desc", "created_at desc" ] if @q.sorts.blank?
@@ -85,7 +85,7 @@ module FeedMonitor
     private
 
     def set_item
-      @item = Item.includes(:source, :item_content).find(params[:id])
+      @item = Item.active.includes(:source, :item_content).find(params[:id])
     end
 
     def load_scrape_context

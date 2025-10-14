@@ -21,6 +21,20 @@ module FeedMonitor
           self.normalized_url_attributes += attributes.map(&:to_sym)
           self.normalized_url_attributes.uniq!
         end
+
+        def validates_url_format(*attributes)
+          attributes.each do |attribute|
+            validate_method = :"validate_#{attribute}_format"
+
+            define_method validate_method do
+              return if self[attribute].blank?
+
+              errors.add(attribute, "must be a valid HTTP(S) URL") if url_invalid?(attribute)
+            end
+
+            validate validate_method
+          end
+        end
       end
 
       def url_invalid?(attribute)

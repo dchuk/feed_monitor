@@ -10,25 +10,23 @@ module FeedMonitor
     has_one :item_content, class_name: "FeedMonitor::ItemContent", inverse_of: :item, dependent: :destroy, autosave: true
     has_many :scrape_logs, class_name: "FeedMonitor::ScrapeLog", inverse_of: :item, dependent: :destroy
 
-    default_scope { where(deleted_at: nil) }
+    # Explicit scope for active (non-deleted) items - no default_scope to avoid anti-pattern
+    scope :active, -> { where(deleted_at: nil) }
     scope :with_deleted, -> { unscope(where: :deleted_at) }
-    scope :only_deleted, -> { with_deleted.where.not(deleted_at: nil) }
+    scope :only_deleted, -> { where.not(deleted_at: nil) }
 
     normalizes_urls :url, :canonical_url, :comments_url
+    validates_url_format :url, :canonical_url, :comments_url
 
     validates :source, presence: true
     validates :guid, presence: true, uniqueness: { scope: :source_id, case_sensitive: false }
     validates :content_fingerprint, uniqueness: { scope: :source_id }, allow_blank: true
     validates :url, presence: true
 
-    validate :url_must_be_http
-    validate :canonical_url_must_be_http
-    validate :comments_url_must_be_http
-
-    scope :recent, -> { order(Arel.sql("published_at DESC NULLS LAST, created_at DESC")) }
-    scope :published, -> { where.not(published_at: nil) }
-    scope :pending_scrape, -> { where(scraped_at: nil) }
-    scope :failed_scrape, -> { where(scrape_status: "failed") }
+    scope :recent, -> { active.order(Arel.sql("published_at DESC NULLS LAST, created_at DESC")) }
+    scope :published, -> { active.where.not(published_at: nil) }
+    scope :pending_scrape, -> { active.where(scraped_at: nil) }
+    scope :failed_scrape, -> { active.where(scrape_status: "failed") }
 
     delegate :scraped_html, :scraped_content, to: :item_content, allow_nil: true
 
@@ -73,18 +71,6 @@ module FeedMonitor
     end
 
     private
-
-    def url_must_be_http
-      errors.add(:url, "must be a valid HTTP(S) URL") if url_invalid?(:url)
-    end
-
-    def canonical_url_must_be_http
-      errors.add(:canonical_url, "must be a valid HTTP(S) URL") if url_invalid?(:canonical_url)
-    end
-
-    def comments_url_must_be_http
-      errors.add(:comments_url, "must be a valid HTTP(S) URL") if url_invalid?(:comments_url)
-    end
 
     def assign_content_attribute(attribute, value)
       unless item_content

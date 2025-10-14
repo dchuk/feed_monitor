@@ -49,7 +49,7 @@ module FeedMonitor
 
       def self.selection_counts(source:, preview_items:, preview_limit: 10)
         preview_collection = Array(preview_items).compact
-        base_scope = FeedMonitor::Item.where(source_id: source.id)
+        base_scope = FeedMonitor::Item.active.where(source_id: source.id)
         {
           current: preview_collection.size.clamp(0, preview_limit.to_i.nonzero? || preview_collection.size),
           unscraped: base_scope.merge(unscraped_scope).count,
@@ -144,7 +144,7 @@ module FeedMonitor
       end
 
       def base_scope
-        FeedMonitor::Item.where(source_id: source.id).order(Arel.sql("published_at DESC NULLS LAST, created_at DESC"))
+        FeedMonitor::Item.active.where(source_id: source.id).order(Arel.sql("published_at DESC NULLS LAST, created_at DESC"))
       end
 
       def without_inflight(scope)
@@ -156,7 +156,7 @@ module FeedMonitor
       def self.unscraped_scope
         item_table = FeedMonitor::Item.arel_table
         failed_statuses = %w[failed partial]
-        FeedMonitor::Item.where(
+        FeedMonitor::Item.active.where(
           item_table[:scraped_at].eq(nil)
             .or(item_table[:scrape_status].in(failed_statuses))
         )
