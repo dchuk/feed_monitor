@@ -735,19 +735,47 @@
 
 ---
 
-### 20.04 Polish & Optimization - Phase 4 (6-10 hours)
+### 20.04 RESTful Routes Refactor - Phase 4 (8 hours, OPTIONAL/DEFERRED)
+
+**Reference:** `.ai/routes_refactor_evaluation.md`
+
+- [ ] 20.04.01 **Create nested resource controllers** (2 hours) - Extract member actions to dedicated controllers. Reference: `.ai/routes_refactor_evaluation.md:44-48` - Create `SourceFetchesController`, `SourceRetriesController`, `SourceBulkScrapesController`. Move action logic from SourcesController. Preserve all before_action filters and helper methods.
+- [ ] 20.04.02 **Update routes configuration** (1 hour) - Convert member actions to nested resources. Reference: `.ai/routes_refactor_evaluation.md:57-60` - Update `config/routes.rb` to use nested resource syntax: `resource :fetch, only: [:create]`, etc. Document route changes in CHANGELOG.
+- [ ] 20.04.03 **Update all view route helpers** (2 hours) - Update route helpers throughout views. Reference: `.ai/routes_refactor_evaluation.md:62-66` - Update all `link_to` and `button_to` calls from `fetch_source_path` to `source_fetch_path`. Update all Turbo Stream rendering. Update all redirect paths. Verify no broken links.
+- [ ] 20.04.04 **Update test suite for new routes** (2 hours) - Update controller and system tests. Reference: `.ai/routes_refactor_evaluation.md:68-72` - Create controller tests for 3 new controllers. Update integration tests. Update system tests. Update all route helper references. Ensure 100% test coverage maintained.
+- [ ] 20.04.05 **Testing and validation** (1 hour) - Verify behavioral parity. Reference: `.ai/routes_refactor_evaluation.md:74-81` - Run full test suite. Manual testing of fetch, retry, scrape_all actions. Verify Turbo Stream responses work correctly. Load test with 100+ sources. Document any behavioral changes.
+
+**Acceptance Criteria:**
+
+- 3 new nested resource controllers created
+- All member actions converted to RESTful nested resources
+- All view route helpers updated
+- All tests passing with same coverage
+- Zero behavioral changes (functional parity maintained)
+- Documentation updated with route changes
+
+**When to Reconsider (from evaluation):**
+
+- Controllers grow beyond 300 lines (currently ~293 after Phase 20.01-20.02)
+- New team members report confusion about action locations
+- Need to add 5+ more custom actions
+- Performance profiling shows controller bloat affecting response times
+
+---
+
+### 20.05 Polish & Optimization - Phase 5 (6-10 hours)
 
 **Reference:** `.ai/codebase_audit_2025.md:1274-1286`
 
 **Priority:** OPTIONAL - Performance and consistency improvements
 
-- [ ] 20.04.01 **Extract toast delay constants** (30 min) - Magic numbers scattered across controllers. Reference: `.ai/codebase_audit_2025.md:1105-1127` - Add `TOAST_DURATION_DEFAULT = 5000` and `TOAST_DURATION_ERROR = 6000` to ApplicationController. Create `toast_delay_for(level)` helper. Update all toast calls.
-- [ ] 20.04.02 **Clean up global event listener** (30 min) - Unused/unclear custom event. Reference: `.ai/codebase_audit_2025.md:1085-1103` - Document purpose of `feed-monitor:form-finished` event or remove if unused. Move to Stimulus controller if needed for cleanup.
-- [ ] 20.04.03 **Rename log filtering methods** (1 hour) - Inconsistent naming conventions. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Rename `log_filter_status` to `status_filter`, `log_filter_item_id` to `item_id_filter`. Rename `filter_fetch_logs` to `apply_fetch_log_filters`. Use consistent verb/noun patterns.
-- [ ] 20.04.04 **Add performance indexes** (2-3 hours) - Missing indexes for common queries. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Create migration adding: `index_items_on_source_and_created_at_for_rates`, `index_sources_on_active_and_next_fetch` (partial), `index_sources_on_failures` (partial). Analyze query performance before/after.
-- [ ] 20.04.05 **Add check constraint on fetch_status enum** (1-2 hours) - Application-level validation only. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Create migration adding PostgreSQL CHECK constraint: `CHECK (fetch_status IN ('idle', 'queued', 'fetching', 'failed'))`. Test invalid status rejection at DB level.
-- [ ] 20.04.06 **Optimize dashboard queries with JOINs** (2-3 hours) - Subqueries less efficient than JOINs. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Refactor `FeedMonitor::Dashboard::Queries` correlated subqueries to use LEFT JOINs. Measure query performance improvement. Update `scrape_log_sql` and `item_sql` methods.
-- [ ] 20.04.07 **Simplify dropdown controller async import** (30 min, OPTIONAL) - Over-engineered progressive enhancement. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Evaluate static import of stimulus-use vs dynamic import. Document trade-offs. Simplify if benefits outweigh loss of progressive enhancement.
+- [ ] 20.05.01 **Extract toast delay constants** (30 min) - Magic numbers scattered across controllers. Reference: `.ai/codebase_audit_2025.md:1105-1127` - Add `TOAST_DURATION_DEFAULT = 5000` and `TOAST_DURATION_ERROR = 6000` to ApplicationController. Create `toast_delay_for(level)` helper. Update all toast calls.
+- [ ] 20.05.02 **Clean up global event listener** (30 min) - Unused/unclear custom event. Reference: `.ai/codebase_audit_2025.md:1085-1103` - Document purpose of `feed-monitor:form-finished` event or remove if unused. Move to Stimulus controller if needed for cleanup.
+- [ ] 20.05.03 **Rename log filtering methods** (1 hour) - Inconsistent naming conventions. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Rename `log_filter_status` to `status_filter`, `log_filter_item_id` to `item_id_filter`. Rename `filter_fetch_logs` to `apply_fetch_log_filters`. Use consistent verb/noun patterns.
+- [ ] 20.05.04 **Add performance indexes** (2-3 hours) - Missing indexes for common queries. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Create migration adding: `index_items_on_source_and_created_at_for_rates`, `index_sources_on_active_and_next_fetch` (partial), `index_sources_on_failures` (partial). Analyze query performance before/after.
+- [ ] 20.05.05 **Add check constraint on fetch_status enum** (1-2 hours) - Application-level validation only. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Create migration adding PostgreSQL CHECK constraint: `CHECK (fetch_status IN ('idle', 'queued', 'fetching', 'failed'))`. Test invalid status rejection at DB level.
+- [ ] 20.05.06 **Optimize dashboard queries with JOINs** (2-3 hours) - Subqueries less efficient than JOINs. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Refactor `FeedMonitor::Dashboard::Queries` correlated subqueries to use LEFT JOINs. Measure query performance improvement. Update `scrape_log_sql` and `item_sql` methods.
+- [ ] 20.05.07 **Simplify dropdown controller async import** (30 min, OPTIONAL) - Over-engineered progressive enhancement. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Evaluate static import of stimulus-use vs dynamic import. Document trade-offs. Simplify if benefits outweigh loss of progressive enhancement.
 
 **Acceptance Criteria:**
 
@@ -761,12 +789,12 @@
 
 ---
 
-### 20.05 Additional Improvements (Low Priority)
+### 20.06 Additional Improvements - Phase 6 (Low Priority)
 
 **Reference:** `.ai/codebase_audit_2025.md:1105-1127`
 
-- [ ] 20.05.01 **Consolidate `refreshed` variable naming** - Use `@source.reload` directly or be consistent. Reference: `.ai/codebase_audit_2025.md:1105-1127`
-- [ ] 20.05.02 **Document or simplify assign_content_attribute pattern** - Complex delegation logic may be candidate for concern if pattern repeats. Reference: `.ai/codebase_audit_2025.md:1105-1127`
+- [ ] 20.06.01 **Consolidate `refreshed` variable naming** - Use `@source.reload` directly or be consistent. Reference: `.ai/codebase_audit_2025.md:1105-1127`
+- [ ] 20.06.02 **Document or simplify assign_content_attribute pattern** - Complex delegation logic may be candidate for concern if pattern repeats. Reference: `.ai/codebase_audit_2025.md:1105-1127`
 
 **Deliverable for Phase 20:**
 
