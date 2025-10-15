@@ -69,46 +69,54 @@ module FeedMonitor
       )
     end
 
-    test "browsing fetch logs and viewing details" do
-      visit feed_monitor.fetch_logs_path
+    test "filtering consolidated logs by type and status" do
+      visit feed_monitor.logs_path
 
-      assert_selector "[data-testid='fetch-logs-table']"
-      assert_text "Fetch Logs"
-      assert_text @success_fetch_log.http_status.to_s
-      assert_text @failure_fetch_log.http_status.to_s
+      assert_text "Logs"
+      assert_selector "[data-log-row='fetch-#{@success_fetch_log.id}']"
+      assert_selector "[data-log-row='scrape-#{@failure_scrape_log.id}']"
+
+      click_link "Scrape Logs"
+      assert_selector "[data-log-row='scrape-#{@success_scrape_log.id}']"
+      assert_no_selector "[data-log-row='fetch-#{@success_fetch_log.id}']"
 
       click_link "Failures"
-      within "[data-testid='fetch-logs-table']" do
-        assert_text @failure_fetch_log.http_status.to_s
-        assert_no_text @success_fetch_log.http_status.to_s
-      end
+      assert_selector "[data-log-row='scrape-#{@failure_scrape_log.id}']"
+      assert_no_selector "[data-log-row='scrape-#{@success_scrape_log.id}']"
 
-      click_link "View", match: :first
-      assert_current_path feed_monitor.fetch_log_path(@failure_fetch_log)
-      assert_text "TimeoutError"
-      assert_text "execution expired"
-      assert_text "Fetch Log"
+      click_link "View Details", match: :first
+      assert_text "Scrape Log"
+      assert_current_path feed_monitor.scrape_log_path(@failure_scrape_log)
     end
 
-    test "browsing scrape logs and viewing details" do
-      visit feed_monitor.scrape_logs_path
-
-      assert_selector "[data-testid='scrape-logs-table']"
-      assert_text "Scrape Logs"
-      assert_text "Success"
-      assert_text "Failure"
-
-      click_link "Failures"
-      within "[data-testid='scrape-logs-table']" do
-        assert_text "Failure"
-        assert_no_text "Success"
+    test "searching logs and paging through results" do
+      40.times do |index|
+        FeedMonitor::FetchLog.create!(
+          source: @source,
+          success: false,
+          http_status: 500,
+          items_created: 0,
+          items_updated: 0,
+          items_failed: 0,
+          error_message: "Batch failure #{index}",
+          started_at: Time.current - (index + 3).hours
+        )
       end
 
-      click_link "View", match: :first
-      assert_current_path feed_monitor.scrape_log_path(@failure_scrape_log)
-      assert_text "RuntimeError"
-      assert_text "failed to parse content"
-      assert_text "Scrape Log"
+      visit feed_monitor.logs_path
+
+      fill_in "Search logs", with: "Batch failure 3"
+      click_button "Search"
+      assert_text "Batch failure 3"
+      assert_no_text "Batch failure 15"
+
+      click_link "Clear"
+
+      click_link "Next"
+      assert_selector "[data-page-indicator='2']"
+
+      click_link "Previous"
+      assert_selector "[data-page-indicator='1']"
     end
   end
 end

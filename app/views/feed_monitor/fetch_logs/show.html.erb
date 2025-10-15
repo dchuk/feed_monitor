@@ -8,7 +8,7 @@
       </p>
     </div>
     <div class="flex gap-3">
-      <%= link_to "Back to Fetch Logs", feed_monitor.fetch_logs_path, class: "inline-flex items-center rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" %>
+      <%= link_to "Back to Logs", feed_monitor.logs_path(log_type: "fetch"), class: "inline-flex items-center rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50" %>
       <%= link_to "View Source", feed_monitor.source_path(@log.source), class: "inline-flex items-center rounded-md bg-slate-800 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
     </div>
   </div>

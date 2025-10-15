@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_14_172525) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_15_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -90,6 +90,33 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_14_172525) do
     t.index ["source_id", "published_at", "created_at"], name: "index_feed_monitor_items_on_source_and_published_at"
     t.index ["source_id"], name: "index_feed_monitor_items_on_source_id"
     t.index ["url"], name: "index_feed_monitor_items_on_url"
+  end
+
+  create_table "feed_monitor_log_entries", force: :cascade do |t|
+    t.string "loggable_type", null: false
+    t.bigint "loggable_id", null: false
+    t.bigint "source_id", null: false
+    t.bigint "item_id"
+    t.boolean "success", default: false, null: false
+    t.datetime "started_at", null: false
+    t.datetime "completed_at"
+    t.integer "http_status"
+    t.integer "duration_ms"
+    t.integer "items_created"
+    t.integer "items_updated"
+    t.integer "items_failed"
+    t.string "scraper_adapter"
+    t.integer "content_length"
+    t.string "error_class"
+    t.text "error_message"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["item_id"], name: "index_feed_monitor_log_entries_on_item_id"
+    t.index ["loggable_type", "loggable_id"], name: "index_feed_monitor_log_entries_on_loggable"
+    t.index ["scraper_adapter"], name: "index_feed_monitor_log_entries_on_scraper_adapter"
+    t.index ["source_id"], name: "index_feed_monitor_log_entries_on_source_id"
+    t.index ["started_at"], name: "index_feed_monitor_log_entries_on_started_at"
+    t.index ["success"], name: "index_feed_monitor_log_entries_on_success"
   end
 
   create_table "feed_monitor_scrape_logs", force: :cascade do |t|
@@ -306,6 +333,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_14_172525) do
   add_foreign_key "feed_monitor_fetch_logs", "feed_monitor_sources", column: "source_id"
   add_foreign_key "feed_monitor_item_contents", "feed_monitor_items", column: "item_id"
   add_foreign_key "feed_monitor_items", "feed_monitor_sources", column: "source_id"
+  add_foreign_key "feed_monitor_log_entries", "feed_monitor_items", column: "item_id"
+  add_foreign_key "feed_monitor_log_entries", "feed_monitor_sources", column: "source_id"
   add_foreign_key "feed_monitor_scrape_logs", "feed_monitor_items", column: "item_id"
   add_foreign_key "feed_monitor_scrape_logs", "feed_monitor_sources", column: "source_id"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

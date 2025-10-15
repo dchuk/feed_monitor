@@ -9,6 +9,7 @@ module FeedMonitor
     belongs_to :source, class_name: "FeedMonitor::Source", inverse_of: :items, counter_cache: true
     has_one :item_content, class_name: "FeedMonitor::ItemContent", inverse_of: :item, dependent: :destroy, autosave: true
     has_many :scrape_logs, class_name: "FeedMonitor::ScrapeLog", inverse_of: :item, dependent: :destroy
+    has_many :log_entries, class_name: "FeedMonitor::LogEntry", inverse_of: :item, dependent: :destroy
 
     # Explicit scope for active (non-deleted) items - no default_scope to avoid anti-pattern
     scope :active, -> { where(deleted_at: nil) }

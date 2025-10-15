@@ -843,12 +843,12 @@
 
 **Goal: Consolidate Fetch & Scrape Logs to one unified UX**
 
-### 21.01 Consolidate Fetch & Scrape Logs
+### 21.01 Consolidate Fetch & Scrape Logs into a single viewing experience
 
-- [ ] 21.01.01 Inventory current fetch and scrape log views/partials to outline the combined layout, including shared columns and log-type specific metadata
-- [ ] 21.01.02 Design a unified log query object/presenter that supports filtering by log type, timeframe ranges, source selection, search terms, and pagination
-- [ ] 21.01.03 Implement the consolidated table/section in the UI with filter controls and ensure the controller accepts/validates the new params without duplicating logic
-- [ ] 21.01.04 Update instrumentation and documentation to reflect the merged log view and add automated coverage (unit + system) for filtering, searching, and pagination paths
+- [x] 21.01.01 Inventory current fetch and scrape log views/partials to outline the combined layout, including shared columns and log-type specific metadata
+- [x] 21.01.02 Design a unified log query object/presenter that supports filtering by log type, timeframe ranges, source selection, search terms, and pagination
+- [x] 21.01.03 Implement the consolidated table/section in the UI with filter controls and ensure the controller accepts/validates the new params without duplicating logic
+- [x] 21.01.04 Update instrumentation and documentation to reflect the merged log view and add automated coverage (unit + system) for filtering, searching, and pagination paths
 
 **Deliverable: Source management UI exposes clear scraping controls and a single consolidated log explorer**
 **Test: Drive the new controls via system specs to confirm status rendering, bulk scraping, deletions, and log filtering behave as expected**
