@@ -812,8 +812,8 @@
 
 **Reference:** `.ai/codebase_audit_2025.md:1105-1127`
 
-- [ ] 20.07.01 **Consolidate `refreshed` variable naming** - Use `@source.reload` directly or be consistent. Reference: `.ai/codebase_audit_2025.md:1105-1127`
-- [ ] 20.07.02 **Document or simplify assign_content_attribute pattern** - Complex delegation logic may be candidate for concern if pattern repeats. Reference: `.ai/codebase_audit_2025.md:1105-1127`
+- [x] 20.07.01 **Consolidate `refreshed` variable naming** - Use `@source.reload` directly or be consistent. Reference: `.ai/codebase_audit_2025.md:1105-1127`
+- [x] 20.07.02 **Document or simplify assign_content_attribute pattern** - Complex delegation logic may be candidate for concern if pattern repeats. Reference: `.ai/codebase_audit_2025.md:1105-1127`
 
 **Deliverable for Phase 20:**
 

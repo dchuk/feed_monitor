@@ -11,23 +11,23 @@ module FeedMonitor
     private
 
     def render_fetch_enqueue_response(message)
-      refreshed = @source.reload
+      @source.reload
       respond_to do |format|
         format.turbo_stream do
           responder = FeedMonitor::TurboStreams::StreamResponder.new
 
           responder.replace_details(
-            refreshed,
+            @source,
             partial: "feed_monitor/sources/details_wrapper",
-            locals: { source: refreshed }
+            locals: { source: @source }
           )
 
           responder.replace_row(
-            refreshed,
+            @source,
             partial: "feed_monitor/sources/row",
             locals: {
-              source: refreshed,
-              item_activity_rates: { refreshed.id => FeedMonitor::Analytics::SourceActivityRates.rate_for(refreshed) }
+              source: @source,
+              item_activity_rates: { @source.id => FeedMonitor::Analytics::SourceActivityRates.rate_for(@source) }
             }
           )
 
@@ -37,7 +37,7 @@ module FeedMonitor
         end
 
         format.html do
-          redirect_to feed_monitor.source_path(refreshed), notice: message
+          redirect_to feed_monitor.source_path(@source), notice: message
         end
       end
     end
@@ -60,7 +60,7 @@ module FeedMonitor
     end
 
     def respond_to_bulk_scrape(result)
-      refreshed = @source.reload
+      @source.reload
       @bulk_scrape_selection = result.selection
       payload = bulk_scrape_flash_payload(result)
       status = result.error? ? :unprocessable_entity : :ok
@@ -70,17 +70,17 @@ module FeedMonitor
           responder = FeedMonitor::TurboStreams::StreamResponder.new
 
           responder.replace_details(
-            refreshed,
+            @source,
             partial: "feed_monitor/sources/details_wrapper",
-            locals: { source: refreshed }
+            locals: { source: @source }
           )
 
           responder.replace_row(
-            refreshed,
+            @source,
             partial: "feed_monitor/sources/row",
             locals: {
-              source: refreshed,
-              item_activity_rates: { refreshed.id => FeedMonitor::Analytics::SourceActivityRates.rate_for(refreshed) }
+              source: @source,
+              item_activity_rates: { @source.id => FeedMonitor::Analytics::SourceActivityRates.rate_for(@source) }
             }
           )
 
@@ -97,9 +97,9 @@ module FeedMonitor
 
         format.html do
           if payload[:message].present?
-            redirect_to feed_monitor.source_path(refreshed), flash: { payload[:flash_key] => payload[:message] }
+            redirect_to feed_monitor.source_path(@source), flash: { payload[:flash_key] => payload[:message] }
           else
-            redirect_to feed_monitor.source_path(refreshed)
+            redirect_to feed_monitor.source_path(@source)
           end
         end
       end

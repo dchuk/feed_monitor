@@ -72,19 +72,25 @@ module FeedMonitor
 
     private
 
+    # Item content lives in a separate row that we only create when rich content exists.
+    # This helper keeps the association lazy-loaded, ensures updates route through the
+    # join model, and tears it back down once both scraped fields are blank again.
     def assign_content_attribute(attribute, value)
-      unless item_content
-        return if value.nil?
-
-        build_item_content
-      end
-
-      item_content.public_send("#{attribute}=", value)
-
-      prune_empty_content_record if item_content.scraped_html.blank? && item_content.scraped_content.blank?
+      ensure_item_content_presence(value)
+      item_content&.public_send("#{attribute}=", value)
+      cleanup_item_content_if_blank
     end
 
-    def prune_empty_content_record
+    def ensure_item_content_presence(value)
+      return if item_content.present? || value.nil?
+
+      build_item_content
+    end
+
+    def cleanup_item_content_if_blank
+      return unless item_content
+      return if item_content.scraped_html.present? || item_content.scraped_content.present?
+
       if item_content.persisted?
         item_content.mark_for_destruction
       else

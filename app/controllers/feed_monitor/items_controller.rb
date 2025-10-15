@@ -55,11 +55,11 @@ module FeedMonitor
           responder = FeedMonitor::TurboStreams::StreamResponder.new
 
           if enqueue_result.enqueued? || enqueue_result.already_enqueued?
-            refreshed_item = @item.reload
+            @item.reload
             responder.replace_details(
-              refreshed_item,
+              @item,
               partial: "feed_monitor/items/details_wrapper",
-              locals: { item: refreshed_item }
+              locals: { item: @item }
             )
           end
 
