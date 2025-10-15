@@ -7,9 +7,9 @@
 
   <%= yield :head %>
 
-  <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+  <%= stylesheet_link_tag "feed_monitor/application", "data-turbo-track": "reload" %>
   <%= turbo_include_tags %>
-  <%= javascript_importmap_tags "feed_monitor/application" %>
+  <%= javascript_include_tag "feed_monitor/application", "data-turbo-track": "reload", type: "module" %>
 </head>
 <body class="fm-admin">
   <%= turbo_stream_from "feed_monitor_notifications" %>
@@ -32,8 +32,8 @@
           <% nav_items.each do |label, path| %>
             <% active = current_page?(path) %>
             <%= link_to label, path, class: [
-              "fm-admin-nav-link",
-              active ? "fm-admin-nav-link--active" : "fm-admin-nav-link--inactive"
+              "inline-flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors",
+              active ? "bg-slate-900 text-white shadow" : "text-slate-200 hover:bg-slate-700 hover:text-white"
             ].join(" ") %>
           <% end %>
         </nav>

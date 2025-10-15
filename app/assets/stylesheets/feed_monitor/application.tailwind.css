@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  .fm-admin {
+    @apply min-h-screen bg-slate-50 text-slate-900;
+  }
+
+  .fm-admin a {
+    @apply text-blue-600 hover:text-blue-500;
+  }
+}

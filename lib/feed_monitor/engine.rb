@@ -1,25 +1,29 @@
 module FeedMonitor
   class Engine < ::Rails::Engine
     isolate_namespace FeedMonitor
+    require "feed_monitor/assets/bundler"
 
     def self.table_name_prefix
       FeedMonitor.config.models.table_name_prefix
     end
 
     initializer "feed_monitor.assets" do |app|
-      app.config.assets.paths << root.join("app/assets/builds")
-    end
-
-    initializer "feed_monitor.assets.precompile" do |app|
       next unless app.config.respond_to?(:assets)
 
-      app.config.assets.precompile += %w[ feed_monitor/application.js feed_monitor/stimulus-use.js ]
+      engine_root = FeedMonitor::Engine.root
+
+      app.config.assets.paths << engine_root.join("app/assets/builds").to_s
+      app.config.assets.paths << engine_root.join("app/assets/images").to_s
+      app.config.assets.paths << engine_root.join("app/assets/svgs").to_s
     end
 
-    initializer "feed_monitor.importmap", before: "importmap" do |app|
-      next unless app.config.respond_to?(:importmap)
+    initializer "feed_monitor.assets.sprockets" do |app|
+      next unless app.config.respond_to?(:assets)
 
-      app.config.importmap.paths << root.join("config/importmap.rb")
+      manifest_entry = "feed_monitor_manifest.js"
+      app.config.assets.precompile << manifest_entry unless app.config.assets.precompile.include?(manifest_entry)
+      app.config.assets.precompile.concat(FeedMonitor::Engine.asset_precompile_entries)
+      app.config.assets.precompile.uniq!
     end
 
     initializer "feed_monitor.metrics" do
@@ -76,6 +80,24 @@ module FeedMonitor
 
         app.config.after_initialize do
           FeedMonitor::Jobs::Visibility.setup!
+        end
+      end
+    end
+    class << self
+      def asset_precompile_entries
+        engine_root = FeedMonitor::Engine.root
+        asset_roots = {
+          images: engine_root.join("app/assets/images"),
+          svgs: engine_root.join("app/assets/svgs")
+        }
+
+        asset_roots.flat_map do |_, base_path|
+          Dir[base_path.join("feed_monitor/**/*").to_s].filter_map do |absolute_path|
+            next unless File.file?(absolute_path)
+            next if File.basename(absolute_path).start_with?(".")
+
+            Pathname.new(absolute_path).relative_path_from(base_path).to_s
+          end
         end
       end
     end

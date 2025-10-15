@@ -10,6 +10,13 @@ end
 
 Restart your application whenever you change these settings. The engine reloads model extensions automatically when the block runs, but background processes need a restart to pick up queue name or adapter changes.
 
+## Asset Bundling
+
+- FeedMonitor ships with npm-based bundling via `cssbundling-rails` and `jsbundling-rails`; follow `.ai/engine-asset-configuration.md:11-113` when adjusting dependency versions or adding new entrypoints.
+- Keep bundled outputs under the namespaced directories (`app/assets/builds/feed_monitor`, `images/feed_monitor`, `svgs/feed_monitor`) so host apps avoid collisions. See `.ai/engine-asset-configuration.md:32-44` for the layout recommendations.
+- Use `rbenv exec bundle exec rake app:feed_monitor:assets:build` (or `npm run build`) after tweaking Tailwind/Stimulus code to refresh the builds, and rely on `test/dummy/bin/dev` to watch `build:css:watch` + `build:js:watch` during development.
+- Sprockets hosts receive automatic precompile coverage; if a host prefers manifest-based precompilation, adapt the approach documented in `.ai/engine-asset-configuration.md:114-143`.
+
 ## Queue & Worker Settings
 
 - `config.queue_namespace` – prefix applied to queue names (`"feed_monitor"` by default)
@@ -159,5 +166,5 @@ The engine honours several environment variables out of the box:
 ## After Changing Configuration
 
 1. Restart web and worker processes so Solid Queue picks up new queue names/adapters.
-2. Re-run `bin/rails assets:precompile` if you toggled realtime/asset options that affect importmaps.
+2. Re-run `npm run build` (engine root) and `bin/rails assets:precompile` if you adjust engine assets per `.ai/engine-asset-configuration.md:11-188`.
 3. Keep a regression test per configuration extension—for example, ensure custom validations are exercised in MiniTest.

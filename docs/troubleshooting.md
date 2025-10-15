@@ -57,6 +57,12 @@ This guide lists common issues you might encounter while installing, upgrading, 
 - The dashboard only renders a Mission Control link when `config.mission_control_enabled = true` **and** `config.mission_control_dashboard_path` resolves. Call `FeedMonitor.mission_control_dashboard_path` in the Rails console to confirm.
 - When hosting Mission Control in a separate app, provide a full URL instead of a route helper.
 
+## 10. Dummy UI Loads Without Styles or JavaScript
+
+- Running `test/dummy/bin/dev` before configuring the bundling pipeline will serve the admin UI without Tailwind styles or Stimulus behaviours. This happens because the engine no longer ships precompiled assets; see `.ai/engine-asset-configuration.md:11-44` for the required npm setup.
+- Fix by running `npm install` followed by `npm run build` inside the engine root so that `app/assets/builds/feed_monitor/application.css` and `application.js` exist. The Rake task `app:feed_monitor:assets:build` wraps the same scripts for CI usage.
+- When the UI is still unstyled, confirm the dummy app can read the namespaced asset directories noted in `.ai/engine-asset-configuration.md:32-44` and restart `bin/dev` so the CSS/JS watchers reconnect.
+
 ## Still Stuck?
 
 Collect the following and open an issue or start a discussion:

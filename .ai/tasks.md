@@ -791,12 +791,29 @@
 
 ---
 
-### 20.06 Additional Improvements - Phase 6 (Low Priority)
+### 20.06 Fix and Optimize Front End asset management for engine
+
+**Reference:** `.ai/engine-asset-configuration.md:11-188`
+
+- [x] 20.06.01 **Audit current asset tooling and bundler deps** (2h) - Completed. Updated gemspec to include `cssbundling-rails`/`jsbundling-rails`, refreshed `package.json` scripts and dependencies. Reference: `.ai/engine-asset-configuration.md:11-28`.
+- [x] 20.06.02 **Document current dummy app breakage** (1h) - Captured the missing Tailwind/JS failure mode and added troubleshooting guidance referencing the asset guide. Reference: `.ai/engine-asset-configuration.md:11-28`.
+- [x] 20.06.03 **Plan asset directory realignment** (1.5h) - Namespaced builds, images, and svgs per guide recommendations. Reference: `.ai/engine-asset-configuration.md:32-44`.
+- [x] 20.06.04 **Implement bundling pipeline setup** (3h) - Installed bundling toolchain via dummy app flow, established npm build/watch scripts, and added `FeedMonitor::Assets::Bundler`. Reference: `.ai/engine-asset-configuration.md:21-28`.
+- [x] 20.06.05 **Expose asset paths via engine initializer** (1.5h) - Engine initializer now exposes builds/images/svgs for both pipelines. Reference: `.ai/engine-asset-configuration.md:48-76`.
+- [x] 20.06.06 **Add Sprockets precompile automation** (2h) - Added programmable precompile list and tests covering Sprockets discovery. Reference: `.ai/engine-asset-configuration.md:79-113`.
+- [x] 20.06.07 **Assess manifest fallback path** (optional, 1h) - Documented manifest fallback option in configuration docs; keeping programmatic approach as default. Reference: `.ai/engine-asset-configuration.md:114-143`.
+- [x] 20.06.08 **Align asset usage in views/stylesheets** (1.5h) - Layout now loads bundled CSS/JS modules; controllers consume local imports. Reference: `.ai/engine-asset-configuration.md:147-167`.
+- [x] 20.06.09 **Cross-pipeline verification** (2h) - Added automated coverage for asset exposure, verified Propshaft tests, and ensured Sprockets manifests precompile. Reference: `.ai/engine-asset-configuration.md:180-188`.
+- [x] 20.06.10 **Document asset setup & troubleshooting** (1h) - README/config/troubleshooting now call out bundling steps and fallback guidance. Reference: `.ai/engine-asset-configuration.md:11-188`.
+
+---
+
+### 20.07 Additional Improvements - Phase 6 (Low Priority)
 
 **Reference:** `.ai/codebase_audit_2025.md:1105-1127`
 
-- [ ] 20.06.01 **Consolidate `refreshed` variable naming** - Use `@source.reload` directly or be consistent. Reference: `.ai/codebase_audit_2025.md:1105-1127`
-- [ ] 20.06.02 **Document or simplify assign_content_attribute pattern** - Complex delegation logic may be candidate for concern if pattern repeats. Reference: `.ai/codebase_audit_2025.md:1105-1127`
+- [ ] 20.07.01 **Consolidate `refreshed` variable naming** - Use `@source.reload` directly or be consistent. Reference: `.ai/codebase_audit_2025.md:1105-1127`
+- [ ] 20.07.02 **Document or simplify assign_content_attribute pattern** - Complex delegation logic may be candidate for concern if pattern repeats. Reference: `.ai/codebase_audit_2025.md:1105-1127`
 
 **Deliverable for Phase 20:**
 

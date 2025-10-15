@@ -1,9 +1,9 @@
 import { Application } from "@hotwired/stimulus";
-import AsyncSubmitController from "feed_monitor/controllers/async_submit_controller";
-import NotificationController from "feed_monitor/controllers/notification_controller";
-import DropdownController from "feed_monitor/controllers/dropdown_controller";
-import ModalController from "feed_monitor/controllers/modal_controller";
-import "feed_monitor/turbo_actions";
+import AsyncSubmitController from "./controllers/async_submit_controller";
+import NotificationController from "./controllers/notification_controller";
+import DropdownController from "./controllers/dropdown_controller";
+import ModalController from "./controllers/modal_controller";
+import "./turbo_actions";
 
 const existingApplication = window.FeedMonitorStimulus;
 const application = existingApplication || Application.start();

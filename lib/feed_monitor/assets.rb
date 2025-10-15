@@ -3,4 +3,4 @@ module FeedMonitor
   end
 end
 
-require "feed_monitor/assets/tailwind"
+require "feed_monitor/assets/bundler"

@@ -23,8 +23,8 @@ Gem::Specification.new do |spec|
   end
 
   spec.add_dependency "rails", ">= 8.0.2.1"
-  spec.add_dependency "tailwindcss-rails"
-  spec.add_dependency "importmap-rails", ">= 2.2"
+  spec.add_dependency "cssbundling-rails"
+  spec.add_dependency "jsbundling-rails"
   spec.add_dependency "turbo-rails"
   spec.add_dependency "feedjira", "~> 3.2"
   spec.add_dependency "faraday", "~> 2.9"

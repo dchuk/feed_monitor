@@ -1,9 +1,10 @@
 const defaultContent = [
   "./app/views/**/*.{erb,html,html.erb}",
   "./app/helpers/**/*.rb",
-  "./app/assets/tailwind/**/*.{css}",
-  "./app/javascript/**/*.{js,ts,jsx,tsx}",
-  "./lib/**/*.{rb}"
+  "./app/assets/stylesheets/feed_monitor/**/*.css",
+  "./app/assets/javascripts/**/*.{js,ts,jsx,tsx}",
+  "./lib/**/*.rb",
+  "./test/dummy/app/views/**/*.{erb,html,html.erb}"
 ];
 
 export default {

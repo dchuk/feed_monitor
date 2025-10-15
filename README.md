@@ -14,7 +14,7 @@ FeedMonitor is a production-ready Rails 8 mountable engine for ingesting, normal
 - Ruby 3.4.4 (manage with `rbenv install 3.4.4` and `rbenv local 3.4.4`)
 - Rails ≥ 8.0.2.1 in the host application
 - PostgreSQL 13+ (engine migrations use JSONB, SKIP LOCKED, advisory locks, and Solid Cable tables)
-- Node.js 18+ (npm or Yarn) for asset linting and optional Tailwind rebuilds
+- Node.js 18+ (npm or Yarn) for asset linting and the Tailwind/esbuild bundling pipeline
 - Solid Queue workers (Rails 8 default) and Solid Cable (default realtime adapter)
 - Optional: Mission Control Jobs for dashboard linking, Redis if you opt into the Redis realtime adapter
 
@@ -74,7 +74,7 @@ See [docs/configuration.md](docs/configuration.md) for exhaustive coverage and e
 
 ## Deployment Considerations
 - Copy engine migrations before every deploy and run `bin/rails db:migrate`.
-- Precompile assets so FeedMonitor's Tailwind build and importmap entries are available at runtime.
+- Precompile assets so FeedMonitor's bundled CSS/JS outputs are available at runtime.
 - Run dedicated Solid Queue worker processes; consider a separate scheduler process for recurring jobs.
 - Configure Action Cable (Solid Cable by default) and expose `/cable` through your load balancer.
 - Monitor gauges/counters emitted by `FeedMonitor::Metrics` and subscribe to notifications for alerting.
@@ -86,7 +86,7 @@ Common installation and runtime issues (missing migrations, realtime not streami
 
 ## Development & Testing (Engine Repository)
 - Install dependencies with `rbenv exec bundle install` and `npm install`.
-- Use `test/dummy/bin/dev` to boot the dummy app with Tailwind watcher, Solid Queue worker, and Rails server.
+- Use `test/dummy/bin/dev` to boot the dummy app with npm CSS/JS watchers, Solid Queue worker, and Rails server.
 - Run tests via `bin/test-coverage` (SimpleCov-enforced), or `bin/rails test` for targeted suites.
 - Quality checks: `bin/rubocop`, `bin/brakeman --no-pager`, `bin/lint-assets`.
 - Record HTTP fixtures with VCR under `test/vcr_cassettes/` and keep coverage ≥ 90% for new code.

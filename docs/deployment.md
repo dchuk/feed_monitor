@@ -6,7 +6,7 @@ This guide captures the production considerations for running FeedMonitor inside
 
 1. **Install dependencies** – use `rbenv exec bundle install` and `npm install` during build steps.
 2. **Copy and run migrations** – always run `bin/rails railties:install:migrations FROM=feed_monitor` before `bin/rails db:migrate` so new engine tables ship with each release.
-3. **Precompile assets** – `bin/rails assets:precompile` pulls in FeedMonitor's Tailwind build, importmap, and stimulus controllers. Fail the build if `feed_monitor:assets:verify` raises.
+3. **Precompile assets** – `bin/rails assets:precompile` pulls in FeedMonitor's bundled CSS/JS outputs and Stimulus controllers. Fail the build if `feed_monitor:assets:verify` raises.
 4. **Run quality gates** – `bin/rubocop`, `bin/brakeman --no-pager`, `bin/lint-assets`, and `bin/test-coverage` mirror the repository CI setup.
 
 ## Process Model

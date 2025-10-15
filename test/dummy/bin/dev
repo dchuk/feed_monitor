@@ -5,19 +5,30 @@ require "English"
 ENGINE_ROOT = File.expand_path("../../..", __dir__)
 DUMMY_ROOT  = File.expand_path("..", __dir__)
 
-tailwind_command = [
-  "bundle", "exec", "tailwindcss",
-  "-i", "app/assets/tailwind/application.css",
-  "-o", "app/assets/builds/tailwind.css",
-  "--watch"
-]
+def ensure_asset_build!(root)
+  css_path = File.join(root, "app/assets/builds/feed_monitor/application.css")
+  js_path  = File.join(root, "app/assets/builds/feed_monitor/application.js")
+  return if File.exist?(css_path) && File.exist?(js_path)
+
+  env = { "BUNDLE_GEMFILE" => File.join(root, "Gemfile") }
+  command = [ "bundle", "exec", "rake", "app:feed_monitor:assets:build" ]
+
+  puts "Prebuilding FeedMonitor asset bundles..."
+  system(env, *command, chdir: root, exception: true)
+end
+
+ensure_asset_build!(ENGINE_ROOT)
+
+css_watch_command = [ "npm", "run", "build:css:watch" ]
+js_watch_command  = [ "npm", "run", "build:js:watch" ]
 
 server_command = [
   "bundle", "exec", "rails", "server", *ARGV
 ]
 
 commands = [
-  { name: "css", dir: ENGINE_ROOT, env: {}, command: tailwind_command },
+  { name: "css", dir: ENGINE_ROOT, env: {}, command: css_watch_command },
+  { name: "js", dir: ENGINE_ROOT, env: {}, command: js_watch_command },
   {
     name: "web",
     dir: DUMMY_ROOT,

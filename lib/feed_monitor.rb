@@ -17,12 +17,6 @@ rescue LoadError
 end
 
 begin
-  require "importmap-rails"
-rescue LoadError
-  # Importmap allows engines to ship modern ES modules when available.
-end
-
-begin
   require "ransack"
 rescue LoadError
   # Ransack powers search forms when available.
