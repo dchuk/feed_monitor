@@ -39,6 +39,7 @@ Key outputs:
 
 - Adds `mount FeedMonitor::Engine, at: "/feed_monitor"` to your routes (change the path with `--mount-path`)
 - Creates `config/initializers/feed_monitor.rb` with documented configuration defaults
+- The generator is idempotent: re-running it will detect existing mounts/initializers and skip overwriting your customizations
 
 ## 3. Copy Engine Migrations
 
@@ -87,6 +88,8 @@ Solid Queue becomes the default Active Job adapter when the host app still uses 
 rbenv exec bin/rails solid_queue:start
 ```
 
+Feed Monitor respects explicit queue adapter overrides. If your host sets `config.active_job.queue_adapter` (for example, to `:inline` or `:sidekiq`), the engine leaves that configuration in place.
+
 For recurring schedules, add a process that runs the Solid Queue CLI with the engine's schedule file:
 
 ```bash
@@ -113,3 +116,12 @@ If you encounter issues, consult the [troubleshooting guide](troubleshooting.md)
 - Explore the admin UI and dashboards
 - Integrate custom scraper adapters or item processors via `FeedMonitor.configure`
 - Set up monitoring for the Solid Queue queues using Mission Control or your preferred observability stack
+
+## Host Compatibility Matrix
+
+| Host Scenario | Status | Notes |
+| --- | --- | --- |
+| Rails 8 full-stack app | ✅ Supported | Default generator flow (mount + initializer) |
+| Rails 8 API-only app (`--api`) | ✅ Supported | Generator mounts engine; ensure you provide a UI entry point if needed |
+| Dedicated Solid Queue database | ✅ Supported | Run `bin/rails solid_queue:install` in the host app before copying Feed Monitor migrations |
+| Redis-backed Action Cable | ✅ Supported | Set `config.realtime.adapter = :redis` and provide `config.realtime.redis_url`; existing `config/cable.yml` entries are preserved |

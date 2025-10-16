@@ -873,9 +873,9 @@
 
 ### 22.03 Isolation & Compatibility Guarantees
 
-- [ ] 22.03.01 Audit engine initializers, Railties, and configuration hooks to ensure they no-op when host overrides are present; document guard clauses or configuration fallbacks
-- [ ] 22.03.02 Add regression tests ensuring engine generators do not overwrite existing host files (e.g., `config/application.rb`, `config/cable.yml`), using temporary fixtures to simulate conflict scenarios
-- [ ] 22.03.03 Validate mounting options for varied host setups (API-only apps, custom queue_db, Redis Action Cable) and record support matrix in docs
+- [x] 22.03.01 Audit engine initializers, Railties, and configuration hooks to ensure they no-op when host overrides are present; document guard clauses or configuration fallbacks
+- [x] 22.03.02 Add regression tests ensuring engine generators do not overwrite existing host files (e.g., `config/application.rb`, `config/cable.yml`), using temporary fixtures to simulate conflict scenarios
+- [x] 22.03.03 Validate mounting options for varied host setups (API-only apps, custom queue_db, Redis Action Cable) and record support matrix in docs
 
 ### 22.04 Installation & Upgrade Documentation
 

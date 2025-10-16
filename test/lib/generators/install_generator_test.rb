@@ -55,6 +55,24 @@ module FeedMonitor
       end
     end
 
+    def test_does_not_overwrite_existing_initializer
+      initializer_path = File.join(destination_root, "config/initializers")
+      FileUtils.mkdir_p(initializer_path)
+      File.write(File.join(initializer_path, "feed_monitor.rb"), "# existing")
+
+      run_generator
+
+      assert_file "config/initializers/feed_monitor.rb", /# existing/
+    end
+
+    def test_does_not_duplicate_routes_when_rerun
+      run_generator
+      run_generator
+
+      routes_contents = File.read(File.join(destination_root, "config/routes.rb"))
+      assert_equal 1, routes_contents.scan(/mount FeedMonitor::Engine/).count
+    end
+
     private
 
     def write_routes_file

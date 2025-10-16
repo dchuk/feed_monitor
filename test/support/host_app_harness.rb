@@ -12,36 +12,64 @@ module HostAppHarness
 
   ENGINE_ROOT = File.expand_path("../..", __dir__)
   TMP_ROOT = File.expand_path("../tmp", __dir__)
-  TEMPLATE_ROOT = File.join(TMP_ROOT, "host_app_template")
-  WORK_ROOT = File.join(TMP_ROOT, "host_app")
 
-  def prepare_working_directory
-    ensure_template!
-    reset_working_directory!
-    ensure_bundle_installed!(WORK_ROOT)
+  TEMPLATE_OPTIONS = {
+    default: [
+      "--skip-test",
+      "--skip-system-test",
+      "--skip-hotwire",
+      "--skip-javascript",
+      "--skip-css",
+      "--skip-action-mailer",
+      "--skip-action-mailbox",
+      "--skip-action-text",
+      "--skip-active-storage",
+      "--skip-git"
+    ],
+    api: [
+      "--api",
+      "--skip-test",
+      "--skip-system-test",
+      "--skip-hotwire",
+      "--skip-javascript",
+      "--skip-css",
+      "--skip-action-mailer",
+      "--skip-action-mailbox",
+      "--skip-action-text",
+      "--skip-active-storage",
+      "--skip-git"
+    ]
+  }.freeze
+
+  def prepare_working_directory(template: :default)
+    ensure_template!(template)
+    reset_working_directory!(template)
+    @current_template = template
+    yield current_work_root if block_given?
+    ensure_bundle_installed!(current_work_root)
   end
 
   def cleanup_working_directory
-    FileUtils.rm_rf(WORK_ROOT)
+    return unless @current_template
+
+    FileUtils.rm_rf(current_work_root)
+    @current_template = nil
   end
 
-  def bundle_exec!(*command)
-    Bundler.with_unbundled_env do
-      Dir.chdir(WORK_ROOT) do
-        env = default_env
-        output, status = Open3.capture2e(env, "rbenv", "exec", "bundle", "exec", *command)
-        raise_command_failure(command, output) unless status.success?
-        output
-      end
+  def bundle_exec!(*command, env: {})
+    with_working_directory(env:) do |resolved_env|
+      output, status = Open3.capture2e(resolved_env, "rbenv", "exec", "bundle", "exec", *command)
+      raise_command_failure(command, output) unless status.success?
+      output
     end
   end
 
   def exist?(relative_path)
-    File.exist?(File.join(WORK_ROOT, relative_path))
+    File.exist?(File.join(current_work_root, relative_path))
   end
 
   def read(relative_path)
-    File.read(File.join(WORK_ROOT, relative_path))
+    File.read(File.join(current_work_root, relative_path))
   end
 
   def digest_files(relative_paths)
@@ -54,23 +82,30 @@ module HostAppHarness
 
   private
 
-  def ensure_template!
-    return if File.exist?(File.join(TEMPLATE_ROOT, "Gemfile.lock"))
+  def current_work_root
+    raise "call prepare_working_directory before interacting with HostAppHarness" unless @current_template
 
-    FileUtils.rm_rf(TEMPLATE_ROOT)
-    generate_host_app_template!
-    append_engine_to_gemfile!(TEMPLATE_ROOT)
-    ensure_bundle_installed!(TEMPLATE_ROOT)
+    work_root(@current_template)
   end
 
-  def reset_working_directory!
-    FileUtils.rm_rf(WORK_ROOT)
-    FileUtils.mkdir_p(File.dirname(WORK_ROOT))
-    FileUtils.cp_r("#{TEMPLATE_ROOT}/.", WORK_ROOT)
+  def ensure_template!(template)
+    root = template_root(template)
+    return if File.exist?(File.join(root, "Gemfile.lock"))
+
+    FileUtils.rm_rf(root)
+    generate_host_app_template!(template)
+    append_engine_to_gemfile!(root)
+    ensure_bundle_installed!(root)
   end
 
-  def generate_host_app_template!
-    args = [ TEMPLATE_ROOT, "--skip-test", "--skip-system-test", "--skip-hotwire", "--skip-javascript", "--skip-css", "--skip-action-mailer", "--skip-action-mailbox", "--skip-action-text", "--skip-active-storage", "--skip-git" ]
+  def reset_working_directory!(template)
+    FileUtils.rm_rf(work_root(template))
+    FileUtils.mkdir_p(File.dirname(work_root(template)))
+    FileUtils.cp_r("#{template_root(template)}/.", work_root(template))
+  end
+
+  def generate_host_app_template!(template)
+    args = [ template_root(template), *TEMPLATE_OPTIONS.fetch(template) ]
 
     Bundler.with_unbundled_env do
       FeedMonitor::Engine.eager_load!
@@ -98,12 +133,21 @@ module HostAppHarness
     end
   end
 
+  def with_working_directory(env: {})
+    Bundler.with_unbundled_env do
+      Dir.chdir(current_work_root) do
+        merged_env = default_env.merge(env)
+        yield merged_env
+      end
+    end
+  end
+
   def run_bundler!(env, args)
     output, status = Open3.capture2e(env, "rbenv", "exec", "bundle", *args)
     raise_command_failure(["bundle", *args], output) unless status.success?
   end
 
-  def default_env(root = WORK_ROOT)
+  def default_env(root = current_work_root)
     {
       "BUNDLE_GEMFILE" => File.join(root, "Gemfile"),
       "BUNDLE_IGNORE_CONFIG" => "1"
@@ -117,5 +161,13 @@ module HostAppHarness
     ].compact.join("\n")
 
     raise RuntimeError, message
+  end
+
+  def template_root(template)
+    File.join(TMP_ROOT, "host_app_template_#{template}")
+  end
+
+  def work_root(template)
+    File.join(TMP_ROOT, "host_app_#{template}")
   end
 end
