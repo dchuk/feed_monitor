@@ -867,9 +867,9 @@
 
 ### 22.02 Fresh Host App Installation Flow
 
-- [ ] 22.02.01 Script a disposable Rails 8 host app harness (e.g., `tmp/host_app`) that installs the gem from the local path and exercises the install generator
-- [ ] 22.02.02 Add automated test suite (bin/rails test or RSpec) that boots the harness, runs `rails g feed_monitor:install`, and asserts migrations/routes initializers mount without manual edits
-- [ ] 22.02.03 Verify host app retains existing configuration (environment settings, Solid Queue adapter, Action Cable config) by snapshotting before/after diffs in the harness tests
+- [x] 22.02.01 Script a disposable Rails 8 host app harness (e.g., `tmp/host_app`) that installs the gem from the local path and exercises the install generator
+- [x] 22.02.02 Add automated test suite (bin/rails test or RSpec) that boots the harness, runs `rails g feed_monitor:install`, and asserts migrations/routes initializers mount without manual edits
+- [x] 22.02.03 Verify host app retains existing configuration (environment settings, Solid Queue adapter, Action Cable config) by snapshotting before/after diffs in the harness tests
 
 ### 22.03 Isolation & Compatibility Guarantees
 

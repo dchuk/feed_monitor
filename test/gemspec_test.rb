@@ -16,6 +16,7 @@ class GemspecTest < ActiveSupport::TestCase
     assert_equal @spec.homepage, @spec.metadata["homepage_uri"]
 
     assert_nil @spec.metadata["allowed_push_host"], "allowed_push_host should not restrict RubyGems release"
+    assert_equal "true", @spec.metadata["rubygems_mfa_required"], "rubygems_mfa_required metadata should be enforced"
 
     assert_equal Gem::Requirement.new(">= 3.4.0"), @spec.required_ruby_version
   end
@@ -30,7 +31,9 @@ class GemspecTest < ActiveSupport::TestCase
       %r{^\.ai/},
       %r{^\.github/},
       %r{^examples/},
-      %r{^vendor/}
+      %r{^vendor/},
+      %r{^pkg/},
+      %r{^bin/}
     ]
 
     disallowed_matches = @spec.files.select do |file|
