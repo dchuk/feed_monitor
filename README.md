@@ -21,7 +21,7 @@ FeedMonitor is a production-ready Rails 8 mountable engine for ingesting, normal
 ## Quick Start (Host Application)
 
 ### Initial Install
-1. Add `gem "feed_monitor", github: "darrindemchuk/feed_monitor"` to your Gemfile and run `rbenv exec bundle install`.
+1. Add `gem "feed_monitor", github: "dchuk/feed_monitor"` to your Gemfile and run `rbenv exec bundle install`.
 2. Install the engine: `rbenv exec bin/rails generate feed_monitor:install --mount-path=/feed_monitor` (updates routes, drops the initializer, prints doc links).
 3. Copy migrations: `rbenv exec bin/rails railties:install:migrations FROM=feed_monitor`.
 4. Apply migrations: `rbenv exec bin/rails db:migrate` (creates sources/items/logs tables, Solid Cable messages, and Solid Queue schema when required).

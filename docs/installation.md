@@ -15,7 +15,7 @@ FeedMonitor installs like any other Rails engine, but it ships enough infrastruc
 
 | Step | Command | Purpose |
 | --- | --- | --- |
-| 1 | `gem "feed_monitor", github: "darrindemchuk/feed_monitor"` | Add the engine to your Gemfile |
+| 1 | `gem "feed_monitor", github: "dchuk/feed_monitor"` | Add the engine to your Gemfile |
 | 2 | `rbenv exec bundle install` | Install Ruby dependencies |
 | 3 | `rbenv exec bin/rails generate feed_monitor:install --mount-path=/feed_monitor` | Mount the engine and create the initializer |
 | 4 | `rbenv exec bin/rails railties:install:migrations FROM=feed_monitor` | Copy engine migrations (idempotent) |
@@ -28,7 +28,7 @@ FeedMonitor installs like any other Rails engine, but it ships enough infrastruc
 In your host application's `Gemfile`:
 
 ```ruby
-gem "feed_monitor", github: "darrindemchuk/feed_monitor"
+gem "feed_monitor", github: "dchuk/feed_monitor"
 ```
 
 Then install dependencies:

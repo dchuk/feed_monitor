@@ -10,9 +10,9 @@ class GemspecTest < ActiveSupport::TestCase
     assert_equal "Feed Monitor engine for ingesting, scraping, and monitoring RSS/Atom/JSON feeds", @spec.summary
     assert_includes @spec.description, "mountable Rails 8 engine"
 
-    assert_equal "https://github.com/darrindemchuk/feed_monitor", @spec.metadata["source_code_uri"]
-    assert_equal "https://github.com/darrindemchuk/feed_monitor/blob/main/CHANGELOG.md", @spec.metadata["changelog_uri"]
-    assert_equal "https://github.com/darrindemchuk/feed_monitor#readme", @spec.metadata["documentation_uri"]
+      assert_equal "https://github.com/dchuk/feed_monitor", @spec.metadata["source_code_uri"]
+      assert_equal "https://github.com/dchuk/feed_monitor/blob/main/CHANGELOG.md", @spec.metadata["changelog_uri"]
+      assert_equal "https://github.com/dchuk/feed_monitor#readme", @spec.metadata["documentation_uri"]
     assert_equal @spec.homepage, @spec.metadata["homepage_uri"]
 
     assert_nil @spec.metadata["allowed_push_host"], "allowed_push_host should not restrict RubyGems release"
