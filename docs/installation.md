@@ -11,6 +11,18 @@ FeedMonitor installs like any other Rails engine, but it ships enough infrastruc
 - Solid Queue and Solid Cable gems available (they ship with Rails 8, but make sure they are not removed)
 - Optional: Mission Control Jobs if you plan to surface the dashboard shortcut, Redis if you intend to switch realtime adapters
 
+## Quick Reference
+
+| Step | Command | Purpose |
+| --- | --- | --- |
+| 1 | `gem "feed_monitor", github: "darrindemchuk/feed_monitor"` | Add the engine to your Gemfile |
+| 2 | `rbenv exec bundle install` | Install Ruby dependencies |
+| 3 | `rbenv exec bin/rails generate feed_monitor:install --mount-path=/feed_monitor` | Mount the engine and create the initializer |
+| 4 | `rbenv exec bin/rails railties:install:migrations FROM=feed_monitor` | Copy engine migrations (idempotent) |
+| 5 | `rbenv exec bin/rails db:migrate` | Apply schema updates, including Solid Queue tables |
+| 6 | `rbenv exec bin/rails solid_queue:start` | Ensure jobs process via Solid Queue |
+| 7 | `rbenv exec bin/jobs --recurring_schedule_file=config/recurring.yml` | Start recurring scheduler (optional but recommended) |
+
 ## 1. Add the Gem
 
 In your host application's `Gemfile`:
@@ -40,6 +52,7 @@ Key outputs:
 - Adds `mount FeedMonitor::Engine, at: "/feed_monitor"` to your routes (change the path with `--mount-path`)
 - Creates `config/initializers/feed_monitor.rb` with documented configuration defaults
 - The generator is idempotent: re-running it will detect existing mounts/initializers and skip overwriting your customizations
+- Update your navigation or admin layout to link to the mount path so teammates can discover the dashboard.
 
 ## 3. Copy Engine Migrations
 
@@ -60,6 +73,8 @@ rbenv exec bin/rails db:migrate
 ```
 
 If you prefer a dedicated database for Solid Queue, run `rbenv exec bin/rails solid_queue:install` beforehand and point the generated config at your queue database. Otherwise the engine-provided migration keeps Solid Queue tables in the primary database.
+
+> Tip: Solid Queue tables must be present before you start the dashboard. If your host app already ran `solid_queue:install`, delete the engine-provided migration before running `db:migrate` to avoid duplication.
 
 ## 5. Wire Action Cable (if needed)
 

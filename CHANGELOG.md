@@ -16,3 +16,11 @@
   - `POST /feed_monitor/sources/:source_id/retry` (`FeedMonitor::SourceRetriesController#create`)
   - `POST /feed_monitor/sources/:source_id/bulk_scrape` (`FeedMonitor::SourceBulkScrapesController#create`)
   Route helpers are now `feed_monitor.source_fetch_path`, `feed_monitor.source_retry_path`, and `feed_monitor.source_bulk_scrape_path`.
+
+### Upgrade Notes
+
+1. Update your host `Gemfile` to the new version and run `rbenv exec bundle install`.
+2. Re-run `rbenv exec bin/rails railties:install:migrations FROM=feed_monitor` followed by `rbenv exec bin/rails db:migrate` to apply new engine migrations (Solid Queue tables remain idempotent).
+3. Diff `config/initializers/feed_monitor.rb` against the generated template to adopt new configuration defaults (queue visibility tweaks, HTTP knobs, mission control toggles).
+4. If you surface Mission Control Jobs from the dashboard, ensure `mission_control-jobs` stays mounted and `config.mission_control_dashboard_path` points to the correct route helper.
+5. Restart Solid Queue workers and Action Cable after deploying to pick up configuration changes.

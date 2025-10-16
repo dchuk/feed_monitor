@@ -19,15 +19,24 @@ FeedMonitor is a production-ready Rails 8 mountable engine for ingesting, normal
 - Optional: Mission Control Jobs for dashboard linking, Redis if you opt into the Redis realtime adapter
 
 ## Quick Start (Host Application)
+
+### Initial Install
 1. Add `gem "feed_monitor", github: "darrindemchuk/feed_monitor"` to your Gemfile and run `rbenv exec bundle install`.
-2. Install the engine: `rbenv exec bin/rails generate feed_monitor:install --mount-path=/feed_monitor`.
+2. Install the engine: `rbenv exec bin/rails generate feed_monitor:install --mount-path=/feed_monitor` (updates routes, drops the initializer, prints doc links).
 3. Copy migrations: `rbenv exec bin/rails railties:install:migrations FROM=feed_monitor`.
 4. Apply migrations: `rbenv exec bin/rails db:migrate` (creates sources/items/logs tables, Solid Cable messages, and Solid Queue schema when required).
 5. Install frontend tooling if you plan to extend engine assets: `npm install`.
 6. Start background workers: `rbenv exec bin/rails solid_queue:start` (or your preferred process manager).
-7. Boot your app and visit `/feed_monitor` (or the mount path you chose) to explore the dashboard.
+7. Boot your app and visit the mount path you chose (default `/feed_monitor`) to explore the dashboard and confirm Solid Queue metrics render.
 
-Detailed instructions, optional flags, and verification steps live in [docs/installation.md](docs/installation.md).
+Detailed instructions, optional flags, and verification steps live in [docs/installation.md](docs/installation.md), with troubleshooting advice in [docs/troubleshooting.md](docs/troubleshooting.md).
+
+### Upgrading FeedMonitor
+1. Bump the gem version in your host `Gemfile` and run `rbenv exec bundle install` (or `bundle update feed_monitor` when targeting a specific release).
+2. Re-run `rbenv exec bin/rails railties:install:migrations FROM=feed_monitor` and then `rbenv exec bin/rails db:migrate` to pick up schema changes.
+3. Compare your `config/initializers/feed_monitor.rb` against the newly generated template for configuration diffs (new queue knobs, HTTP options, etc.).
+4. Review release notes for optional integrations—when enabling Mission Control, ensure `mission_control-jobs` stays mounted and linked via `config.mission_control_dashboard_path`.
+5. Smoke test Solid Queue workers, Action Cable, and admin UI flows after the upgrade.
 
 ## Example Applications
 - `examples/basic_host/template.rb` – Minimal host that seeds a Rails blog source and redirects `/` to the dashboard.

@@ -73,6 +73,13 @@ module FeedMonitor
       assert_equal 1, routes_contents.scan(/mount FeedMonitor::Engine/).count
     end
 
+    def test_outputs_next_steps_with_doc_links
+      output = run_generator
+
+      assert_includes output, "docs/installation.md"
+      assert_includes output, "docs/troubleshooting.md"
+    end
+
     private
 
     def write_routes_file

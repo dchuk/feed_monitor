@@ -8,7 +8,7 @@ This guide lists common issues you might encounter while installing, upgrading, 
 - Restart the Rails server after modifying routes.
 - Confirm your host application routes are reloaded (run `rbenv exec bin/rails routes | grep feed_monitor`).
 
-## 2. Migrations Are Missing or Out of Date
+## 2. Migrations or Solid Queue Tables Are Missing
 
 - Run `rbenv exec bin/rails railties:install:migrations FROM=feed_monitor` followed by `rbenv exec bin/rails db:migrate`.
 - If you see duplicate migration timestamps, remove the older copy before rerunning the installer.
@@ -52,12 +52,13 @@ This guide lists common issues you might encounter while installing, upgrading, 
 - System tests rely on Selenium + Chrome. Install Chrome/Chromium and set `SELENIUM_CHROME_BINARY` if the binary lives in a non-standard path.
 - You can run `rbenv exec bin/test-coverage --verbose` to inspect failures with additional logging.
 
-## 9. Mission Control Link Breaks
+## 9. Mission Control Jobs Link Returns 404
 
-- The dashboard only renders a Mission Control link when `config.mission_control_enabled = true` **and** `config.mission_control_dashboard_path` resolves. Call `FeedMonitor.mission_control_dashboard_path` in the Rails console to confirm.
-- When hosting Mission Control in a separate app, provide a full URL instead of a route helper.
+- Mount `MissionControl::Jobs::Engine` in your host routes (for example, `mount MissionControl::Jobs::Engine, at: "/mission_control"`).
+- Keep `config.mission_control_enabled = true` **and** `config.mission_control_dashboard_path` pointing at that mounted route helper. Call `FeedMonitor.mission_control_dashboard_path` in the Rails console to confirm it resolves.
+- When hosting Mission Control in a separate app, provide a full URL instead of a route helper and ensure CORS/WebSocket settings allow the dashboard iframe.
 
-## 10. Dummy UI Loads Without Styles or JavaScript
+## 10. Tailwind Build Fails or Admin UI Loads Without Styles
 
 - Running `test/dummy/bin/dev` before configuring the bundling pipeline will serve the admin UI without Tailwind styles or Stimulus behaviours. This happens because the engine no longer ships precompiled assets; see `.ai/engine-asset-configuration.md:11-44` for the required npm setup.
 - Fix by running `npm install` followed by `npm run build` inside the engine root so that `app/assets/builds/feed_monitor/application.css` and `application.js` exist. The Rake task `app:feed_monitor:assets:build` wraps the same scripts for CI usage.

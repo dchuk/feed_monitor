@@ -879,9 +879,9 @@
 
 ### 22.04 Installation & Upgrade Documentation
 
-- [ ] 22.04.01 Produce a dedicated `docs/installation.md` (linked from README) covering Gemfile entry, bundle install, generator invocation, migrations, mount instructions, and Solid Queue prerequisites
-- [ ] 22.04.02 Update README quickstart and CHANGELOG release sections with step-by-step upgrade notes (engine migrations, configuration diffs, optional Mission Control integration)
-- [ ] 22.04.03 Draft troubleshooting guide for common install issues (missing Solid Queue tables, Tailwind build failures, mission_control-jobs not mounted) and cross-link from generator output
+- [x] 22.04.01 Produce a dedicated `docs/installation.md` (linked from README) covering Gemfile entry, bundle install, generator invocation, migrations, mount instructions, and Solid Queue prerequisites
+- [x] 22.04.02 Update README quickstart and CHANGELOG release sections with step-by-step upgrade notes (engine migrations, configuration diffs, optional Mission Control integration)
+- [x] 22.04.03 Draft troubleshooting guide for common install issues (missing Solid Queue tables, Tailwind build failures, mission_control-jobs not mounted) and cross-link from generator output
 
 ### 22.05 Release Pipeline & Quality Gates
 

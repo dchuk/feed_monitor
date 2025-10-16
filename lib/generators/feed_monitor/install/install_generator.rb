@@ -32,6 +32,12 @@ module FeedMonitor
         template "feed_monitor.rb.tt", initializer_path
       end
 
+      def print_next_steps
+        say_status :info,
+          "Next steps: review docs/installation.md for install walkthroughs and docs/troubleshooting.md for common fixes.",
+          :green
+      end
+
       private
 
       def engine_already_mounted?(mount_path)
