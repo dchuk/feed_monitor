@@ -1,5 +1,14 @@
 # Changelog
 
+## Release Checklist
+
+1. `rbenv exec bundle exec rails test`
+2. `rbenv exec bundle exec rubocop`
+3. `rbenv exec bundle exec rake app:feed_monitor:assets:verify`
+4. `rbenv exec bundle exec gem build feed_monitor.gemspec`
+5. Update release notes in this file and tag the release (`git tag vX.Y.Z`)
+6. Push tags and publish the gem (`rbenv exec gem push pkg/feed_monitor-X.Y.Z.gem`)
+
 ## 2025-10-14
 
 - Converted source fetch, retry, and bulk scrape member actions into nested resources. New controller endpoints:

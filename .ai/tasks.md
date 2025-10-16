@@ -855,6 +855,45 @@
 
 ---
 
+## Phase 22: Release Readiness & Host Installation Experience
+
+**Goal: Ship Feed Monitor as an installable gem with bulletproof host app onboarding**
+
+### 22.01 Package Readiness Audit
+
+- [x] 22.01.01 Review `feed_monitor.gemspec` metadata, dependencies, and executables to match release expectations (homepage, changelog, docs URLs, Ruby/Rails version constraints)
+- [x] 22.01.02 Establish semantic versioning policy and release cadence, updating `.ai/project_overview.md` and `CHANGELOG.md` with the release checklist
+- [x] 22.01.03 Confirm gem build artifacts (`gem build feed_monitor.gemspec`) exclude development-only files via `.gemspec` and `.npmignore`/`.gitignore` alignment
+
+### 22.02 Fresh Host App Installation Flow
+
+- [ ] 22.02.01 Script a disposable Rails 8 host app harness (e.g., `tmp/host_app`) that installs the gem from the local path and exercises the install generator
+- [ ] 22.02.02 Add automated test suite (bin/rails test or RSpec) that boots the harness, runs `rails g feed_monitor:install`, and asserts migrations/routes initializers mount without manual edits
+- [ ] 22.02.03 Verify host app retains existing configuration (environment settings, Solid Queue adapter, Action Cable config) by snapshotting before/after diffs in the harness tests
+
+### 22.03 Isolation & Compatibility Guarantees
+
+- [ ] 22.03.01 Audit engine initializers, Railties, and configuration hooks to ensure they no-op when host overrides are present; document guard clauses or configuration fallbacks
+- [ ] 22.03.02 Add regression tests ensuring engine generators do not overwrite existing host files (e.g., `config/application.rb`, `config/cable.yml`), using temporary fixtures to simulate conflict scenarios
+- [ ] 22.03.03 Validate mounting options for varied host setups (API-only apps, custom queue_db, Redis Action Cable) and record support matrix in docs
+
+### 22.04 Installation & Upgrade Documentation
+
+- [ ] 22.04.01 Produce a dedicated `docs/installation.md` (linked from README) covering Gemfile entry, bundle install, generator invocation, migrations, mount instructions, and Solid Queue prerequisites
+- [ ] 22.04.02 Update README quickstart and CHANGELOG release sections with step-by-step upgrade notes (engine migrations, configuration diffs, optional Mission Control integration)
+- [ ] 22.04.03 Draft troubleshooting guide for common install issues (missing Solid Queue tables, Tailwind build failures, mission_control-jobs not mounted) and cross-link from generator output
+
+### 22.05 Release Pipeline & Quality Gates
+
+- [ ] 22.05.01 Create release automation task (e.g., `bin/release`) that runs linters/tests, builds the gem, and tags versions with annotated changelog entries
+- [ ] 22.05.02 Introduce CI job that provisions the disposable host app harness, installs the built gem, runs generator, migrations, and smoke tests to guard future releases
+- [ ] 22.05.03 Document manual verification steps for release managers (check gem size, README rendering on RubyGems, confirm installation instructions) in `.ai/release_checklist.md`
+
+**Deliverable: Engine publishes as a gem with automated host app install verification, zero configuration bleed, and clear onboarding docs**
+**Test: Release pipeline builds the gem, CI installs it into a fresh Rails 8 host app, and generator-driven smoke tests pass without modifying host configurations**
+
+---
+
 ## Success Criteria Per Phase
 
 Each phase must:

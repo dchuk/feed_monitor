@@ -681,6 +681,19 @@ Modify the admin interface:
 - Troubleshooting guide
 - Deployment best practices
 
+### Release Strategy
+
+- **Semantic Versioning**: Follow MAJOR.MINOR.PATCH. Breaking changes bump MAJOR, additive features bump MINOR, bugfixes and documentation-only changes bump PATCH.
+- **Release Cadence**: Target monthly MINOR releases with PATCH releases on demand for urgent fixes.
+- **Release Checklist**:
+  1. `rbenv exec bundle exec rails test`
+  2. `rbenv exec bundle exec rubocop`
+  3. `rbenv exec bundle exec rake app:feed_monitor:assets:verify`
+  4. `rbenv exec bundle exec gem build feed_monitor.gemspec`
+  5. Update `CHANGELOG.md` with release notes and tag commit (`git tag vX.Y.Z`)
+  6. Push tag and publish gem (`rbenv exec gem push pkg/feed_monitor-X.Y.Z.gem`)
+  7. Announce release in project README/CHANGELOG summary as needed
+
 ---
 
 ## Use Cases
