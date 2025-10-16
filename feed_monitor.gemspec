@@ -4,8 +4,8 @@ Gem::Specification.new do |spec|
   spec.name        = "feed_monitor"
   spec.version     = FeedMonitor::VERSION
   spec.authors     = [ "dchuk" ]
-  spec.email       = [ "darrindemchuk@gmail.com" ]
-  spec.homepage    = "https://github.com/darrindemchuk/feed_monitor"
+  spec.email       = [ "me@dchuk.com" ]
+  spec.homepage    = "https://github.com/dchuk/feed_monitor"
   spec.summary     = "Feed Monitor engine for ingesting, scraping, and monitoring RSS/Atom/JSON feeds"
   spec.description = "Feed Monitor is a mountable Rails 8 engine that ingests RSS, Atom, and JSON feeds, scrapes full article content, and surfaces Solid Queue powered dashboards for monitoring and remediation."
   spec.license     = "MIT"
@@ -13,9 +13,9 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = ">= 3.4.0"
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
-  spec.metadata["changelog_uri"] = "https://github.com/darrindemchuk/feed_monitor/blob/main/CHANGELOG.md"
-  spec.metadata["documentation_uri"] = "https://github.com/darrindemchuk/feed_monitor#readme"
-  spec.metadata["bug_tracker_uri"] = "https://github.com/darrindemchuk/feed_monitor/issues"
+  spec.metadata["changelog_uri"] = "https://github.com/dchuk/feed_monitor/blob/main/CHANGELOG.md"
+  spec.metadata["documentation_uri"] = "https://github.com/dchuk/feed_monitor#readme"
+  spec.metadata["bug_tracker_uri"] = "https://github.com/dchuk/feed_monitor/issues"
   spec.metadata["rubygems_mfa_required"] = "true"
 
   spec.files = Dir.chdir(File.expand_path(__dir__)) do
