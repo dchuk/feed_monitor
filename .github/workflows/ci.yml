@@ -52,6 +52,12 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    env:
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_TEST_DB: feed_monitor_dummy_test
     services:
       postgres:
         image: postgres:16
@@ -68,7 +74,7 @@ jobs:
           --health-retries=5
     steps:
       - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y build-essential git libyaml-dev pkg-config google-chrome-stable
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y build-essential git libyaml-dev pkg-config google-chrome-stable postgresql-client
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -91,13 +97,17 @@ jobs:
       - name: Build frontend assets
         run: npm run build
 
+      - name: Wait for Postgres
+        env:
+          PGPASSWORD: ${{ env.POSTGRES_PASSWORD }}
+        run: |
+          until pg_isready --host="$POSTGRES_HOST" --port="$POSTGRES_PORT" --username="$POSTGRES_USER"; do
+            sleep 1
+          done
+
       - name: Run tests
         env:
           RAILS_ENV: test
-          POSTGRES_HOST: postgres
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_TEST_DB: feed_monitor_dummy_test
           # REDIS_URL: redis://localhost:6379/0
         run: |
           bin/rails db:test:prepare
