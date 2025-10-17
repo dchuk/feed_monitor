@@ -109,7 +109,9 @@ module HostAppHarness
 
     Bundler.with_unbundled_env do
       FeedMonitor::Engine.eager_load!
-      Rails::Generators::AppGenerator.start(args, behavior: :invoke)
+      Dir.chdir(ENGINE_ROOT) do
+        Rails::Generators::AppGenerator.start(args, behavior: :invoke)
+      end
     end
   end
 
