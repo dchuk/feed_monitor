@@ -3,6 +3,7 @@
 require "bundler"
 require "digest"
 require "fileutils"
+require "json"
 require "open3"
 require "rails/generators"
 require "rails/generators/rails/app/app_generator"
@@ -20,15 +21,10 @@ module HostAppHarness
       "--skip-hotwire",
       "--skip-javascript",
       "--skip-css",
+      "--skip-kamal",
+      "--skip-thruster",
       "--skip-ci",
       "--skip-docker",
-      "--skip-thruster",
-      "--skip-rubocop",
-      "--skip-brakeman",
-      "--skip-solid",
-      "--skip-kamal",
-      "--skip-dev-gems",
-      "--skip-bundle",
       "--skip-deploy",
       "--skip-action-mailer",
       "--skip-action-mailbox",
@@ -43,15 +39,10 @@ module HostAppHarness
       "--skip-hotwire",
       "--skip-javascript",
       "--skip-css",
+      "--skip-kamal",
+      "--skip-thruster",
       "--skip-ci",
       "--skip-docker",
-      "--skip-thruster",
-      "--skip-rubocop",
-      "--skip-brakeman",
-      "--skip-solid",
-      "--skip-kamal",
-      "--skip-dev-gems",
-      "--skip-bundle",
       "--skip-deploy",
       "--skip-action-mailer",
       "--skip-action-mailbox",
@@ -60,6 +51,15 @@ module HostAppHarness
       "--skip-git"
     ]
   }.freeze
+
+  TEMPLATE_SIGNATURE = Digest::SHA256.hexdigest(
+    JSON.dump(
+      options: TEMPLATE_OPTIONS,
+      ruby: RUBY_VERSION,
+      rails: Rails.version,
+      feed_monitor: FeedMonitor::VERSION
+    )
+  ).freeze
 
   def prepare_working_directory(template: :default)
     ensure_template!(template)
@@ -110,12 +110,30 @@ module HostAppHarness
 
   def ensure_template!(template)
     root = template_root(template)
-    return if File.exist?(File.join(root, "Gemfile.lock"))
+    unless template_up_to_date?(template)
+      FileUtils.rm_rf(root)
+      generate_host_app_template!(template)
+      append_engine_to_gemfile!(root)
+      ensure_bundle_installed!(root)
+      write_template_signature!(template)
+    end
+  end
 
-    FileUtils.rm_rf(root)
-    generate_host_app_template!(template)
-    append_engine_to_gemfile!(root)
-    ensure_bundle_installed!(root)
+  def template_up_to_date?(template)
+    root = template_root(template)
+    lockfile = File.join(root, "Gemfile.lock")
+    signature_file = template_signature_file(template)
+    File.exist?(lockfile) &&
+      File.exist?(signature_file) &&
+      File.read(signature_file) == TEMPLATE_SIGNATURE
+  end
+
+  def template_signature_file(template)
+    File.join(template_root(template), ".feed_monitor_template_signature")
+  end
+
+  def write_template_signature!(template)
+    File.write(template_signature_file(template), TEMPLATE_SIGNATURE)
   end
 
   def reset_working_directory!(template)
@@ -129,8 +147,18 @@ module HostAppHarness
 
     Bundler.with_unbundled_env do
       FeedMonitor::Engine.eager_load!
-      Dir.chdir(ENGINE_ROOT) do
-        Rails::Generators::AppGenerator.start(args, behavior: :invoke)
+      parent = File.dirname(template_root(template))
+      FileUtils.mkdir_p(parent)
+      Dir.chdir(parent) do
+        system(
+          { "BUNDLE_IGNORE_CONFIG" => "1" },
+          "rbenv",
+          "exec",
+          "rails",
+          "new",
+          *args,
+          exception: true
+        )
       end
     end
   end
