@@ -47,11 +47,11 @@ module FeedMonitor
     test "scopes provide recent ordering" do
       latest = ScrapeLog.create!(source: @source, item: @item, started_at: 1.minute.ago, success: true)
       middle = ScrapeLog.create!(source: @source, item: @item, started_at: 5.minutes.ago, success: false)
-      oldest = ScrapeLog.create!(source: @source, item: @item, started_at: 10.minutes.ago)
+      oldest = ScrapeLog.create!(source: @source, item: @item, started_at: 10.minutes.ago, success: true)
 
-      assert_equal [ latest, middle, oldest ], ScrapeLog.recent.to_a
-      assert_equal [ latest ], ScrapeLog.successful.to_a
-      assert_equal [ middle ], ScrapeLog.failed.to_a
+      assert_equal [latest, middle, oldest], ScrapeLog.recent.to_a
+      assert_equal [latest, oldest], ScrapeLog.successful.to_a
+      assert_equal [middle], ScrapeLog.failed.to_a
     end
   end
 end

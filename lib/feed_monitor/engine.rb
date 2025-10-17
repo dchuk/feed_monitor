@@ -13,6 +13,7 @@ module FeedMonitor
       engine_root = FeedMonitor::Engine.root
 
       app.config.assets.paths << engine_root.join("app/assets/builds").to_s
+      app.config.assets.paths << engine_root.join("app/assets/builds/feed_monitor").to_s
       app.config.assets.paths << engine_root.join("app/assets/images").to_s
       app.config.assets.paths << engine_root.join("app/assets/svgs").to_s
     end

@@ -27,7 +27,7 @@ module FeedMonitor
       def previous_page
         return nil unless has_previous_page
 
-        [ page - 1, 1 ].max
+        [page - 1, 1].max
       end
     end
 
@@ -81,7 +81,7 @@ module FeedMonitor
         number = value.to_i
         return DEFAULT_PER_PAGE if number <= 0
 
-        [ number, 100 ].min
+        [number, 100].min
       rescue StandardError
         DEFAULT_PER_PAGE
       end

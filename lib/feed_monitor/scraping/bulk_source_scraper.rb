@@ -171,7 +171,7 @@ module FeedMonitor
         return scope unless limit
 
         current_limit = scope.limit_value
-        effective_limit = current_limit ? [ current_limit, limit ].min : limit
+        effective_limit = current_limit ? [current_limit, limit].min : limit
         scope.limit(effective_limit)
       end
 

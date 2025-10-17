@@ -51,7 +51,7 @@ module FeedMonitor
         config.http.retry_interval = 1.0
         config.http.retry_interval_randomness = 0.25
         config.http.retry_backoff_factor = 3
-        config.http.retry_statuses = [ 418, 429 ]
+        config.http.retry_statuses = [418, 429]
       end
 
       connection = FeedMonitor::HTTP.client
@@ -71,7 +71,7 @@ module FeedMonitor
       assert_in_delta 1.0, options[:interval]
       assert_in_delta 0.25, options[:interval_randomness]
       assert_equal 3, options[:backoff_factor]
-      assert_equal [ 418, 429 ], options[:retry_statuses]
+      assert_equal [418, 429], options[:retry_statuses]
     end
 
     test "supports proxy arguments" do

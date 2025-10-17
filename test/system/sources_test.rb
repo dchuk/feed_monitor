@@ -159,13 +159,13 @@ module FeedMonitor
 
       visit feed_monitor.sources_path
 
-      assert_source_order [ "Zeta Feed", "Alpha Feed" ]
+      assert_source_order ["Zeta Feed", "Alpha Feed"]
 
       within "turbo-frame#feed_monitor_sources_table thead" do
         click_link "Source"
       end
 
-      assert_source_order [ "Alpha Feed", "Zeta Feed" ]
+      assert_source_order ["Alpha Feed", "Zeta Feed"]
       within "turbo-frame#feed_monitor_sources_table thead th[data-sort-column='name']" do
         assert_text "▲"
       end
@@ -173,7 +173,7 @@ module FeedMonitor
       within "turbo-frame#feed_monitor_sources_table thead" do
         click_link "Source"
       end
-      assert_source_order [ "Zeta Feed", "Alpha Feed" ]
+      assert_source_order ["Zeta Feed", "Alpha Feed"]
       within "turbo-frame#feed_monitor_sources_table thead th[data-sort-column='name']" do
         assert_text "▼"
       end

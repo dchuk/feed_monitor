@@ -19,7 +19,7 @@ module FeedMonitor
       json = Feedjira.parse(json_feed)
 
       assert_equal "Example JSON Feed", json.title
-      assert_equal [ "json-1" ], json.entries.map(&:id)
+      assert_equal ["json-1"], json.entries.map(&:id)
     end
   end
 end

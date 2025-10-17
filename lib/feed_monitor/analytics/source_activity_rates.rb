@@ -20,7 +20,7 @@ module FeedMonitor
           .group(:source_id)
           .count
 
-        days = [ lookback.in_days, 1 ].max
+        days = [lookback.in_days, 1].max
 
         counts.transform_values { |count| count.to_f / days }.tap do |results|
           source_ids.each { |source_id| results[source_id] ||= 0.0 }

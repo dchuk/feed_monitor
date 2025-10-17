@@ -30,9 +30,9 @@ module FeedMonitor
         fake_connection = Class.new do
           def exec_query(sql)
             if sql.include?("pg_try_advisory_lock")
-              ActiveRecord::Result.new([], [ [ false ] ])
+              ActiveRecord::Result.new([], [[false]])
             else
-              ActiveRecord::Result.new([], [ [ true ] ])
+              ActiveRecord::Result.new([], [[true]])
             end
           end
         end.new

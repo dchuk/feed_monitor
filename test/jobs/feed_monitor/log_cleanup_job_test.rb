@@ -29,8 +29,8 @@ module FeedMonitor
           scrape_logs_older_than_days: 60
         )
 
-        assert_equal [ "recent" ], FeedMonitor::FetchLog.order(:created_at).pluck(Arel.sql("metadata->>'label'"))
-        assert_equal [ "recent" ], FeedMonitor::ScrapeLog.order(:created_at).pluck(Arel.sql("metadata->>'label'"))
+        assert_equal ["recent"], FeedMonitor::FetchLog.order(:created_at).pluck(Arel.sql("metadata->>'label'"))
+        assert_equal ["recent"], FeedMonitor::ScrapeLog.order(:created_at).pluck(Arel.sql("metadata->>'label'"))
       end
     end
 

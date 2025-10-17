@@ -280,7 +280,7 @@ module FeedMonitor
           unless source.adaptive_fetching_enabled? == false
             retry_at = now + decision.wait
             current_next = attributes[:next_fetch_at]
-            attributes[:next_fetch_at] = [ current_next, retry_at ].compact.min
+            attributes[:next_fetch_at] = [current_next, retry_at].compact.min
             attributes[:backoff_until] = retry_at
           end
         else
@@ -426,20 +426,20 @@ module FeedMonitor
         if source.adaptive_fetching_enabled?
           interval_seconds = compute_next_interval_seconds(content_changed:, failure:)
           scheduled_time = Time.current + adjusted_interval_with_jitter(interval_seconds)
-          scheduled_time = [ scheduled_time, source.backoff_until ].compact.max if source.backoff_until.present?
+          scheduled_time = [scheduled_time, source.backoff_until].compact.max if source.backoff_until.present?
 
           attributes[:fetch_interval_minutes] = interval_minutes_for(interval_seconds)
           attributes[:next_fetch_at] = scheduled_time
           attributes[:backoff_until] = failure ? scheduled_time : nil
         else
-          fixed_minutes = [ source.fetch_interval_minutes.to_i, 1 ].max
+          fixed_minutes = [source.fetch_interval_minutes.to_i, 1].max
           attributes[:next_fetch_at] = Time.current + fixed_minutes.minutes
           attributes[:backoff_until] = nil
         end
       end
 
       def compute_next_interval_seconds(content_changed:, failure:)
-        current = [ current_interval_seconds, min_fetch_interval_seconds ].max
+        current = [current_interval_seconds, min_fetch_interval_seconds].max
 
         next_interval = if failure
                           current * failure_increase_factor_value
@@ -460,7 +460,7 @@ module FeedMonitor
 
       def interval_minutes_for(interval_seconds)
         minutes = (interval_seconds / 60.0).round
-        [ minutes, 1 ].max
+        [minutes, 1].max
       end
 
       def min_fetch_interval_seconds

@@ -96,11 +96,11 @@ module FeedMonitor
     def scrape_flash_payload(result)
       case result.status
       when :enqueued
-        [ :notice, "Scrape has been enqueued and will run shortly." ]
+        [:notice, "Scrape has been enqueued and will run shortly."]
       when :already_enqueued
-        [ :notice, result.message ]
+        [:notice, result.message]
       else
-        [ :alert, result.message || "Unable to enqueue scrape for this item." ]
+        [:alert, result.message || "Unable to enqueue scrape for this item."]
       end
     end
 

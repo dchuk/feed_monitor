@@ -118,7 +118,7 @@ module FeedMonitor
         future_cap = reference_time + 100.years
 
         sources.sort_by do |source|
-          [ source.next_fetch_at || future_cap, source.name.to_s ]
+          [source.next_fetch_at || future_cap, source.name.to_s]
         end
       end
     end

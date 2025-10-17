@@ -107,10 +107,10 @@ module FeedMonitor
 
       def rate_limit_exhausted?
         limit = FeedMonitor.config.scraping.max_in_flight_per_source
-        return [ false, nil ] unless limit
+        return [false, nil] unless limit
 
         in_flight = source.items.where(scrape_status: FeedMonitor::Scraping::State::IN_FLIGHT_STATUSES).count
-        [ in_flight >= limit, { limit:, in_flight: in_flight } ]
+        [in_flight >= limit, { limit:, in_flight: in_flight }]
       end
 
       def rate_limit_message(info)

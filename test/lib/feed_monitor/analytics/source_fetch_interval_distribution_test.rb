@@ -10,7 +10,7 @@ module FeedMonitor
       end
 
       test "groups sources into defined buckets" do
-        intervals = [ 3, 10, 45, 90, 180, 360, 600 ]
+        intervals = [3, 10, 45, 90, 180, 360, 600]
 
         intervals.each_with_index do |interval, index|
           create_source!(
@@ -26,7 +26,7 @@ module FeedMonitor
 
         counts = buckets.map(&:count)
 
-        assert_equal [ 2, 1, 1, 1, 1, 1 ], counts
+        assert_equal [2, 1, 1, 1, 1, 1], counts
       end
     end
   end

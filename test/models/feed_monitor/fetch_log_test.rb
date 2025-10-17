@@ -40,16 +40,16 @@ module FeedMonitor
       failed = FetchLog.create!(source: @source, success: false, started_at: 2.minutes.ago)
       older = FetchLog.create!(source: @source, success: true, started_at: 10.minutes.ago)
 
-      assert_equal [ failed, successful, older ], FetchLog.recent.to_a
-      assert_equal [ successful, older ], FetchLog.successful.to_a
-      assert_equal [ failed ], FetchLog.failed.to_a
+      assert_equal [failed, successful, older], FetchLog.recent.to_a
+      assert_equal [successful, older], FetchLog.successful.to_a
+      assert_equal [failed], FetchLog.failed.to_a
     end
 
     test "scopes by job id" do
-      tracked = FetchLog.create!(source: @source, job_id: "abc-123", started_at: Time.current)
-      FetchLog.create!(source: @source, job_id: "other", started_at: Time.current)
+      tracked = FetchLog.create!(source: @source, success: true, job_id: "abc-123", started_at: Time.current)
+      FetchLog.create!(source: @source, success: true, job_id: "other", started_at: Time.current)
 
-      assert_equal [ tracked ], FetchLog.for_job("abc-123").to_a
+      assert_equal [tracked], FetchLog.for_job("abc-123").to_a
     end
   end
 end

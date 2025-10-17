@@ -25,7 +25,7 @@ module FeedMonitor
           feed_url: "https://example.com/feed.xml",
           website_url: "https://example.com",
           scrape_settings: {
-            selectors: [ "<script>main</script>", { teaser: "<div>Lead</div>" } ]
+            selectors: ["<script>main</script>", { teaser: "<div>Lead</div>" }]
           },
           metadata: { "<script>" => "<b>value</b>" }
         )

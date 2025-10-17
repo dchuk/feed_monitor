@@ -1,19 +1,17 @@
 require "test_helper"
+require "tmpdir"
 
 module FeedMonitor
   module Assets
     class BundlerTest < ActiveSupport::TestCase
-      BUILD_ROOT = FeedMonitor::Engine.root.join("app/assets/builds/feed_monitor")
-
       setup do
-        FileUtils.mkdir_p(BUILD_ROOT)
-        @css_path = BUILD_ROOT.join("application.css")
-        @js_path = BUILD_ROOT.join("application.js")
+        @tmp_dir = Pathname.new(Dir.mktmpdir("feed_monitor-assets"))
+        @css_path = @tmp_dir.join("application.css")
+        @js_path = @tmp_dir.join("application.js")
       end
 
       teardown do
-        FileUtils.rm_f(@css_path)
-        FileUtils.rm_f(@js_path)
+        FileUtils.remove_entry(@tmp_dir) if @tmp_dir&.exist?
       end
 
       test "build! runs npm build in the engine root" do
@@ -54,8 +52,11 @@ module FeedMonitor
         FileUtils.rm_f(@css_path)
         File.write(@js_path, "// built js")
 
-        error = assert_raises FeedMonitor::Assets::Bundler::MissingBuildError do
-          FeedMonitor::Assets::Bundler.verify!
+        error = nil
+        FeedMonitor::Assets::Bundler.stub(:build_artifacts, [@css_path, @js_path]) do
+          error = assert_raises FeedMonitor::Assets::Bundler::MissingBuildError do
+            FeedMonitor::Assets::Bundler.verify!
+          end
         end
 
         assert_match "application.css", error.message
@@ -65,7 +66,12 @@ module FeedMonitor
         File.write(@css_path, "/* built css */")
         File.write(@js_path, "// built js")
 
-        assert FeedMonitor::Assets::Bundler.verify!
+        result = nil
+        FeedMonitor::Assets::Bundler.stub(:build_artifacts, [@css_path, @js_path]) do
+          result = FeedMonitor::Assets::Bundler.verify!
+        end
+
+        assert result
       end
     end
   end

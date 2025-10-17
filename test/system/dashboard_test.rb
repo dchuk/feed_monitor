@@ -188,7 +188,7 @@ module FeedMonitor
         turbo_nodes =
           case payload
           when Nokogiri::XML::Node
-            [ payload ]
+            [payload]
           else
             message = payload.is_a?(Hash) ? payload["message"] : payload
             next if message.blank?

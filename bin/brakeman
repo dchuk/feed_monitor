@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-rbenv exec bundle exec brakeman "$@"
+if command -v rbenv >/dev/null 2>&1; then
+  exec rbenv exec bundle exec brakeman "$@"
+else
+  exec bundle exec brakeman "$@"
+fi

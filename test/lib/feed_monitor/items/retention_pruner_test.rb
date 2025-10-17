@@ -28,7 +28,7 @@ module FeedMonitor
           result = FeedMonitor::Items::RetentionPruner.call(source:)
           assert_equal 1, result.removed_by_age
           assert_equal 0, result.removed_by_limit
-          assert_equal [ "recent" ], source.items.pluck(:guid)
+          assert_equal ["recent"], source.items.pluck(:guid)
         end
       end
 
@@ -44,7 +44,7 @@ module FeedMonitor
 
           result = FeedMonitor::Items::RetentionPruner.call(source:)
           assert_equal 1, result.removed_by_age
-          assert_equal [ "fresh" ], source.items.pluck(:guid)
+          assert_equal ["fresh"], source.items.pluck(:guid)
         end
       end
 

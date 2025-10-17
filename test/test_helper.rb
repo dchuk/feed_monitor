@@ -15,7 +15,7 @@ end
 ENV["RAILS_ENV"] = "test"
 
 require_relative "../test/dummy/config/environment"
-ActiveRecord::Migrator.migrations_paths = [ File.expand_path("../test/dummy/db/migrate", __dir__) ]
+ActiveRecord::Migrator.migrations_paths = [File.expand_path("../test/dummy/db/migrate", __dir__)]
 ActiveRecord::Migrator.migrations_paths << File.expand_path("../db/migrate", __dir__)
 require "rails/test_help"
 require "webmock/minitest"
@@ -32,7 +32,7 @@ require "capybara/minitest"
 # Load fixtures from the engine
 if ActiveSupport::TestCase.respond_to?(:fixture_paths=)
   fixtures_root = File.expand_path("fixtures", __dir__)
-  ActiveSupport::TestCase.fixture_paths = [ fixtures_root ]
+  ActiveSupport::TestCase.fixture_paths = [fixtures_root]
   ActionDispatch::IntegrationTest.fixture_paths = ActiveSupport::TestCase.fixture_paths
   ActiveSupport::TestCase.file_fixture_path = fixtures_root
   ActiveSupport::TestCase.fixtures :all

@@ -81,31 +81,31 @@ module FeedMonitor
       test "returns entries ordered by newest started_at first" do
         result = FeedMonitor::Logs::Query.new(params: {}).call
 
-        assert_equal [ @recent_scrape_entry.id, @recent_fetch_entry.id, @older_fetch_entry.id, @older_scrape_entry.id ],
+        assert_equal [@recent_scrape_entry.id, @recent_fetch_entry.id, @older_fetch_entry.id, @older_scrape_entry.id],
                      result.entries.map(&:id)
-        assert_equal [ :scrape, :fetch, :fetch, :scrape ],
+        assert_equal [:scrape, :fetch, :fetch, :scrape],
                      result.entries.map(&:log_type)
       end
 
       test "filters by log type" do
         result = FeedMonitor::Logs::Query.new(params: { log_type: "fetch" }).call
 
-        assert_equal [ :fetch, :fetch ], result.entries.map(&:log_type)
-        assert_equal [ @recent_fetch_entry.id, @older_fetch_entry.id ], result.entries.map(&:id)
+        assert_equal [:fetch, :fetch], result.entries.map(&:log_type)
+        assert_equal [@recent_fetch_entry.id, @older_fetch_entry.id], result.entries.map(&:id)
       end
 
       test "filters by status" do
         result = FeedMonitor::Logs::Query.new(params: { status: "failed" }).call
 
-        assert_equal [ :scrape, :fetch ], result.entries.map(&:log_type)
-        assert_equal [ @recent_scrape_entry.id, @older_fetch_entry.id ], result.entries.map(&:id)
+        assert_equal [:scrape, :fetch], result.entries.map(&:log_type)
+        assert_equal [@recent_scrape_entry.id, @older_fetch_entry.id], result.entries.map(&:id)
         assert result.entries.all? { |entry| entry.success? == false }
       end
 
       test "filters by timeframe shortcut" do
         result = FeedMonitor::Logs::Query.new(params: { timeframe: "24h" }).call
 
-        assert_equal [ @recent_scrape_entry.id, @recent_fetch_entry.id ], result.entries.map(&:id)
+        assert_equal [@recent_scrape_entry.id, @recent_fetch_entry.id], result.entries.map(&:id)
       end
 
       test "filters by explicit started_at range" do
@@ -116,27 +116,27 @@ module FeedMonitor
           }
         ).call
 
-        assert_equal [ @recent_scrape_entry.id, @recent_fetch_entry.id ], result.entries.map(&:id)
+        assert_equal [@recent_scrape_entry.id, @recent_fetch_entry.id], result.entries.map(&:id)
       end
 
       test "filters by source id" do
         result = FeedMonitor::Logs::Query.new(params: { source_id: @source_a.id.to_s }).call
 
-        assert_equal [ :scrape, :fetch ], result.entries.map(&:log_type)
+        assert_equal [:scrape, :fetch], result.entries.map(&:log_type)
         assert result.entries.all? { |entry| entry.source_id == @source_a.id }
       end
 
       test "filters scrape logs by item id" do
         result = FeedMonitor::Logs::Query.new(params: { item_id: @item_a.id }).call
 
-        assert_equal [ :scrape ], result.entries.map(&:log_type)
-        assert_equal [ @recent_scrape_entry.id ], result.entries.map(&:id)
+        assert_equal [:scrape], result.entries.map(&:log_type)
+        assert_equal [@recent_scrape_entry.id], result.entries.map(&:id)
       end
 
       test "performs case-insensitive search across title, source, and error message" do
         result = FeedMonitor::Logs::Query.new(params: { search: "timeout" }).call
 
-        assert_equal [ @older_fetch_entry.id ], result.entries.map(&:id)
+        assert_equal [@older_fetch_entry.id], result.entries.map(&:id)
       end
 
       test "paginates results using configured per_page" do
@@ -173,7 +173,7 @@ module FeedMonitor
           }
         ).call
 
-        assert_equal [ @recent_scrape_entry.id, @older_fetch_entry.id ],
+        assert_equal [@recent_scrape_entry.id, @older_fetch_entry.id],
                      result.entries.map(&:id)
       end
     end

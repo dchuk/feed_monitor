@@ -29,8 +29,8 @@ module FeedMonitor
       end
 
       test "extract_ids handles arrays strings and ignores blanks" do
-        ids = FeedMonitor::Jobs::CleanupOptions.extract_ids([ " 1", "2, 3", nil, "a" ])
-        assert_equal [ 1, 2, 3 ], ids
+        ids = FeedMonitor::Jobs::CleanupOptions.extract_ids([" 1", "2, 3", nil, "a"])
+        assert_equal [1, 2, 3], ids
       end
 
       test "integer returns nil when value invalid" do

@@ -38,7 +38,7 @@ class CreateFeedMonitorItems < ActiveRecord::Migration[8.0]
     add_index :feed_monitor_items, :url
     add_index :feed_monitor_items, :scrape_status
     add_index :feed_monitor_items, :published_at
-    add_index :feed_monitor_items, [ :source_id, :guid ], unique: true
-    add_index :feed_monitor_items, [ :source_id, :content_fingerprint ], unique: true
+    add_index :feed_monitor_items, [:source_id, :guid], unique: true
+    add_index :feed_monitor_items, [:source_id, :content_fingerprint], unique: true
   end
 end

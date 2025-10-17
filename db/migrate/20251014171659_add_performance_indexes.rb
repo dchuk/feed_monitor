@@ -2,17 +2,17 @@ class AddPerformanceIndexes < ActiveRecord::Migration[8.0]
   def change
     # Index for activity rate calculations
     # Query: SELECT COUNT(*) FROM items WHERE source_id IN (...) AND created_at >= ? GROUP BY source_id
-    unless index_exists?(:feed_monitor_items, [ :source_id, :created_at ], name: "index_items_on_source_and_created_at_for_rates")
+    unless index_exists?(:feed_monitor_items, [:source_id, :created_at], name: "index_items_on_source_and_created_at_for_rates")
       add_index :feed_monitor_items,
-        [ :source_id, :created_at ],
+        [:source_id, :created_at],
         name: "index_items_on_source_and_created_at_for_rates"
     end
 
     # Partial index for due_for_fetch queries
     # Query: SELECT * FROM sources WHERE active = true AND (next_fetch_at IS NULL OR next_fetch_at <= ?)
-    unless index_exists?(:feed_monitor_sources, [ :active, :next_fetch_at ], name: "index_sources_on_active_and_next_fetch")
+    unless index_exists?(:feed_monitor_sources, [:active, :next_fetch_at], name: "index_sources_on_active_and_next_fetch")
       add_index :feed_monitor_sources,
-        [ :active, :next_fetch_at ],
+        [:active, :next_fetch_at],
         where: "active = true",
         name: "index_sources_on_active_and_next_fetch"
     end

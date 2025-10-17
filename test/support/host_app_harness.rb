@@ -105,7 +105,7 @@ module HostAppHarness
   end
 
   def generate_host_app_template!(template)
-    args = [ template_root(template), *TEMPLATE_OPTIONS.fetch(template) ]
+    args = [template_root(template), *TEMPLATE_OPTIONS.fetch(template)]
 
     Bundler.with_unbundled_env do
       FeedMonitor::Engine.eager_load!

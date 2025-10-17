@@ -26,12 +26,12 @@ module FeedMonitor
     end
 
     def test_mounts_engine_with_custom_path
-      run_generator [ "--mount-path=/reader" ]
+      run_generator ["--mount-path=/reader"]
       assert_file "config/routes.rb", /mount FeedMonitor::Engine, at: "\/reader"/
     end
 
     def test_mount_path_without_leading_slash_is_normalized
-      run_generator [ "--mount-path=admin/feed_monitor" ]
+      run_generator ["--mount-path=admin/feed_monitor"]
       assert_file "config/routes.rb", /mount FeedMonitor::Engine, at: "\/admin\/feed_monitor"/
     end
 

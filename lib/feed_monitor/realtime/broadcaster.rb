@@ -207,11 +207,11 @@ module FeedMonitor
       end
 
       def item_stream_identifier(item)
-        Turbo::StreamsChannel.signed_stream_name([ item, :details ]) rescue nil
+        Turbo::StreamsChannel.signed_stream_name([item, :details]) rescue nil
       end
 
       def source_stream_identifier(source)
-        Turbo::StreamsChannel.signed_stream_name([ source, :details ]) rescue nil
+        Turbo::StreamsChannel.signed_stream_name([source, :details]) rescue nil
       end
 
       def turbo_available?

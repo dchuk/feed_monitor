@@ -23,7 +23,7 @@ module FeedMonitor
         if missing.any?
           relative_paths = missing.map { |path| path.relative_path_from(engine_root) }
           raise MissingBuildError,
-            "FeedMonitor asset build artifacts missing: #{relative_paths.join(', ')}. Run `npm run build` in the engine root to regenerate." 
+            "FeedMonitor asset build artifacts missing: #{relative_paths.join(', ')}. Run `npm run build` in the engine root to regenerate."
         end
 
         true

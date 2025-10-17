@@ -72,7 +72,7 @@ module FeedMonitor
       end
 
       def effective_started_after
-        [ timeframe_start, started_after ].compact.max
+        [timeframe_start, started_after].compact.max
       end
 
       def source_id
@@ -103,7 +103,7 @@ module FeedMonitor
           return DEFAULT_PER_PAGE unless integer.present?
 
           integer = DEFAULT_PER_PAGE if integer <= 0
-          [ integer, MAX_PER_PAGE ].min
+          [integer, MAX_PER_PAGE].min
         end
       end
 

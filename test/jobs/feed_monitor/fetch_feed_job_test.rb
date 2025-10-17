@@ -52,7 +52,7 @@ module FeedMonitor
       args = enqueued[:args]
       assert_equal source.id, args.first
       force_value = args[1]&.[]("force")
-      assert_includes [ nil, false ], force_value
+      assert_includes [nil, false], force_value
       assert enqueued[:at].present?, "expected retry to be scheduled in the future"
     end
 

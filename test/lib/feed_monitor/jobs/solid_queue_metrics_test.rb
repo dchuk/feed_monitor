@@ -66,7 +66,7 @@ module FeedMonitor
           SolidQueue::Pause.create!(queue_name: fetch_queue)
         end
 
-        metrics = FeedMonitor::Jobs::SolidQueueMetrics.call(queue_names: [ fetch_queue, scrape_queue ])
+        metrics = FeedMonitor::Jobs::SolidQueueMetrics.call(queue_names: [fetch_queue, scrape_queue])
 
         fetch_metrics = metrics.fetch(fetch_queue.to_s)
 

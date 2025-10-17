@@ -3,8 +3,8 @@ require_relative "lib/feed_monitor/version"
 Gem::Specification.new do |spec|
   spec.name        = "feed_monitor"
   spec.version     = FeedMonitor::VERSION
-  spec.authors     = [ "dchuk" ]
-  spec.email       = [ "me@dchuk.com" ]
+  spec.authors     = ["dchuk"]
+  spec.email       = ["me@dchuk.com"]
   spec.homepage    = "https://github.com/dchuk/feed_monitor"
   spec.summary     = "Feed Monitor engine for ingesting, scraping, and monitoring RSS/Atom/JSON feeds"
   spec.description = "Feed Monitor is a mountable Rails 8 engine that ingests RSS, Atom, and JSON feeds, scrapes full article content, and surfaces Solid Queue powered dashboards for monitoring and remediation."

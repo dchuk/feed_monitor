@@ -24,5 +24,5 @@ namespace :app do
 end
 
 if defined?(Rake::Task) && Rake::Task.task_defined?("test")
-  Rake::Task["test"].enhance([ "feed_monitor:assets:verify" ])
+  Rake::Task["test"].enhance(["feed_monitor:assets:verify"])
 end
