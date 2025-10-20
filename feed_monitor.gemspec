@@ -33,7 +33,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "cssbundling-rails"
   spec.add_dependency "jsbundling-rails"
   spec.add_dependency "turbo-rails"
-  spec.add_dependency "feedjira", "~> 3.2"
+  spec.add_dependency "feedjira", ">= 3.2", "< 5.0"
   spec.add_dependency "faraday", "~> 2.9"
   spec.add_dependency "faraday-retry", "~> 2.2"
   spec.add_dependency "faraday-follow_redirects", "~> 0.4"
