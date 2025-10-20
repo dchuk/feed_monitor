@@ -2,6 +2,8 @@
 
 The files in this directory let you run any generated example application in containers alongside Postgres and Redis. Mount the repository into the containers, point `APP_PATH` at your generated host app, and start the stack with Docker Compose.
 
+> **Note:** When running in Docker, Ruby version management (rbenv, asdf, etc.) is handled by the container image itself. All commands run directly without needing version manager prefixes. The Dockerfile specifies the Ruby version, and the container environment ensures the correct version is active.
+
 ## Prerequisites
 
 - Docker Engine 24+

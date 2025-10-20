@@ -4,7 +4,9 @@ This guide captures the production considerations for running FeedMonitor inside
 
 ## Build & Release Pipeline
 
-1. **Install dependencies** – use `rbenv exec bundle install` and `npm install` during build steps.
+> **Ruby version management in production:** Use rbenv, asdf, or the Ruby version baked into your container image, depending on your deployment platform. The commands below are shown without version manager prefixes—adjust for your environment (e.g., `rbenv exec bundle install`, `asdf exec bundle install`, or bare `bundle install` in Docker).
+
+1. **Install dependencies** – use `bundle install` and `npm install` during build steps.
 2. **Copy and run migrations** – always run `bin/rails railties:install:migrations FROM=feed_monitor` before `bin/rails db:migrate` so new engine tables ship with each release.
 3. **Precompile assets** – `bin/rails assets:precompile` pulls in FeedMonitor's bundled CSS/JS outputs and Stimulus controllers. Fail the build if `feed_monitor:assets:verify` raises.
 4. **Run quality gates** – `bin/rubocop`, `bin/brakeman --no-pager`, `bin/lint-assets`, and `bin/test-coverage` mirror the repository CI setup.

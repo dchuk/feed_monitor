@@ -4,24 +4,26 @@ FeedMonitor installs like any other Rails engine, but it ships enough infrastruc
 
 ## Prerequisites
 
-- Ruby 3.4.4 (we recommend `rbenv install 3.4.4` and `rbenv local 3.4.4`)
+- Ruby 3.4.4 (we recommend [rbenv](https://github.com/rbenv/rbenv) for local development: `rbenv install 3.4.4 && rbenv local 3.4.4`, but asdf, chruby, rvm, or container-managed Ruby all work equally well—choose whatever fits your environment)
 - Rails 8.0.2.1 or newer
 - PostgreSQL 13 or newer (the engine migrations rely on JSONB, SKIP LOCKED, and advisory locks)
 - Node.js 18+ and npm or Yarn for asset linting/builds
 - Solid Queue and Solid Cable gems available (they ship with Rails 8, but make sure they are not removed)
 - Optional: Mission Control Jobs if you plan to surface the dashboard shortcut, Redis if you intend to switch realtime adapters
 
+> **Command prefixes:** All commands below are shown without `rbenv exec`. If you use rbenv, prefix `bundle` and `bin/rails` commands with `rbenv exec`. For asdf, no prefix is needed. In Docker/container environments, run commands directly inside the container.
+
 ## Quick Reference
 
 | Step | Command | Purpose |
 | --- | --- | --- |
 | 1 | `gem "feed_monitor", github: "dchuk/feed_monitor"` | Add the engine to your Gemfile |
-| 2 | `rbenv exec bundle install` | Install Ruby dependencies |
-| 3 | `rbenv exec bin/rails generate feed_monitor:install --mount-path=/feed_monitor` | Mount the engine and create the initializer |
-| 4 | `rbenv exec bin/rails railties:install:migrations FROM=feed_monitor` | Copy engine migrations (idempotent) |
-| 5 | `rbenv exec bin/rails db:migrate` | Apply schema updates, including Solid Queue tables |
-| 6 | `rbenv exec bin/rails solid_queue:start` | Ensure jobs process via Solid Queue |
-| 7 | `rbenv exec bin/jobs --recurring_schedule_file=config/recurring.yml` | Start recurring scheduler (optional but recommended) |
+| 2 | `bundle install` | Install Ruby dependencies |
+| 3 | `bin/rails generate feed_monitor:install --mount-path=/feed_monitor` | Mount the engine and create the initializer |
+| 4 | `bin/rails railties:install:migrations FROM=feed_monitor` | Copy engine migrations (idempotent) |
+| 5 | `bin/rails db:migrate` | Apply schema updates, including Solid Queue tables |
+| 6 | `bin/rails solid_queue:start` | Ensure jobs process via Solid Queue |
+| 7 | `bin/jobs --recurring_schedule_file=config/recurring.yml` | Start recurring scheduler (optional but recommended) |
 
 ## 1. Add the Gem
 
@@ -34,7 +36,7 @@ gem "feed_monitor", github: "dchuk/feed_monitor"
 Then install dependencies:
 
 ```bash
-rbenv exec bundle install
+bundle install
 ```
 
 If you vendor node tooling for linting/assets in the host app, run `npm install` as well.
@@ -44,7 +46,7 @@ If you vendor node tooling for linting/assets in the host app, run `npm install`
 The generator mounts the engine and drops an initializer stub for you to configure.
 
 ```bash
-rbenv exec bin/rails generate feed_monitor:install --mount-path=/feed_monitor
+bin/rails generate feed_monitor:install --mount-path=/feed_monitor
 ```
 
 Key outputs:
@@ -59,7 +61,7 @@ Key outputs:
 FeedMonitor relies on several tables (sources, items, fetch logs, scrape logs, Solid Cable messages, retention helpers) plus an optional Solid Queue schema. Copy them into your host application with:
 
 ```bash
-rbenv exec bin/rails railties:install:migrations FROM=feed_monitor
+bin/rails railties:install:migrations FROM=feed_monitor
 ```
 
 This command is idempotent—re-run it when upgrading to pick up new migrations.
@@ -69,10 +71,10 @@ This command is idempotent—re-run it when upgrading to pick up new migrations.
 Apply the new schema:
 
 ```bash
-rbenv exec bin/rails db:migrate
+bin/rails db:migrate
 ```
 
-If you prefer a dedicated database for Solid Queue, run `rbenv exec bin/rails solid_queue:install` beforehand and point the generated config at your queue database. Otherwise the engine-provided migration keeps Solid Queue tables in the primary database.
+If you prefer a dedicated database for Solid Queue, run `bin/rails solid_queue:install` beforehand and point the generated config at your queue database. Otherwise the engine-provided migration keeps Solid Queue tables in the primary database.
 
 > Tip: Solid Queue tables must be present before you start the dashboard. If your host app already ran `solid_queue:install`, delete the engine-provided migration before running `db:migrate` to avoid duplication.
 
@@ -100,7 +102,7 @@ Solid Queue becomes the default Active Job adapter when the host app still uses 
 
 ```bash
 # long-running process
-rbenv exec bin/rails solid_queue:start
+bin/rails solid_queue:start
 ```
 
 Feed Monitor respects explicit queue adapter overrides. If your host sets `config.active_job.queue_adapter` (for example, to `:inline` or `:sidekiq`), the engine leaves that configuration in place.
@@ -108,7 +110,7 @@ Feed Monitor respects explicit queue adapter overrides. If your host sets `confi
 For recurring schedules, add a process that runs the Solid Queue CLI with the engine's schedule file:
 
 ```bash
-rbenv exec bin/jobs --recurring_schedule_file=config/recurring.yml
+bin/jobs --recurring_schedule_file=config/recurring.yml
 ```
 
 Set `SOLID_QUEUE_SKIP_RECURRING=true` in environments that manage recurring tasks elsewhere.
@@ -119,7 +121,7 @@ Open `config/initializers/feed_monitor.rb` and adjust queue namespaces, HTTP tim
 
 ## 8. Verify the Installation
 
-1. Start your Rails server: `rbenv exec bin/rails server`
+1. Start your Rails server: `bin/rails server`
 2. Ensure a Solid Queue worker is running (see step 6)
 3. Visit the mount path (`/feed_monitor` by default)
 4. Create a source and trigger `Fetch Now`—watch fetch logs appear and dashboard metrics update
