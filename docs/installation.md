@@ -4,7 +4,7 @@ FeedMonitor installs like any other Rails engine, but it ships enough infrastruc
 
 ## Prerequisites
 
-- Ruby 3.4.7 (we recommend [rbenv](https://github.com/rbenv/rbenv) for local development: `rbenv install 3.4.7 && rbenv local 3.4.7`, but asdf, chruby, rvm, or container-managed Ruby all work equally well—choose whatever fits your environment)
+- Ruby 3.4.1+ (we recommend [rbenv](https://github.com/rbenv/rbenv) for local development: `rbenv install 3.4.1 && rbenv local 3.4.1`, but asdf, chruby, rvm, or container-managed Ruby all work equally well—choose whatever fits your environment)
 - Rails 8.0.2.1 or newer
 - PostgreSQL 13 or newer (the engine migrations rely on JSONB, SKIP LOCKED, and advisory locks)
 - Node.js 18+ and npm or Yarn for asset linting/builds

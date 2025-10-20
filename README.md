@@ -11,7 +11,7 @@ FeedMonitor is a production-ready Rails 8 mountable engine for ingesting, normal
 - First-class observability through ActiveSupport notifications and `FeedMonitor::Metrics` counters/gauges
 
 ## Requirements
-- Ruby 3.4.7 (we recommend [rbenv](https://github.com/rbenv/rbenv) for local development: `rbenv install 3.4.7 && rbenv local 3.4.7`, but use whatever Ruby version manager suits your environment—asdf, chruby, rvm, or container-based workflows all work fine)
+- Ruby 3.4.1+ (we recommend [rbenv](https://github.com/rbenv/rbenv) for local development: `rbenv install 3.4.1 && rbenv local 3.4.1`, but use whatever Ruby version manager suits your environment—asdf, chruby, rvm, or container-based workflows all work fine)
 - Rails ≥ 8.0.2.1 in the host application
 - PostgreSQL 13+ (engine migrations use JSONB, SKIP LOCKED, advisory locks, and Solid Cable tables)
 - Node.js 18+ (npm or Yarn) for asset linting and the Tailwind/esbuild bundling pipeline
