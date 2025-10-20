@@ -137,6 +137,6 @@ module FeedMonitor
       cable_contents = HostAppHarness.read("config/cable.yml")
       assert_match(/adapter: redis/, cable_contents)
     end
+    end
   end
-end
 end

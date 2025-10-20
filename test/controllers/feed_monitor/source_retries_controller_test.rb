@@ -14,7 +14,7 @@ module FeedMonitor
     test "forces a fetch and renders turbo stream" do
       source = create_source!(fetch_status: "failed")
 
-      expected_args = [source.id, { force: true }]
+      expected_args = [ source.id, { force: true } ]
       assert_enqueued_jobs 1, only: FeedMonitor::FetchFeedJob do
         assert_enqueued_with(job: FeedMonitor::FetchFeedJob, args: expected_args) do
           post feed_monitor.source_retry_path(source), as: :turbo_stream

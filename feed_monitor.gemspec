@@ -24,10 +24,10 @@ Gem::Specification.new do |spec|
       file.start_with?(".ai/", ".github/", "coverage/", "node_modules/", "pkg/", "spec/", "test/", "tmp/", "vendor/", "examples/", "bin/")
     end
   end
-  spec.files += ["CHANGELOG.md"].select { |path| File.exist?(File.join(__dir__, path)) }
+  spec.files += [ "CHANGELOG.md" ].select { |path| File.exist?(File.join(__dir__, path)) }
   spec.files.uniq!
 
-  spec.require_paths = ["lib"]
+  spec.require_paths = [ "lib" ]
 
   spec.add_dependency "rails", ">= 8.0.2.1"
   spec.add_dependency "cssbundling-rails"

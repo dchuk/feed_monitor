@@ -7,7 +7,7 @@ module FeedMonitor
     class TestController < ActionController::Base
       include FeedMonitor::SanitizesSearchParams
 
-      searchable_with scope: -> { FeedMonitor::Source.all }, default_sorts: ["created_at desc"]
+      searchable_with scope: -> { FeedMonitor::Source.all }, default_sorts: [ "created_at desc" ]
 
       def index
         @search_params = sanitized_search_params

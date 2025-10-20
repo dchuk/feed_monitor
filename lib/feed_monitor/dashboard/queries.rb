@@ -20,7 +20,7 @@ module FeedMonitor
       end
 
       def recent_activity(limit: DEFAULT_RECENT_ACTIVITY_LIMIT)
-        cache.fetch([:recent_activity, limit]) do
+        cache.fetch([ :recent_activity, limit ]) do
           measure(:recent_activity, limit:) do
             RecentActivityQuery.new(limit:).call
           end
@@ -242,7 +242,7 @@ module FeedMonitor
         end
 
         def sanitized_sql
-          ActiveRecord::Base.send(:sanitize_sql_array, [unified_sql_template, limit])
+          ActiveRecord::Base.send(:sanitize_sql_array, [ unified_sql_template, limit ])
         end
 
         def unified_sql_template

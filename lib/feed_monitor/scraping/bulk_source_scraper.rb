@@ -196,7 +196,7 @@ module FeedMonitor
           already_enqueued_count: 0,
           failure_count: 1,
           failure_details: { scraping_disabled: 1 },
-          messages: ["Scraping is disabled for this source."],
+          messages: [ "Scraping is disabled for this source." ],
           rate_limited: false
         )
       end
@@ -210,7 +210,7 @@ module FeedMonitor
           already_enqueued_count: 0,
           failure_count: 1,
           failure_details: { invalid_selection: 1 },
-          messages: ["Invalid selection for bulk scrape."],
+          messages: [ "Invalid selection for bulk scrape." ],
           rate_limited: false
         )
       end
@@ -224,7 +224,7 @@ module FeedMonitor
           already_enqueued_count: 0,
           failure_count: 1,
           failure_details: { no_items: 1 },
-          messages: ["No items match the selected scope."],
+          messages: [ "No items match the selected scope." ],
           rate_limited: false
         )
       end

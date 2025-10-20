@@ -144,7 +144,7 @@ module HostAppHarness
 
   def run_bundler!(env, args)
     output, status = Open3.capture2e(env, "rbenv", "exec", "bundle", *args)
-    raise_command_failure(["bundle", *args], output) unless status.success?
+    raise_command_failure([ "bundle", *args ], output) unless status.success?
   end
 
   def default_env(root = current_work_root)

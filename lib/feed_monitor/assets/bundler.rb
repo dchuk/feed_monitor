@@ -23,7 +23,7 @@ module FeedMonitor
         if missing.any?
           relative_paths = missing.map { |path| path.relative_path_from(engine_root) }
           raise MissingBuildError,
-            "FeedMonitor asset build artifacts missing: #{relative_paths.join(', ')}. Run `npm run build` in the engine root to regenerate." 
+            "FeedMonitor asset build artifacts missing: #{relative_paths.join(', ')}. Run `npm run build` in the engine root to regenerate."
         end
 
         true
@@ -37,7 +37,7 @@ module FeedMonitor
       end
 
       def run_script!(script)
-        command = ["npm", "run", script]
+        command = [ "npm", "run", script ]
         system({ "BUNDLE_GEMFILE" => engine_root.join("Gemfile").to_s }, *command, chdir: engine_root.to_s, exception: true)
       end
 

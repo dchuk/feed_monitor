@@ -33,21 +33,21 @@ module FeedMonitor
       test "build_css! delegates to npm build:css" do
         captured = nil
 
-        FeedMonitor::Assets::Bundler.stub(:run_script!, ->(script, watch: false) { captured = [script, watch] }) do
+        FeedMonitor::Assets::Bundler.stub(:run_script!, ->(script, watch: false) { captured = [ script, watch ] }) do
           FeedMonitor::Assets::Bundler.build_css!
         end
 
-        assert_equal ["build:css", false], captured
+        assert_equal [ "build:css", false ], captured
       end
 
       test "build_js! delegates to npm build:js" do
         captured = nil
 
-        FeedMonitor::Assets::Bundler.stub(:run_script!, ->(script, watch: false) { captured = [script, watch] }) do
+        FeedMonitor::Assets::Bundler.stub(:run_script!, ->(script, watch: false) { captured = [ script, watch ] }) do
           FeedMonitor::Assets::Bundler.build_js!
         end
 
-        assert_equal ["build:js", false], captured
+        assert_equal [ "build:js", false ], captured
       end
 
       test "verify! raises when a build artifact is missing" do

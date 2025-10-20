@@ -6,11 +6,11 @@ module FeedMonitor
 
     included do
       class_attribute :_search_scope, instance_writer: false
-      class_attribute :_default_search_sorts, instance_writer: false, default: ["created_at desc"]
+      class_attribute :_default_search_sorts, instance_writer: false, default: [ "created_at desc" ]
     end
 
     class_methods do
-      def searchable_with(scope:, default_sorts: ["created_at desc"])
+      def searchable_with(scope:, default_sorts: [ "created_at desc" ])
         self._search_scope = scope
         self._default_search_sorts = default_sorts
       end
