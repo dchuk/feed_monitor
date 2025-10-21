@@ -162,6 +162,7 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_TEST_DB: feed_monitor_dummy_test
+          SIMPLECOV_COMMAND_NAME: feed_monitor:release_verification
         run: bin/rails test test/integration/release_packaging_test.rb
 
       - name: Enforce diff coverage
