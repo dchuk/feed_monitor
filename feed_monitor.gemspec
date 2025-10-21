@@ -43,4 +43,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "solid_queue", ">= 0.3"
   spec.add_dependency "solid_cable", ">= 0.2"
   spec.add_dependency "ransack", "~> 4.2"
+  spec.add_dependency "ostruct", ">= 0.6.1"
 end
