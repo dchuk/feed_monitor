@@ -11,6 +11,9 @@ if ENV["CI"] || ENV["COVERAGE"]
   SimpleCov.enable_for_subprocesses true
 end
 
+# Ensure host app helper tests don't traverse temporary bundle directories.
+ENV["DEFAULT_TEST_EXCLUDE"] ||= "test/{system,dummy,fixtures,tmp}/**/*_test.rb"
+
 # Configure Rails Environment
 ENV["RAILS_ENV"] = "test"
 

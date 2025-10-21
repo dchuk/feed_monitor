@@ -12,6 +12,11 @@ module HostAppHarness
 
   ENGINE_ROOT = File.expand_path("../..", __dir__)
   TMP_ROOT = File.expand_path("../tmp", __dir__)
+  RUBY_VERSION = File.read(File.expand_path("../../.ruby-version", __dir__)).strip
+  BUNDLE_ROOT = File.join(ENGINE_ROOT, "tmp", "bundles", RUBY_VERSION)
+  LEGACY_BUNDLE_ROOT = File.join(TMP_ROOT, "bundles")
+
+  FileUtils.rm_rf(LEGACY_BUNDLE_ROOT) if Dir.exist?(LEGACY_BUNDLE_ROOT)
 
   TEMPLATE_OPTIONS = {
     default: [
@@ -95,6 +100,7 @@ module HostAppHarness
 
     FileUtils.rm_rf(root)
     generate_host_app_template!(template)
+    pin_ruby_version!(root)
     append_engine_to_gemfile!(root)
     ensure_bundle_installed!(root)
   end
@@ -124,14 +130,9 @@ module HostAppHarness
 
   def ensure_bundle_installed!(root)
     Bundler.with_unbundled_env do
-      Dir.chdir(root) do
-        env = default_env(root)
-        check_command = rbenv_available? ? [ "rbenv", "exec", "bundle", "check" ] : [ "bundle", "check" ]
-        check_status = system(env, *check_command, out: File::NULL, err: File::NULL)
-        return if check_status
-
-        run_bundler!(env, %w[install --quiet])
-      end
+      env = default_env(root)
+      FileUtils.mkdir_p(env.fetch("BUNDLE_PATH"))
+      run_bundler!(env, %w[install --jobs 4 --retry 3 --quiet], chdir: root)
     end
   end
 
@@ -144,9 +145,9 @@ module HostAppHarness
     end
   end
 
-  def run_bundler!(env, args)
+  def run_bundler!(env, args, chdir: current_work_root)
     bundle_command = rbenv_available? ? [ "rbenv", "exec", "bundle", *args ] : [ "bundle", *args ]
-    output, status = Open3.capture2e(env, *bundle_command)
+    output, status = Open3.capture2e(env, *bundle_command, chdir: chdir)
     raise_command_failure([ "bundle", *args ], output) unless status.success?
   end
 
@@ -155,10 +156,14 @@ module HostAppHarness
   end
 
   def default_env(root = current_work_root)
-    {
+    env = {
       "BUNDLE_GEMFILE" => File.join(root, "Gemfile"),
-      "BUNDLE_IGNORE_CONFIG" => "1"
+      "BUNDLE_IGNORE_CONFIG" => "1",
+      "BUNDLE_PATH" => BUNDLE_ROOT,
+      "BUNDLE_CACHE_ALL" => "1"
     }
+    env["RBENV_VERSION"] = RUBY_VERSION if rbenv_available?
+    env
   end
 
   def raise_command_failure(command, output)
@@ -176,5 +181,18 @@ module HostAppHarness
 
   def work_root(template)
     File.join(TMP_ROOT, "host_app_#{template}")
+  end
+
+  def pin_ruby_version!(root)
+    File.write(File.join(root, ".ruby-version"), "#{RUBY_VERSION}\n")
+    gemfile = File.join(root, "Gemfile")
+    contents = File.read(gemfile)
+    replacement = %(ruby "#{RUBY_VERSION}")
+    if contents.match?(/^ruby /)
+      contents.sub!(/^ruby .+$/, replacement)
+    else
+      contents = "#{replacement}\n#{contents}"
+    end
+    File.write(gemfile, contents)
   end
 end
