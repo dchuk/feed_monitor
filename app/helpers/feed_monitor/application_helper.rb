@@ -1,5 +1,19 @@
 module FeedMonitor
   module ApplicationHelper
+    def feed_monitor_stylesheet_bundle_tag
+      stylesheet_link_tag("feed_monitor/application", "data-turbo-track": "reload")
+    rescue StandardError => error
+      log_feed_monitor_asset_error(:stylesheet, error)
+      nil
+    end
+
+    def feed_monitor_javascript_bundle_tag
+      javascript_include_tag("feed_monitor/application", "data-turbo-track": "reload", type: "module")
+    rescue StandardError => error
+      log_feed_monitor_asset_error(:javascript, error)
+      nil
+    end
+
     def heatmap_bucket_classes(count, max_count)
       return "bg-slate-100 text-slate-500" if max_count.to_i.zero? || count.to_i.zero?
 
@@ -252,6 +266,12 @@ module FeedMonitor
       return "success" if item.scraped_at.present?
 
       "idle"
+    end
+
+    def log_feed_monitor_asset_error(kind, error)
+      return unless defined?(Rails) && Rails.respond_to?(:logger) && Rails.logger
+
+      Rails.logger.debug("[FeedMonitor] Skipping #{kind} bundle include: #{error.message}")
     end
   end
 end
