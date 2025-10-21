@@ -54,6 +54,7 @@ module HostAppHarness
 
   def prepare_working_directory(template: :default)
     ensure_ruby_version!
+    capture_override_from_env!
     ensure_template!(template)
     reset_working_directory!(template)
     @current_template = template
@@ -106,6 +107,7 @@ module HostAppHarness
     root = template_root(template)
     if File.exist?(File.join(root, "Gemfile.lock"))
       ensure_queue_config!(root)
+      ensure_sqlite_json_patch!(root)
       return
     end
 
@@ -114,6 +116,7 @@ module HostAppHarness
     pin_ruby_version!(root)
     append_engine_to_gemfile!(root)
     ensure_queue_config!(root)
+    ensure_sqlite_json_patch!(root)
     ensure_bundle_installed!(root)
   end
 
@@ -122,6 +125,7 @@ module HostAppHarness
     FileUtils.mkdir_p(File.dirname(work_root(template)))
     FileUtils.cp_r("#{template_root(template)}/.", work_root(template))
     ensure_queue_config!(work_root(template))
+    ensure_sqlite_json_patch!(work_root(template))
   end
 
   def generate_host_app_template!(template)
@@ -135,9 +139,10 @@ module HostAppHarness
 
   def append_engine_to_gemfile!(root)
     gemfile = File.join(root, "Gemfile")
+    gem_path = override_gem_path || ENGINE_ROOT
     File.open(gemfile, "a") do |file|
       file.puts
-      file.puts %(gem "feed_monitor", path: "#{ENGINE_ROOT}")
+      file.puts %(gem "feed_monitor", path: "#{gem_path}")
     end
   end
 
@@ -189,11 +194,11 @@ module HostAppHarness
   end
 
   def template_root(template)
-    File.join(TMP_ROOT, "host_app_template_#{template}")
+    File.join(TMP_ROOT, "host_app_template_#{template}#{override_template_suffix}")
   end
 
   def work_root(template)
-    File.join(TMP_ROOT, "host_app_#{template}")
+    File.join(TMP_ROOT, "host_app_#{template}#{override_template_suffix}")
   end
 
   def pin_ruby_version!(root)
@@ -208,6 +213,28 @@ module HostAppHarness
       contents = "#{replacement}\n#{contents}"
     end
     File.write(gemfile, contents)
+  end
+
+  def override_template_suffix
+    path = override_gem_path
+    return "" unless path
+
+    digest = Digest::SHA256.hexdigest(path)[0, 8]
+    "_override_#{digest}"
+  end
+
+  def override_gem_path
+    @override_gem_path
+  end
+
+  def capture_override_from_env!
+    raw = ENV["FEED_MONITOR_GEM_PATH"]
+    return @override_gem_path = nil if raw.nil?
+
+    value = raw.strip
+    return @override_gem_path = nil if value.empty?
+
+    @override_gem_path = File.expand_path(value)
   end
 
   def ensure_ruby_version!
@@ -263,5 +290,25 @@ module HostAppHarness
           default:
             concurrency: 5
     YAML
+  end
+
+  def ensure_sqlite_json_patch!(root)
+    initializer_path = File.join(root, "config", "initializers", "sqlite_jsonb_patch.rb")
+    FileUtils.mkdir_p(File.dirname(initializer_path))
+    File.write(initializer_path, <<~RUBY)
+      # frozen_string_literal: true
+
+      require "active_support"
+
+      ActiveSupport.on_load(:active_record) do
+        next unless defined?(ActiveRecord::ConnectionAdapters::SQLite3)
+
+        ActiveRecord::ConnectionAdapters::SQLite3::TableDefinition.prepend(Module.new do
+          def jsonb(name, **options)
+            json(name, **options)
+          end
+        end)
+      end
+    RUBY
   end
 end
