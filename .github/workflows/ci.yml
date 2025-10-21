@@ -167,6 +167,11 @@ jobs:
           name: coverage
           path: coverage
 
+      - name: Backup coverage result
+        run: |
+          mkdir -p tmp/ci-coverage
+          cp coverage/.resultset.json tmp/ci-coverage/resultset.json
+
       - name: Run release packaging verification
         env:
           RAILS_ENV: test
@@ -176,6 +181,14 @@ jobs:
           POSTGRES_TEST_DB: feed_monitor_dummy_test
           FEED_MONITOR_SKIP_COVERAGE: "true"
         run: bin/rails test test/integration/release_packaging_test.rb
+
+      - name: Restore coverage result if missing
+        run: |
+          if [ ! -f coverage/.resultset.json ] && [ -f tmp/ci-coverage/resultset.json ]; then
+            echo "Restoring coverage result from backup after packaging verification"
+            mkdir -p coverage
+            cp tmp/ci-coverage/resultset.json coverage/.resultset.json
+          fi
 
       - name: Enforce diff coverage
         run: bundle exec ruby bin/check-diff-coverage
