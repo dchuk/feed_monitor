@@ -170,7 +170,12 @@ jobs:
       - name: Backup coverage result
         run: |
           mkdir -p tmp/ci-coverage
-          cp coverage/.resultset.json tmp/ci-coverage/resultset.json
+          RESULTSET_PATH=$(find coverage -name ".resultset.json" -print -quit)
+          if [ -z "$RESULTSET_PATH" ]; then
+            echo "Unable to locate coverage result after artifact download"
+            exit 1
+          fi
+          cp "$RESULTSET_PATH" tmp/ci-coverage/resultset.json
 
       - name: Run release packaging verification
         env:
