@@ -1,5 +1,5 @@
 module FeedMonitor
-  class ApplicationMailer < ActionMailer::Base
+  class ApplicationMailer < ::ActionMailer::Base
     default from: "from@example.com"
     layout "mailer"
   end
