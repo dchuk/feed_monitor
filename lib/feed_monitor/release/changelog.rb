@@ -17,7 +17,7 @@ module FeedMonitor
           heading = sections.keys.find { |key| key != "## Release Checklist" }
           raise MissingEntryError, "Unable to find changelog entry after Release Checklist" unless heading
 
-          content = ([heading] + sections.fetch(heading)).join
+          content = ([ heading ] + sections.fetch(heading)).join
           content.rstrip
         end
       end
@@ -25,7 +25,7 @@ module FeedMonitor
       def annotation_for(version)
         raise ArgumentError, "version must be provided" if version.to_s.strip.empty?
 
-        ["Feed Monitor v#{version}", latest_entry].join("\n\n")
+        [ "Feed Monitor v#{version}", latest_entry ].join("\n\n")
       end
 
       private

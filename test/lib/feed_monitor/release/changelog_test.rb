@@ -5,7 +5,7 @@ module FeedMonitor
   module Release
     class ChangelogTest < ActiveSupport::TestCase
       def setup
-        @changelog_file = Tempfile.new(["changelog", ".md"])
+        @changelog_file = Tempfile.new([ "changelog", ".md" ])
         @changelog_file.write(<<~MARKDOWN)
           # Changelog
 

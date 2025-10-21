@@ -9,12 +9,12 @@ module FeedMonitor
       CommandFailure = Class.new(StandardError)
 
       QUALITY_COMMANDS = [
-        ["bin/rubocop"],
-        ["bin/brakeman", "--no-pager"],
-        ["bin/test-coverage"],
-        ["bin/check-diff-coverage"]
+        [ "bin/rubocop" ],
+        [ "bin/brakeman", "--no-pager" ],
+        [ "bin/test-coverage" ],
+        [ "bin/check-diff-coverage" ]
       ].freeze
-      GEM_BUILD_COMMAND = ["rbenv", "exec", "gem", "build", "feed_monitor.gemspec"].freeze
+      GEM_BUILD_COMMAND = [ "rbenv", "exec", "gem", "build", "feed_monitor.gemspec" ].freeze
 
       def initialize(version:, executor: Executor.new, changelog: Changelog.new)
         @version = version
@@ -50,12 +50,12 @@ module FeedMonitor
       def create_annotated_tag
         message = changelog.annotation_for(version)
 
-        Tempfile.create(["feed-monitor-release", ".log"]) do |file|
+        Tempfile.create([ "feed-monitor-release", ".log" ]) do |file|
           file.write(message)
           file.flush
           file.rewind
 
-          run_command(["git", "tag", "-a", "v#{version}", "-F", file.path])
+          run_command([ "git", "tag", "-a", "v#{version}", "-F", file.path ])
         end
       end
 

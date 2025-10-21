@@ -55,18 +55,18 @@ module FeedMonitor
 
         Runner.new(version: "1.2.3", executor:, changelog:).call
 
-        assert_equal ["1.2.3"], changelog.calls
+        assert_equal [ "1.2.3" ], changelog.calls
 
         commands = executor.commands.map { |entry| entry[:command] }
 
-        assert_equal ["bin/rubocop"], commands[0]
-        assert_equal ["bin/brakeman", "--no-pager"], commands[1]
-        assert_equal ["bin/test-coverage"], commands[2]
-        assert_equal ["bin/check-diff-coverage"], commands[3]
-        assert_equal ["rbenv", "exec", "gem", "build", "feed_monitor.gemspec"], commands[4]
+        assert_equal [ "bin/rubocop" ], commands[0]
+        assert_equal [ "bin/brakeman", "--no-pager" ], commands[1]
+        assert_equal [ "bin/test-coverage" ], commands[2]
+        assert_equal [ "bin/check-diff-coverage" ], commands[3]
+        assert_equal [ "rbenv", "exec", "gem", "build", "feed_monitor.gemspec" ], commands[4]
 
         git_tag_command = commands[5]
-        assert_equal ["git", "tag", "-a", "v1.2.3", "-F"], git_tag_command[0..4]
+        assert_equal [ "git", "tag", "-a", "v1.2.3", "-F" ], git_tag_command[0..4]
         assert Pathname.new(git_tag_command[5]).absolute?
         assert_equal "Release notes go here.", executor.captured_annotation
       end
