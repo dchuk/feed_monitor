@@ -91,7 +91,7 @@ jobs:
       - name: Build assets
         run: npm run build
 
-      - name: Run tests
+      - name: Run tests with coverage
         env:
           RAILS_ENV: test
           POSTGRES_HOST: localhost
@@ -99,7 +99,7 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_TEST_DB: feed_monitor_dummy_test
           # REDIS_URL: redis://localhost:6379/0
-        run: bin/rails db:create db:migrate && bin/rails test
+        run: bin/rails db:create db:migrate && bin/test-coverage
 
       - name: Enforce diff coverage
         run: bundle exec ruby bin/check-diff-coverage
