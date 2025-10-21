@@ -36,6 +36,17 @@ module FeedMonitor
 
         assert_equal({}, result)
       end
+
+      test "records default sorts through searchable_with DSL" do
+        assert_equal(
+          [ "created_at desc" ],
+          FeedMonitor::SourcesController._default_search_sorts
+        )
+        assert_equal(
+          [ "published_at desc", "created_at desc" ],
+          FeedMonitor::ItemsController._default_search_sorts
+        )
+      end
     end
   end
 end
