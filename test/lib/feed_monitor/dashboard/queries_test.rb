@@ -147,6 +147,38 @@ module FeedMonitor
         assert_equal 1, cached_groups.find { |group| group.key == "0-30" }.sources.size
       end
 
+      test "recent_activity caches results per limit key" do
+        queries = FeedMonitor::Dashboard::Queries.new
+        fake_cache = Struct.new(:calls) do
+          def fetch(key)
+            calls << key
+            yield
+          end
+        end.new([])
+
+        queries.instance_variable_set(:@cache, fake_cache)
+
+        fake_query = Minitest::Mock.new
+        fake_query.expect :call, []
+
+        FeedMonitor::Dashboard::Queries::RecentActivityQuery.stub(:new, ->(**kwargs) {
+          assert_equal 5, kwargs[:limit]
+          fake_query
+        }) { queries.recent_activity(limit: 5) }
+
+        fake_query.verify
+
+        assert_includes fake_cache.calls, [ :recent_activity, 5 ]
+      end
+
+      test "recent_activity_query sanitizes SQL with the provided limit" do
+        query = FeedMonitor::Dashboard::Queries::RecentActivityQuery.new(limit: 3)
+
+        sql = query.send(:sanitized_sql)
+
+        assert_includes sql, "LIMIT 3"
+      end
+
       private
 
       def count_sql_queries

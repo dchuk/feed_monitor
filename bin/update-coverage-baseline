@@ -6,7 +6,8 @@ require "json"
 require "simplecov"
 
 ROOT = Dir.pwd
-COVERAGE_RESULT_PATH = File.join(ROOT, "coverage", ".resultset.json")
+COVERAGE_DIR = File.join(ROOT, "coverage")
+COVERAGE_RESULT_PATH = File.join(COVERAGE_DIR, ".resultset.json")
 BASELINE_PATH = File.join(ROOT, "config", "coverage_baseline.json")
 RAIL_TREES = %w[app/ lib/].freeze
 
@@ -15,7 +16,12 @@ unless File.exist?(COVERAGE_RESULT_PATH)
 end
 
 result_data = JSON.parse(File.read(COVERAGE_RESULT_PATH))
-coverage_result = SimpleCov::Result.from_hash(result_data).first
+command_names, coverage = SimpleCov::ResultMerger.merge_valid_results(result_data, ignore_timeout: true)
+coverage_result = SimpleCov::ResultMerger.create_result(command_names, coverage)
+
+unless coverage_result
+  abort "Unable to load coverage data from #{COVERAGE_RESULT_PATH}. Run the test suite with coverage enabled first."
+end
 
 baseline = {}
 

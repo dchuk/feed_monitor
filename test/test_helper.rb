@@ -2,6 +2,7 @@
 if ENV["CI"] || ENV["COVERAGE"]
   require "simplecov"
 
+  SimpleCov.command_name ENV.fetch("SIMPLECOV_COMMAND_NAME", "feed_monitor:test")
   SimpleCov.start "rails" do
     enable_coverage :branch
     refuse_coverage_drop :line
