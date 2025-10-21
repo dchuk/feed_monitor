@@ -307,8 +307,6 @@ module HostAppHarness
           next
         end
 
-        next unless defined?(ActiveRecord::ConnectionAdapters::SQLite3::TableDefinition)
-
         unless defined?(FeedMonitor::SQLiteJsonbShim)
           module FeedMonitor
             module SQLiteJsonbShim
@@ -319,7 +317,24 @@ module HostAppHarness
           end
         end
 
-        ActiveRecord::ConnectionAdapters::SQLite3::TableDefinition.prepend(FeedMonitor::SQLiteJsonbShim)
+        targets = []
+        if defined?(ActiveRecord::ConnectionAdapters::SQLite3::TableDefinition)
+          targets << ActiveRecord::ConnectionAdapters::SQLite3::TableDefinition
+        elsif defined?(ActiveRecord::ConnectionAdapters::SQLite3Adapter::TableDefinition)
+          targets << ActiveRecord::ConnectionAdapters::SQLite3Adapter::TableDefinition
+        end
+
+        if defined?(ActiveRecord::ConnectionAdapters::SQLite3::ColumnMethods)
+          targets << ActiveRecord::ConnectionAdapters::SQLite3::ColumnMethods
+        elsif defined?(ActiveRecord::ConnectionAdapters::SQLite3Adapter::ColumnMethods)
+          targets << ActiveRecord::ConnectionAdapters::SQLite3Adapter::ColumnMethods
+        end
+
+        targets.each do |target|
+          next if target < FeedMonitor::SQLiteJsonbShim
+
+          target.prepend(FeedMonitor::SQLiteJsonbShim)
+        end
       end
     RUBY
   end
