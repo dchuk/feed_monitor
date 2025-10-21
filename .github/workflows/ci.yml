@@ -92,9 +92,12 @@ jobs:
       - name: Run tests
         env:
           RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/feed_monitor_test
+          POSTGRES_HOST: localhost
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_TEST_DB: feed_monitor_dummy_test
           # REDIS_URL: redis://localhost:6379/0
-        run: bin/rails db:test:prepare && bin/rails test
+        run: bin/rails db:create db:migrate && bin/rails test
 
       - name: Enforce diff coverage
         run: bundle exec ruby bin/check-diff-coverage
