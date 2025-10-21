@@ -1,6 +1,4 @@
 require "test_helper"
-require "ostruct"
-
 module FeedMonitor
   class EngineAssetsConfigurationTest < ActiveSupport::TestCase
     class FakeAssets
@@ -12,11 +10,19 @@ module FeedMonitor
       end
     end
 
+    class FakeConfig
+      attr_reader :assets
+
+      def initialize(assets:)
+        @assets = assets
+      end
+    end
+
     class FakeApp
       attr_reader :config
 
       def initialize
-        @config = OpenStruct.new(assets: FakeAssets.new)
+        @config = FakeConfig.new(assets: FakeAssets.new)
       end
     end
 

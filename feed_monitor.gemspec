@@ -29,7 +29,7 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = [ "lib" ]
 
-  spec.add_dependency "rails", ">= 8.0.2.1"
+  spec.add_dependency "rails", ">= 8.0.3", "< 9.0"
   spec.add_dependency "cssbundling-rails"
   spec.add_dependency "jsbundling-rails"
   spec.add_dependency "turbo-rails"
@@ -43,5 +43,4 @@ Gem::Specification.new do |spec|
   spec.add_dependency "solid_queue", ">= 0.3"
   spec.add_dependency "solid_cable", ">= 0.2"
   spec.add_dependency "ransack", "~> 4.2"
-  spec.add_dependency "ostruct", ">= 0.6.1"
 end
