@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "ostruct"
-
 require FeedMonitor::Engine.root.join("examples/custom_adapter/lib/feed_monitor/examples/scrapers/markdown_scraper.rb")
 
 module FeedMonitor

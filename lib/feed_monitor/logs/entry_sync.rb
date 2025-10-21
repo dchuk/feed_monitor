@@ -31,7 +31,7 @@ module FeedMonitor
         {
           source: loggable.source,
           item: extract_item,
-          success: loggable.success,
+          success: boolean_success,
           started_at: loggable.started_at,
           completed_at: loggable.respond_to?(:completed_at) ? loggable.completed_at : nil,
           http_status: safe_attribute(:http_status),
@@ -54,6 +54,15 @@ module FeedMonitor
 
       def safe_attribute(attribute)
         loggable.respond_to?(attribute) ? loggable.public_send(attribute) : nil
+      end
+
+      def boolean_success
+        return false unless loggable.respond_to?(:success)
+
+        value = loggable.public_send(:success)
+        return false if value.nil?
+
+        ActiveModel::Type::Boolean.new.cast(value)
       end
     end
   end

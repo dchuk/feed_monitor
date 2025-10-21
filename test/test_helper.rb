@@ -2,6 +2,7 @@
 if ENV["CI"] || ENV["COVERAGE"]
   require "simplecov"
 
+  SimpleCov.command_name ENV.fetch("SIMPLECOV_COMMAND_NAME", "feed_monitor:test")
   SimpleCov.start "rails" do
     enable_coverage :branch
     refuse_coverage_drop :line
@@ -10,6 +11,9 @@ if ENV["CI"] || ENV["COVERAGE"]
 
   SimpleCov.enable_for_subprocesses true
 end
+
+# Ensure host app helper tests don't traverse temporary bundle directories.
+ENV["DEFAULT_TEST_EXCLUDE"] ||= "test/{system,dummy,fixtures,tmp}/**/*_test.rb"
 
 # Configure Rails Environment
 ENV["RAILS_ENV"] = "test"

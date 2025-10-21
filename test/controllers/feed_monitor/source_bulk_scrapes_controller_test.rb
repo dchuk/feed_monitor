@@ -16,7 +16,7 @@ module FeedMonitor
         already_enqueued_count: 0,
         failure_count: 0,
         failure_details: {},
-        messages: ["Queued scraping for 2 items"],
+        messages: [ "Queued scraping for 2 items" ],
         rate_limited: false
       )
 
@@ -46,7 +46,7 @@ module FeedMonitor
         already_enqueued_count: 0,
         failure_count: 1,
         failure_details: { scraping_disabled: 1 },
-        messages: ["Scraping is disabled"],
+        messages: [ "Scraping is disabled" ],
         rate_limited: false
       )
 

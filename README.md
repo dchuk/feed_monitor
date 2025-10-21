@@ -11,7 +11,7 @@ FeedMonitor is a production-ready Rails 8 mountable engine for ingesting, normal
 - First-class observability through ActiveSupport notifications and `FeedMonitor::Metrics` counters/gauges
 
 ## Requirements
-- Ruby 3.4.4 (manage with `rbenv install 3.4.4` and `rbenv local 3.4.4`)
+- Ruby 3.4.4 (we recommend [rbenv](https://github.com/rbenv/rbenv) for local development: `rbenv install 3.4.4 && rbenv local 3.4.4`, but use whatever Ruby version manager suits your environment—asdf, chruby, rvm, or container-based workflows all work fine)
 - Rails ≥ 8.0.2.1 in the host application
 - PostgreSQL 13+ (engine migrations use JSONB, SKIP LOCKED, advisory locks, and Solid Cable tables)
 - Node.js 18+ (npm or Yarn) for asset linting and the Tailwind/esbuild bundling pipeline
@@ -20,20 +20,22 @@ FeedMonitor is a production-ready Rails 8 mountable engine for ingesting, normal
 
 ## Quick Start (Host Application)
 
+> **Note on commands:** The examples below use bare `bundle` and `bin/rails` commands. If you use rbenv, prefix them with `rbenv exec` (e.g., `rbenv exec bundle install`). For Docker/container environments, run commands directly or via your container runtime. Adjust to match your Ruby version management approach.
+
 ### Initial Install
-1. Add `gem "feed_monitor", github: "dchuk/feed_monitor"` to your Gemfile and run `rbenv exec bundle install`.
-2. Install the engine: `rbenv exec bin/rails generate feed_monitor:install --mount-path=/feed_monitor` (updates routes, drops the initializer, prints doc links).
-3. Copy migrations: `rbenv exec bin/rails railties:install:migrations FROM=feed_monitor`.
-4. Apply migrations: `rbenv exec bin/rails db:migrate` (creates sources/items/logs tables, Solid Cable messages, and Solid Queue schema when required).
+1. Add `gem "feed_monitor", github: "dchuk/feed_monitor"` to your Gemfile and run `bundle install`.
+2. Install the engine: `bin/rails generate feed_monitor:install --mount-path=/feed_monitor` (updates routes, drops the initializer, prints doc links).
+3. Copy migrations: `bin/rails railties:install:migrations FROM=feed_monitor`.
+4. Apply migrations: `bin/rails db:migrate` (creates sources/items/logs tables, Solid Cable messages, and Solid Queue schema when required).
 5. Install frontend tooling if you plan to extend engine assets: `npm install`.
-6. Start background workers: `rbenv exec bin/rails solid_queue:start` (or your preferred process manager).
+6. Start background workers: `bin/rails solid_queue:start` (or your preferred process manager).
 7. Boot your app and visit the mount path you chose (default `/feed_monitor`) to explore the dashboard and confirm Solid Queue metrics render.
 
 Detailed instructions, optional flags, and verification steps live in [docs/installation.md](docs/installation.md), with troubleshooting advice in [docs/troubleshooting.md](docs/troubleshooting.md).
 
 ### Upgrading FeedMonitor
-1. Bump the gem version in your host `Gemfile` and run `rbenv exec bundle install` (or `bundle update feed_monitor` when targeting a specific release).
-2. Re-run `rbenv exec bin/rails railties:install:migrations FROM=feed_monitor` and then `rbenv exec bin/rails db:migrate` to pick up schema changes.
+1. Bump the gem version in your host `Gemfile` and run `bundle install` (or `bundle update feed_monitor` when targeting a specific release).
+2. Re-run `bin/rails railties:install:migrations FROM=feed_monitor` and then `bin/rails db:migrate` to pick up schema changes.
 3. Compare your `config/initializers/feed_monitor.rb` against the newly generated template for configuration diffs (new queue knobs, HTTP options, etc.).
 4. Review release notes for optional integrations—when enabling Mission Control, ensure `mission_control-jobs` stays mounted and linked via `config.mission_control_dashboard_path`.
 5. Smoke test Solid Queue workers, Action Cable, and admin UI flows after the upgrade.
@@ -94,7 +96,7 @@ More production guidance, including process topology and scaling tips, is availa
 Common installation and runtime issues (missing migrations, realtime not streaming, scraping failures, queue visibility gaps) are documented in [docs/troubleshooting.md](docs/troubleshooting.md). When you report bugs, include your `FeedMonitor::VERSION`, Rails version, configuration snippet, and relevant fetch/scrape logs so we can reproduce quickly.
 
 ## Development & Testing (Engine Repository)
-- Install dependencies with `rbenv exec bundle install` and `npm install`.
+- Install dependencies with `bundle install` and `npm install` (prefix with `rbenv exec` if using rbenv).
 - Use `test/dummy/bin/dev` to boot the dummy app with npm CSS/JS watchers, Solid Queue worker, and Rails server.
 - Run tests via `bin/test-coverage` (SimpleCov-enforced), or `bin/rails test` for targeted suites.
 - Quality checks: `bin/rubocop`, `bin/brakeman --no-pager`, `bin/lint-assets`.

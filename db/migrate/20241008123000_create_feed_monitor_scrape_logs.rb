@@ -5,7 +5,7 @@ class CreateFeedMonitorScrapeLogs < ActiveRecord::Migration[8.0]
     create_table :feed_monitor_scrape_logs do |t|
       t.references :item, null: false, foreign_key: { to_table: :feed_monitor_items }
       t.references :source, null: false, foreign_key: { to_table: :feed_monitor_sources }
-      t.boolean :success
+      t.boolean :success, null: false, default: false
       t.datetime :started_at, null: false
       t.datetime :completed_at
       t.integer :duration_ms

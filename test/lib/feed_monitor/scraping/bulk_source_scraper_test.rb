@@ -16,6 +16,15 @@ module FeedMonitor
         clear_enqueued_jobs
       end
 
+      test "selection helpers normalize input for UI" do
+        assert_equal "current view", FeedMonitor::Scraping::BulkSourceScraper.selection_label("current")
+        assert_equal "unscraped items", FeedMonitor::Scraping::BulkSourceScraper.selection_label("UNSCRAPED")
+        assert_equal "current view", FeedMonitor::Scraping::BulkSourceScraper.selection_label("invalid")
+
+        normalized = FeedMonitor::Scraping::BulkSourceScraper.normalize_selection(" All ")
+        assert_equal :all, normalized
+      end
+
       test "enqueues scraping for current items preview" do
         source = create_source!(scraping_enabled: true)
         recent_items = Array.new(3) { create_item!(source:, published_at: Time.current) }

@@ -12,6 +12,11 @@ module HostAppHarness
 
   ENGINE_ROOT = File.expand_path("../..", __dir__)
   TMP_ROOT = File.expand_path("../tmp", __dir__)
+  TARGET_RUBY_VERSION = File.read(File.expand_path("../../.ruby-version", __dir__)).strip
+  BUNDLE_ROOT = File.join(ENGINE_ROOT, "tmp", "bundles", RUBY_VERSION)
+  LEGACY_BUNDLE_ROOT = File.join(TMP_ROOT, "bundles")
+
+  FileUtils.rm_rf(LEGACY_BUNDLE_ROOT) if Dir.exist?(LEGACY_BUNDLE_ROOT)
 
   TEMPLATE_OPTIONS = {
     default: [
@@ -24,7 +29,10 @@ module HostAppHarness
       "--skip-action-mailbox",
       "--skip-action-text",
       "--skip-active-storage",
-      "--skip-git"
+      "--skip-git",
+      "--skip-kamal",
+      "--skip-docker",
+      "--skip-bundle"
     ],
     api: [
       "--api",
@@ -37,11 +45,15 @@ module HostAppHarness
       "--skip-action-mailbox",
       "--skip-action-text",
       "--skip-active-storage",
-      "--skip-git"
+      "--skip-git",
+      "--skip-kamal",
+      "--skip-docker",
+      "--skip-bundle"
     ]
   }.freeze
 
   def prepare_working_directory(template: :default)
+    ensure_ruby_version!
     ensure_template!(template)
     reset_working_directory!(template)
     @current_template = template
@@ -58,7 +70,8 @@ module HostAppHarness
 
   def bundle_exec!(*command, env: {})
     with_working_directory(env:) do |resolved_env|
-      output, status = Open3.capture2e(resolved_env, "rbenv", "exec", "bundle", "exec", *command)
+      bundle_command = rbenv_available? ? [ "rbenv", "exec", "bundle", "exec", *command ] : [ "bundle", "exec", *command ]
+      output, status = Open3.capture2e(resolved_env, *bundle_command)
       raise_command_failure(command, output) unless status.success?
       output
     end
@@ -89,12 +102,18 @@ module HostAppHarness
   end
 
   def ensure_template!(template)
+    ensure_rails_available!
     root = template_root(template)
-    return if File.exist?(File.join(root, "Gemfile.lock"))
+    if File.exist?(File.join(root, "Gemfile.lock"))
+      ensure_queue_config!(root)
+      return
+    end
 
     FileUtils.rm_rf(root)
     generate_host_app_template!(template)
+    pin_ruby_version!(root)
     append_engine_to_gemfile!(root)
+    ensure_queue_config!(root)
     ensure_bundle_installed!(root)
   end
 
@@ -102,6 +121,7 @@ module HostAppHarness
     FileUtils.rm_rf(work_root(template))
     FileUtils.mkdir_p(File.dirname(work_root(template)))
     FileUtils.cp_r("#{template_root(template)}/.", work_root(template))
+    ensure_queue_config!(work_root(template))
   end
 
   def generate_host_app_template!(template)
@@ -123,13 +143,9 @@ module HostAppHarness
 
   def ensure_bundle_installed!(root)
     Bundler.with_unbundled_env do
-      Dir.chdir(root) do
-        env = default_env(root)
-        check_status = system(env, "rbenv", "exec", "bundle", "check", out: File::NULL, err: File::NULL)
-        return if check_status
-
-        run_bundler!(env, %w[install --quiet])
-      end
+      env = default_env(root)
+      FileUtils.mkdir_p(env.fetch("BUNDLE_PATH"))
+      run_bundler!(env, %w[install --jobs 4 --retry 3 --quiet], chdir: root)
     end
   end
 
@@ -142,16 +158,25 @@ module HostAppHarness
     end
   end
 
-  def run_bundler!(env, args)
-    output, status = Open3.capture2e(env, "rbenv", "exec", "bundle", *args)
-    raise_command_failure(["bundle", *args], output) unless status.success?
+  def run_bundler!(env, args, chdir: current_work_root)
+    bundle_command = rbenv_available? ? [ "rbenv", "exec", "bundle", *args ] : [ "bundle", *args ]
+    output, status = Open3.capture2e(env, *bundle_command, chdir: chdir)
+    raise_command_failure([ "bundle", *args ], output) unless status.success?
+  end
+
+  def rbenv_available?
+    @rbenv_available ||= system("which rbenv > /dev/null 2>&1")
   end
 
   def default_env(root = current_work_root)
-    {
+    env = {
       "BUNDLE_GEMFILE" => File.join(root, "Gemfile"),
-      "BUNDLE_IGNORE_CONFIG" => "1"
+      "BUNDLE_IGNORE_CONFIG" => "1",
+      "BUNDLE_PATH" => BUNDLE_ROOT,
+      "BUNDLE_CACHE_ALL" => "1"
     }
+    env["RBENV_VERSION"] = TARGET_RUBY_VERSION if rbenv_available?
+    env
   end
 
   def raise_command_failure(command, output)
@@ -169,5 +194,74 @@ module HostAppHarness
 
   def work_root(template)
     File.join(TMP_ROOT, "host_app_#{template}")
+  end
+
+  def pin_ruby_version!(root)
+    version = desired_host_ruby_version
+    File.write(File.join(root, ".ruby-version"), "#{version}\n")
+    gemfile = File.join(root, "Gemfile")
+    contents = File.read(gemfile)
+    replacement = %(ruby "#{version}")
+    if contents.match?(/^ruby /)
+      contents.sub!(/^ruby .+$/, replacement)
+    else
+      contents = "#{replacement}\n#{contents}"
+    end
+    File.write(gemfile, contents)
+  end
+
+  def ensure_ruby_version!
+    return if ::RUBY_VERSION.start_with?(TARGET_RUBY_VERSION)
+
+    if rbenv_available?
+      raise <<~MESSAGE
+        FeedMonitor requires Ruby #{TARGET_RUBY_VERSION}. Detected #{::RUBY_VERSION}.
+        Please install #{TARGET_RUBY_VERSION} (e.g., via rbenv: `rbenv install #{TARGET_RUBY_VERSION}`) and re-run the test suite.
+      MESSAGE
+    else
+      Kernel.warn <<~MESSAGE
+        FeedMonitor expected Ruby #{TARGET_RUBY_VERSION} but detected #{::RUBY_VERSION}.
+        Proceeding with #{::RUBY_VERSION} because rbenv is not available; ensure CI installs Ruby #{TARGET_RUBY_VERSION} for full parity.
+      MESSAGE
+    end
+  end
+
+  def ensure_rails_available!
+    Gem::Specification.find_by_name("rails", ">= 8.0.3")
+  rescue Gem::LoadError
+    raise <<~MESSAGE
+      FeedMonitor's host app harness expects Rails >= 8.0.3 to be installed.
+      Run `bundle install` in the engine directory to install Rails before executing the test suite.
+    MESSAGE
+  end
+
+  def desired_host_ruby_version
+    return TARGET_RUBY_VERSION if ::RUBY_VERSION.start_with?(TARGET_RUBY_VERSION)
+    return TARGET_RUBY_VERSION if rbenv_available?
+
+    ::RUBY_VERSION
+  end
+
+  def ensure_queue_config!(root)
+    path = File.join(root, "config", "queue.yml")
+    return if File.exist?(path)
+
+    FileUtils.mkdir_p(File.dirname(path))
+    File.write(path, <<~YAML)
+      development:
+        queues:
+          default:
+            concurrency: 1
+
+      test:
+        queues:
+          default:
+            concurrency: 1
+
+      production:
+        queues:
+          default:
+            concurrency: 5
+    YAML
   end
 end

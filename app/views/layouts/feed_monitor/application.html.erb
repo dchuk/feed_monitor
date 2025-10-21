@@ -7,9 +7,9 @@
 
   <%= yield :head %>
 
-  <%= stylesheet_link_tag "feed_monitor/application", "data-turbo-track": "reload" %>
+  <%= feed_monitor_stylesheet_bundle_tag %>
   <%= turbo_include_tags %>
-  <%= javascript_include_tag "feed_monitor/application", "data-turbo-track": "reload", type: "module" %>
+  <%= feed_monitor_javascript_bundle_tag %>
 </head>
 <body class="fm-admin">
   <%= turbo_stream_from "feed_monitor_notifications" %>

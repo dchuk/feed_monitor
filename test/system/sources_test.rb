@@ -291,7 +291,7 @@ module FeedMonitor
       item.update!(scrape_status: "success", scraped_at: Time.current)
       source.reload
 
-      payloads = capture_turbo_stream_broadcasts([source, :details]) do
+      payloads = capture_turbo_stream_broadcasts([ source, :details ]) do
         FeedMonitor::Realtime.broadcast_source(source)
       end
       assert_not_empty payloads, "expected a turbo-stream broadcast for source details"

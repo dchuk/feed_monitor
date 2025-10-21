@@ -4,7 +4,7 @@ class CreateFeedMonitorFetchLogs < ActiveRecord::Migration[8.0]
   def change
     create_table :feed_monitor_fetch_logs do |t|
       t.references :source, null: false, foreign_key: { to_table: :feed_monitor_sources }
-      t.boolean :success
+      t.boolean :success, null: false, default: false
       t.integer :items_created, null: false, default: 0
       t.integer :items_updated, null: false, default: 0
       t.integer :items_failed, null: false, default: 0

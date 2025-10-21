@@ -100,6 +100,85 @@ module FeedMonitor
         ActiveSupport::Notifications.unsubscribe(subscriber) if subscriber
       end
 
+      test "job_metrics maps summaries to configured queue roles" do
+        queries = FeedMonitor::Dashboard::Queries.new
+        fetch_summary = FeedMonitor::Jobs::SolidQueueMetrics::QueueSummary.new(
+          queue_name: FeedMonitor.queue_name(:fetch),
+          ready_count: 2,
+          scheduled_count: 1,
+          failed_count: 0,
+          recurring_count: 1,
+          paused: false,
+          last_enqueued_at: Time.current,
+          last_started_at: nil,
+          last_finished_at: nil,
+          available: true
+        )
+
+        FeedMonitor::Jobs::SolidQueueMetrics.stub(:call, { FeedMonitor.queue_name(:fetch) => fetch_summary }) do
+          metrics = queries.job_metrics
+
+          assert_equal [ :fetch, :scrape ], metrics.map { |row| row[:role] }
+          fetch_row = metrics.detect { |row| row[:role] == :fetch }
+          assert_equal fetch_summary, fetch_row[:summary]
+
+          scrape_row = metrics.detect { |row| row[:role] == :scrape }
+          assert_equal FeedMonitor.queue_name(:scrape), scrape_row[:queue_name]
+          assert_equal 0, scrape_row[:summary].ready_count
+          refute scrape_row[:summary].available
+        end
+      end
+
+      test "upcoming_fetch_schedule caches grouped sources" do
+        source = FeedMonitor::Source.create!(
+          name: "Schedule Source",
+          feed_url: "https://example.com/schedule.xml",
+          next_fetch_at: Time.current + 15.minutes
+        )
+
+        queries = FeedMonitor::Dashboard::Queries.new
+
+        first_groups = queries.upcoming_fetch_schedule.groups
+        assert_equal 1, first_groups.find { |group| group.key == "0-30" }.sources.size
+
+        FeedMonitor::Source.where(id: source.id).update_all(next_fetch_at: Time.current + 5.hours)
+
+        cached_groups = queries.upcoming_fetch_schedule.groups
+        assert_equal 1, cached_groups.find { |group| group.key == "0-30" }.sources.size
+      end
+
+      test "recent_activity caches results per limit key" do
+        queries = FeedMonitor::Dashboard::Queries.new
+        fake_cache = Struct.new(:calls) do
+          def fetch(key)
+            calls << key
+            yield
+          end
+        end.new([])
+
+        queries.instance_variable_set(:@cache, fake_cache)
+
+        fake_query = Minitest::Mock.new
+        fake_query.expect :call, []
+
+        FeedMonitor::Dashboard::Queries::RecentActivityQuery.stub(:new, ->(**kwargs) {
+          assert_equal 5, kwargs[:limit]
+          fake_query
+        }) { queries.recent_activity(limit: 5) }
+
+        fake_query.verify
+
+        assert_includes fake_cache.calls, [ :recent_activity, 5 ]
+      end
+
+      test "recent_activity_query sanitizes SQL with the provided limit" do
+        query = FeedMonitor::Dashboard::Queries::RecentActivityQuery.new(limit: 3)
+
+        sql = query.send(:sanitized_sql)
+
+        assert_includes sql, "LIMIT 3"
+      end
+
       private
 
       def count_sql_queries

@@ -86,7 +86,7 @@ module FeedMonitor
           selection: :current,
           enqueued_count: 0,
           already_enqueued_count: 0,
-          messages: ["Scraping is disabled for this source."]
+          messages: [ "Scraping is disabled for this source." ]
         )
 
         presenter = BulkResultPresenter.new(result:, pluralizer: @pluralizer)

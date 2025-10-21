@@ -16,7 +16,7 @@ module FeedMonitor
         )
 
         presenter = FeedMonitor::Dashboard::RecentActivityPresenter.new(
-          [event],
+          [ event ],
           url_helpers: FeedMonitor::Engine.routes.url_helpers
         )
 
@@ -38,7 +38,7 @@ module FeedMonitor
         )
 
         presenter = FeedMonitor::Dashboard::RecentActivityPresenter.new(
-          [event],
+          [ event ],
           url_helpers: FeedMonitor::Engine.routes.url_helpers
         )
 

@@ -8,7 +8,7 @@ module FeedMonitor
     include ActionView::RecordIdentifier
     include FeedMonitor::SanitizesSearchParams
 
-    searchable_with scope: -> { Source.all }, default_sorts: ["created_at desc"]
+    searchable_with scope: -> { Source.all }, default_sorts: [ "created_at desc" ]
 
     ITEMS_PREVIEW_LIMIT = FeedMonitor::Scraping::BulkSourceScraper::DEFAULT_PREVIEW_LIMIT
 
