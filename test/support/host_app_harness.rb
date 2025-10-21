@@ -301,13 +301,25 @@ module HostAppHarness
       require "active_support"
 
       ActiveSupport.on_load(:active_record) do
-        next unless defined?(ActiveRecord::ConnectionAdapters::SQLite3)
+        begin
+          require "active_record/connection_adapters/sqlite3_adapter"
+        rescue LoadError
+          next
+        end
 
-        ActiveRecord::ConnectionAdapters::SQLite3::TableDefinition.prepend(Module.new do
-          def jsonb(name, **options)
-            json(name, **options)
+        next unless defined?(ActiveRecord::ConnectionAdapters::SQLite3::TableDefinition)
+
+        unless defined?(FeedMonitor::SQLiteJsonbShim)
+          module FeedMonitor
+            module SQLiteJsonbShim
+              def jsonb(name, **options)
+                json(name, **options)
+              end
+            end
           end
-        end)
+        end
+
+        ActiveRecord::ConnectionAdapters::SQLite3::TableDefinition.prepend(FeedMonitor::SQLiteJsonbShim)
       end
     RUBY
   end

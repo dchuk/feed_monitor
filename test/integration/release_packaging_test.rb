@@ -55,13 +55,20 @@ module FeedMonitor
         FileUtils.rm_f(gem_path)
 
         env = {}
-        env["RBENV_VERSION"] = HostAppHarness::TARGET_RUBY_VERSION if HostAppHarness.const_defined?(:TARGET_RUBY_VERSION)
 
         built_gem = File.join(ENGINE_ROOT, "feed_monitor-#{FeedMonitor::VERSION}.gem")
         FileUtils.rm_f(built_gem)
 
+        command =
+          if HostAppHarness.send(:rbenv_available?)
+            env["RBENV_VERSION"] = HostAppHarness::TARGET_RUBY_VERSION if HostAppHarness.const_defined?(:TARGET_RUBY_VERSION)
+            [ "rbenv", "exec", "gem", "build", "feed_monitor.gemspec" ]
+          else
+            [ "gem", "build", "feed_monitor.gemspec" ]
+          end
+
         output, status = Bundler.with_unbundled_env do
-          Open3.capture2e(env, "rbenv", "exec", "gem", "build", "feed_monitor.gemspec", chdir: ENGINE_ROOT)
+          Open3.capture2e(env, *command, chdir: ENGINE_ROOT)
         end
         raise "Failed to build gem: #{output}" unless status.success?
 
