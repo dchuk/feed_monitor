@@ -58,7 +58,8 @@ module HostAppHarness
 
   def bundle_exec!(*command, env: {})
     with_working_directory(env:) do |resolved_env|
-      output, status = Open3.capture2e(resolved_env, "rbenv", "exec", "bundle", "exec", *command)
+      bundle_command = rbenv_available? ? [ "rbenv", "exec", "bundle", "exec", *command ] : [ "bundle", "exec", *command ]
+      output, status = Open3.capture2e(resolved_env, *bundle_command)
       raise_command_failure(command, output) unless status.success?
       output
     end
@@ -125,7 +126,8 @@ module HostAppHarness
     Bundler.with_unbundled_env do
       Dir.chdir(root) do
         env = default_env(root)
-        check_status = system(env, "rbenv", "exec", "bundle", "check", out: File::NULL, err: File::NULL)
+        check_command = rbenv_available? ? [ "rbenv", "exec", "bundle", "check" ] : [ "bundle", "check" ]
+        check_status = system(env, *check_command, out: File::NULL, err: File::NULL)
         return if check_status
 
         run_bundler!(env, %w[install --quiet])
@@ -143,8 +145,13 @@ module HostAppHarness
   end
 
   def run_bundler!(env, args)
-    output, status = Open3.capture2e(env, "rbenv", "exec", "bundle", *args)
+    bundle_command = rbenv_available? ? [ "rbenv", "exec", "bundle", *args ] : [ "bundle", *args ]
+    output, status = Open3.capture2e(env, *bundle_command)
     raise_command_failure([ "bundle", *args ], output) unless status.success?
+  end
+
+  def rbenv_available?
+    @rbenv_available ||= system("which rbenv > /dev/null 2>&1")
   end
 
   def default_env(root = current_work_root)
