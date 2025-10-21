@@ -10,8 +10,7 @@ PATH
       feedjira (>= 3.2, < 5.0)
       jsbundling-rails
       nokolexbor (~> 0.5)
-      ostruct (>= 0.6.1)
-      rails (>= 8.0.2.1)
+      rails (>= 8.0.3, < 9.0)
       ransack (~> 4.2)
       ruby-readability (~> 0.7)
       solid_cable (>= 0.2)
@@ -210,7 +209,6 @@ GEM
     nokolexbor (0.6.2-arm64-darwin)
     nokolexbor (0.6.2-x86_64-darwin)
     nokolexbor (0.6.2-x86_64-linux)
-    ostruct (0.6.3)
     parallel (1.27.0)
     parser (3.3.9.0)
       ast (~> 2.4.1)
