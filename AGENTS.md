@@ -4,6 +4,16 @@ refer to ./ai/project_overview.md for full scope of this project
 
 use rbenv for all ruby and bundler/gem commands, not the system ruby
 
+## Contribution Workflow
+
+- Treat the engine like any external contributor would: no direct commits to `main`.
+- Before writing code, branch off the latest `origin/main` (use a descriptive `feature/` or `bugfix/` prefix) and open a draft PR on `github.com/dchuk/feed_monitor` referencing the active `.ai/tasks.md` slice.
+- Push early and often to that branch so history stays visible; keep commits scoped and rebases local to your branch only.
+- Move the PR out of draft once tests pass and the slice is ready for review; request at least one review and wait for all CI jobs (lint, security, Rails tests + diff coverage) to succeed before merging.
+- The `test` job enforces diff coverage via `bin/check-diff-coverage`; if legitimate gaps remain after new code paths, refresh `config/coverage_baseline.json` by running `bin/test-coverage` followed by `bin/update-coverage-baseline` on the updated branch and commit the regenerated baseline.
+- Merge via the PR UI (squash or rebase as agreed) after approval; avoid rewriting shared history post-push.
+- Tag releases only after the release PR merges, then follow the checklist in `CHANGELOG.md`.
+
 ## Library Documentation
 
 - Use Context7 MCP constantly to look up fresh documentation for any task you're looking to complete, especially tasks that rely on using libraries or gems
