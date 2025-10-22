@@ -2,7 +2,7 @@
   <div class="flex flex-wrap items-center justify-between gap-3">
     <div>
       <h1 class="text-3xl font-semibold text-slate-900">Logs</h1>
-      <p class="mt-1 text-sm text-slate-500">Review recent fetch and scrape activity in a single view.</p>
+      <p class="mt-1 text-sm text-slate-500">Review recent fetch, scrape, and health check activity in a single view.</p>
     </div>
   </div>
 
@@ -32,7 +32,8 @@
       <% type_options = [
         ["All Logs", nil],
         ["Fetch Logs", "fetch"],
-        ["Scrape Logs", "scrape"]
+        ["Scrape Logs", "scrape"],
+        ["Health Checks", "health_check"]
       ] %>
       <% type_options.each do |label, value| %>
         <% params_for_type = base_params.merge(log_type: value, page: nil).compact %>

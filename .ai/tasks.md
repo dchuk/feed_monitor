@@ -889,6 +889,17 @@
 - [x] 22.05.02 Expand CI with a release-verification job that installs the built gem into the disposable host app harness, runs the install generator and smoke tests, and reuses stored coverage to fail if diff coverage or harness assertions regress
 - [x] 22.05.03 Document manual release verification in `.ai/release_checklist.md`, including checking coverage artifacts/baseline freshness, gem size, README rendering on RubyGems, and confirmation that `bin/release` + the release-verification job both passed
 
+### 22.06 Failure Recovery Experience
+
+- [x] 22.06.01 Replace failing/auto-paused status badges with dropdown triggers (sources index + show) that expose recovery actions alongside concise helper copy, wired up with Turbo streams.
+- [x] 22.06.02 Hook existing "Fetch Now" runner into a dropdown action that queues a full fetch, swaps the badge for an inline `Processing` state with spinner, and emits a toast confirmation via Turbo.
+- [x] 22.06.03 Add a lightweight health-check job that enqueues through Solid Queue, performs a single fetch request without mutating items, records a dedicated log entry, and surfaces completion through the shared inline + toast UI.
+- [x] 22.06.04 Implement "Reset to Active Status" for auto-paused sources to clear pause/backoff timestamps, failure counters, last error metadata, and restore the next fetch interval using source-level override or global default.
+- [x] 22.06.05 Expand system/unit coverage to exercise dropdown UX, Turbo responses, log visibility, and state-reset behaviors for both failing and auto-paused sources.
+
+**Deliverable: Operators can recover failing or auto-paused sources inline with Turbo-powered dropdowns, clear state resets, and auditable logs.**
+**Test: System tests assert badge-to-dropdown flow, spinner/toast feedback, health-check log visibility, and reset-side effects on source scheduling.**
+
 **Deliverable: Engine publishes as a gem with automated host app install verification, zero configuration bleed, and clear onboarding docs**
 **Test: Release pipeline builds the gem, CI installs it into a fresh Rails 8 host app, and generator-driven smoke tests pass without modifying host configurations**
 

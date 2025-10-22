@@ -10,7 +10,8 @@ module FeedMonitor
 
       LOG_TYPE_MAP = {
         "fetch" => "FeedMonitor::FetchLog",
-        "scrape" => "FeedMonitor::ScrapeLog"
+        "scrape" => "FeedMonitor::ScrapeLog",
+        "health_check" => "FeedMonitor::HealthCheckLog"
       }.freeze
 
       TIMEFRAME_MAP = {

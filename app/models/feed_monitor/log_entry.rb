@@ -4,7 +4,7 @@ module FeedMonitor
   class LogEntry < ApplicationRecord
     self.table_name = "feed_monitor_log_entries"
 
-    delegated_type :loggable, types: %w[FeedMonitor::FetchLog FeedMonitor::ScrapeLog]
+    delegated_type :loggable, types: %w[FeedMonitor::FetchLog FeedMonitor::ScrapeLog FeedMonitor::HealthCheckLog]
 
     belongs_to :source, class_name: "FeedMonitor::Source", inverse_of: :log_entries
     belongs_to :item, class_name: "FeedMonitor::Item", inverse_of: :log_entries, optional: true
@@ -42,8 +42,15 @@ module FeedMonitor
       loggable_type == ScrapeLog.sti_name
     end
 
+    def health_check?
+      loggable_type == HealthCheckLog.sti_name
+    end
+
     def log_type
-      fetch? ? :fetch : :scrape
+      return :fetch if fetch?
+      return :scrape if scrape?
+
+      :health_check
     end
   end
 end

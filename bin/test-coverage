@@ -2,9 +2,41 @@
 set -euo pipefail
 
 export COVERAGE=true
+export SIMPLECOV_COMMAND_NAME="${SIMPLECOV_COMMAND_NAME:-feed_monitor:test}"
 
-if command -v rbenv >/dev/null 2>&1; then
-  rbenv exec bundle exec rails test "$@"
-else
-  bundle exec rails test "$@"
+if [ -d coverage ]; then
+  rm -rf coverage
 fi
+
+TARGETED_TESTS=(
+  "test/lib/feed_monitor/health/source_health_check_test.rb"
+  "test/lib/feed_monitor/health/source_health_monitor_test.rb"
+  "test/lib/feed_monitor/health/source_health_reset_test.rb"
+  "test/lib/feed_monitor/health/health_module_test.rb"
+  "test/lib/feed_monitor/http_test.rb"
+  "test/lib/feed_monitor/logs/table_presenter_test.rb"
+  "test/models/feed_monitor/log_entry_test.rb"
+  "test/controllers/feed_monitor/source_health_checks_controller_test.rb"
+  "test/controllers/feed_monitor/source_health_resets_controller_test.rb"
+  "test/helpers/feed_monitor/application_helper_test.rb"
+)
+
+run_tests() {
+  if command -v rbenv >/dev/null 2>&1; then
+    rbenv exec "$@"
+  else
+    "$@"
+  fi
+}
+
+run_tests bundle exec rails test "$@"
+
+run_tests_with_env() {
+  if command -v rbenv >/dev/null 2>&1; then
+    SIMPLECOV_COMMAND_NAME=feed_monitor:health_suite COVERAGE=true rbenv exec bundle exec rails test "$@"
+  else
+    SIMPLECOV_COMMAND_NAME=feed_monitor:health_suite COVERAGE=true bundle exec rails test "$@"
+  fi
+}
+
+run_tests_with_env "${TARGETED_TESTS[@]}"

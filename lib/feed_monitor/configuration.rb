@@ -496,6 +496,7 @@ module FeedMonitor
         item: :item,
         fetch_log: :fetch_log,
         scrape_log: :scrape_log,
+        health_check_log: :health_check_log,
         item_content: :item_content,
         log_entry: :log_entry
       }.freeze

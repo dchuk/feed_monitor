@@ -1,0 +1,46 @@
+<% source = local_assigns.fetch(:source) %>
+<% override = local_assigns[:health_status_override] %>
+<% badge = source_health_badge(source, override:) %>
+<% actions = source_health_actions(source) %>
+<% interactive = interactive_health_status?(source, override: override) && actions.any? %>
+
+<% if interactive %>
+  <div data-controller="dropdown" class="relative inline-block text-left" data-testid="source-health-menu">
+    <button type="button"
+            class="inline-flex w-full items-center justify-center rounded-full px-3 py-1 text-xs font-semibold <%= badge[:classes] %>"
+            data-action="dropdown#toggle click@window->dropdown#hide"
+            data-testid="source-health-menu-toggle">
+      <% if badge[:show_spinner] %>
+        <%= loading_spinner_svg(css_class: "mr-1 h-3.5 w-3.5 animate-spin text-blue-500") %>
+      <% end %>
+      <span><%= badge[:label] %></span>
+      <svg class="ml-2 h-3 w-3 text-slate-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06z" clip-rule="evenodd" />
+      </svg>
+    </button>
+    <div data-dropdown-target="menu" class="absolute z-20 mt-2 w-80 origin-top-left rounded-md border border-slate-200 bg-white shadow-lg hidden">
+      <div class="py-2">
+        <% actions.each do |action| %>
+          <% button_classes = "w-full px-4 py-3 text-left text-sm hover:bg-slate-50 focus:outline-none" %>
+          <%= button_to action[:path],
+                method: action[:method],
+                form: { class: "w-full" },
+                data: (action[:data] || {}).merge(action: "dropdown#hide"),
+                class: button_classes do %>
+            <div class="flex flex-col text-slate-700">
+              <span class="font-semibold"><%= action[:label] %></span>
+              <span class="mt-1 text-xs text-slate-500"><%= action[:description] %></span>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% else %>
+  <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold <%= badge[:classes] %>">
+    <% if badge[:show_spinner] %>
+      <%= loading_spinner_svg(css_class: "mr-1 h-3.5 w-3.5 animate-spin text-blue-500") %>
+    <% end %>
+    <%= badge[:label] %>
+  </span>
+<% end %>

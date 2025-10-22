@@ -130,6 +130,24 @@ module FeedMonitor
       assert_match(/green/, badge[:classes])
     end
 
+    test "source_health_badge highlights declining status" do
+      source = FeedMonitor::Source.new(health_status: "declining")
+
+      badge = source_health_badge(source)
+
+      assert_equal "Declining", badge[:label]
+      assert_match(/orange/, badge[:classes])
+    end
+
+    test "source_health_badge highlights improving status" do
+      source = FeedMonitor::Source.new(health_status: "improving")
+
+      badge = source_health_badge(source)
+
+      assert_equal "Improving", badge[:label]
+      assert_match(/sky|blue|green/, badge[:classes])
+    end
+
     test "source_health_badge indicates auto paused" do
       source = FeedMonitor::Source.new(health_status: "auto_paused")
 
@@ -137,6 +155,25 @@ module FeedMonitor
 
       assert_equal "Auto-Paused", badge[:label]
       assert_match(/amber|rose/, badge[:classes])
+    end
+
+    test "source_health_actions include recovery options for declining sources" do
+      source = FeedMonitor::Source.new(
+        id: 42,
+        health_status: "declining"
+      )
+
+      actions = source_health_actions(source)
+      keys = actions.map { |action| action[:key] }
+
+      assert_equal %i[full_fetch health_check], keys
+      assert actions.all? { |action| action[:data][:testid].present? }
+    end
+
+    test "interactive_health_status is enabled for declining sources" do
+      source = FeedMonitor::Source.new(health_status: "declining")
+
+      assert interactive_health_status?(source)
     end
 
     test "item_scrape_status_badge shows scraped label for success" do

@@ -14,6 +14,7 @@ module FeedMonitor
     has_many :items, -> { active }, class_name: "FeedMonitor::Item", inverse_of: :source
     has_many :fetch_logs, class_name: "FeedMonitor::FetchLog", inverse_of: :source, dependent: :destroy
     has_many :scrape_logs, class_name: "FeedMonitor::ScrapeLog", inverse_of: :source, dependent: :destroy
+    has_many :health_check_logs, class_name: "FeedMonitor::HealthCheckLog", inverse_of: :source, dependent: :destroy
     has_many :log_entries, class_name: "FeedMonitor::LogEntry", inverse_of: :source, dependent: :destroy
 
     # Scopes for common source states

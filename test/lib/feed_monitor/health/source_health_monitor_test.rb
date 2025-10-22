@@ -43,7 +43,7 @@ module FeedMonitor
 
         @source.reload
         assert_in_delta 0.6, @source.rolling_success_rate, 0.001
-        assert_equal "healthy", @source.health_status
+        assert_equal "improving", @source.health_status
       end
 
       test "auto pauses when rolling success rate falls below threshold" do
@@ -91,6 +91,67 @@ module FeedMonitor
 
         @source.reload
         assert_equal "auto_paused", @source.health_status
+      end
+
+      test "marks source as declining after three consecutive failures" do
+        travel_to Time.current
+
+        3.times { |index| create_fetch_log(success: false, minutes_ago: index) }
+
+        FeedMonitor::Health::SourceHealthMonitor.new(source: @source).call
+
+        @source.reload
+        assert_equal "declining", @source.health_status
+      end
+
+      test "marks source as improving after consecutive recoveries" do
+        travel_to Time.current
+
+        create_fetch_log(success: false, minutes_ago: 2)
+        create_fetch_log(success: true, minutes_ago: 1)
+        create_fetch_log(success: true, minutes_ago: 0)
+
+        FeedMonitor::Health::SourceHealthMonitor.new(source: @source).call
+
+        @source.reload
+        assert_equal "improving", @source.health_status
+      end
+
+      test "private helpers compute failure and success streaks" do
+        monitor = FeedMonitor::Health::SourceHealthMonitor.new(source: @source)
+
+        simple_log = Class.new do
+          attr_reader :value
+
+          def initialize(value)
+            @value = value
+          end
+
+          def success?
+            value
+          end
+
+          def success
+            value
+          end
+        end
+
+        logs = [
+          simple_log.new(false),
+          simple_log.new(false),
+          simple_log.new(true)
+        ]
+
+        assert_equal 2, monitor.send(:consecutive_failures, logs)
+
+        improving_logs = [
+          simple_log.new(true),
+          simple_log.new(true),
+          simple_log.new(false)
+        ]
+
+        assert monitor.send(:improving_streak?, improving_logs)
+        refute monitor.send(:improving_streak?, logs)
       end
 
       private

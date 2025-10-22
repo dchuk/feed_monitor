@@ -100,9 +100,9 @@ module FeedMonitor
     def reset_configuration!
       @config = Configuration.new
       FeedMonitor::ModelExtensions.reload!
-      FeedMonitor::Dashboard::TurboBroadcaster.setup!
-      FeedMonitor::Realtime.setup!
       FeedMonitor::Health.setup!
+      FeedMonitor::Realtime.setup!
+      FeedMonitor::Dashboard::TurboBroadcaster.setup!
     end
 
     def queue_name(role)

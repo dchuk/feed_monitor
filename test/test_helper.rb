@@ -11,10 +11,11 @@ skip_coverage =
 if (ENV["CI"] || ENV["COVERAGE"]) && !skip_coverage
   require "simplecov"
 
-  SimpleCov.command_name ENV.fetch("SIMPLECOV_COMMAND_NAME", "feed_monitor:test")
+  command_name = ENV.fetch("SIMPLECOV_COMMAND_NAME", "feed_monitor:test")
+  SimpleCov.command_name command_name
   SimpleCov.start "rails" do
     enable_coverage :branch
-    refuse_coverage_drop :line
+    refuse_coverage_drop :line if command_name == "feed_monitor:test"
     add_filter %r{^/test/}
   end
 

@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require "feed_monitor/health/source_health_monitor"
+require "feed_monitor/health/source_health_reset"
+require "feed_monitor/health/source_health_check"
 
 module FeedMonitor
   module Health

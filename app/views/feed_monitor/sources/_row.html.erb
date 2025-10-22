@@ -1,9 +1,10 @@
 <% rate_map = local_assigns[:item_activity_rates] || {} %>
 <% activity_rate = rate_map.fetch(source.id, 0.0) %>
+<% health_status_override = local_assigns[:health_status_override] %>
 <% health_status = if !source.active?
-    { label: "Paused", classes: "bg-amber-100 text-amber-700" }
+    { label: "Paused", classes: "bg-amber-100 text-amber-700", show_spinner: false }
   else
-    source_health_badge(source)
+    source_health_badge(source, override: health_status_override)
   end %>
 <% fetch_status = async_status_badge(source.fetch_status) %>
 <% search_params = local_assigns[:search_params] || {} %>
@@ -32,7 +33,13 @@
   </td>
   <td class="px-6 py-4">
     <div class="flex flex-col gap-2 text-xs">
-      <span class="inline-flex items-center rounded-full px-3 py-1 font-semibold <%= health_status[:classes] %>"><%= health_status[:label] %></span>
+      <% if source.active? %>
+        <%= render "feed_monitor/sources/health_status_badge",
+              source: source,
+              health_status_override: health_status_override %>
+      <% else %>
+        <span class="inline-flex items-center rounded-full px-3 py-1 font-semibold <%= health_status[:classes] %>"><%= health_status[:label] %></span>
+      <% end %>
       <% if source.rolling_success_rate.present? %>
         <span class="text-[11px] text-slate-500">Success Rate: <%= number_to_percentage(source.rolling_success_rate * 100, precision: 0) %></span>
       <% end %>

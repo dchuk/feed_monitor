@@ -10,7 +10,7 @@ module FeedMonitor
 
     private
 
-    def render_fetch_enqueue_response(message)
+    def render_fetch_enqueue_response(message, toast_level: :info, health_status_override: nil)
       @source.reload
       respond_to do |format|
         format.turbo_stream do
@@ -19,7 +19,7 @@ module FeedMonitor
           responder.replace_details(
             @source,
             partial: "feed_monitor/sources/details_wrapper",
-            locals: { source: @source }
+            locals: { source: @source, health_status_override: health_status_override }
           )
 
           responder.replace_row(
@@ -27,11 +27,12 @@ module FeedMonitor
             partial: "feed_monitor/sources/row",
             locals: {
               source: @source,
-              item_activity_rates: { @source.id => FeedMonitor::Analytics::SourceActivityRates.rate_for(@source) }
+              item_activity_rates: { @source.id => FeedMonitor::Analytics::SourceActivityRates.rate_for(@source) },
+              health_status_override: health_status_override
             }
           )
 
-          responder.toast(message:, level: :info, delay_ms: toast_delay_for(:info))
+          responder.toast(message:, level: toast_level, delay_ms: toast_delay_for(toast_level))
 
           render turbo_stream: responder.render(view_context)
         end
@@ -42,8 +43,8 @@ module FeedMonitor
       end
     end
 
-    def handle_fetch_failure(error)
-      error_message = "Fetch could not be enqueued: #{error.message}"
+    def handle_fetch_failure(error, prefix: "Fetch")
+      error_message = "#{prefix} could not be enqueued: #{error.message}"
 
       respond_to do |format|
         format.turbo_stream do
