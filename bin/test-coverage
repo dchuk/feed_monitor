@@ -4,6 +4,10 @@ set -euo pipefail
 export COVERAGE=true
 export SIMPLECOV_COMMAND_NAME="${SIMPLECOV_COMMAND_NAME:-feed_monitor:test}"
 
+if [ -d coverage ]; then
+  rm -rf coverage
+fi
+
 if command -v rbenv >/dev/null 2>&1; then
   rbenv exec bundle exec rails test "$@"
 else
