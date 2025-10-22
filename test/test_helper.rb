@@ -1,5 +1,14 @@
-# Enable coverage reporting in CI or when explicitly requested.
-if ENV["CI"] || ENV["COVERAGE"]
+# Enable coverage reporting in CI or when explicitly requested unless disabled.
+skip_coverage_flag = ENV.fetch("FEED_MONITOR_SKIP_COVERAGE", "")
+skip_coverage =
+  case skip_coverage_flag.downcase
+  when "", "0", "false"
+    false
+  else
+    true
+  end
+
+if (ENV["CI"] || ENV["COVERAGE"]) && !skip_coverage
   require "simplecov"
 
   SimpleCov.command_name ENV.fetch("SIMPLECOV_COMMAND_NAME", "feed_monitor:test")

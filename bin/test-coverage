@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-COVERAGE=true rbenv exec bundle exec rails test "$@"
+export COVERAGE=true
+
+if command -v rbenv >/dev/null 2>&1; then
+  rbenv exec bundle exec rails test "$@"
+else
+  bundle exec rails test "$@"
+fi

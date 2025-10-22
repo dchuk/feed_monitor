@@ -91,7 +91,7 @@ jobs:
       - name: Build assets
         run: npm run build
 
-      - name: Run tests
+      - name: Run tests with coverage
         env:
           RAILS_ENV: test
           POSTGRES_HOST: localhost
@@ -99,17 +99,26 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_TEST_DB: feed_monitor_dummy_test
           # REDIS_URL: redis://localhost:6379/0
-        run: bin/rails db:create db:migrate && bin/rails test
+        run: bin/rails db:create db:migrate && bin/test-coverage
 
       - name: Enforce diff coverage
         run: bundle exec ruby bin/check-diff-coverage
+
+      - name: Verify coverage artifact
+        run: |
+          if [ ! -f coverage/.resultset.json ]; then
+            echo "coverage/.resultset.json not found!"
+            ls -Rla coverage || echo "coverage directory missing"
+            exit 1
+          fi
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage
           path: coverage
-          if-no-files-found: ignore
+          include-hidden-files: true
+          if-no-files-found: error
 
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@v4
@@ -118,3 +127,82 @@ jobs:
           name: screenshots
           path: ${{ github.workspace }}/tmp/screenshots
           if-no-files-found: ignore
+
+  release_verification:
+    runs-on: ubuntu-latest
+    needs: [ lint, security, test ]
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: feed_monitor_test
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - name: Install packages
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y build-essential git libyaml-dev libsqlite3-dev pkg-config postgresql-client
+
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.4.4
+          bundler-cache: true
+
+      - name: Prepare database
+        env:
+          RAILS_ENV: test
+          POSTGRES_HOST: localhost
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_TEST_DB: feed_monitor_dummy_test
+        run: bin/rails db:create db:migrate
+
+      - name: Reset coverage directory
+        run: rm -rf coverage
+
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage
+          path: coverage
+
+      - name: Backup coverage result
+        run: |
+          mkdir -p tmp/ci-coverage
+          RESULTSET_PATH=$(find coverage -name ".resultset.json" -print -quit)
+          if [ -z "$RESULTSET_PATH" ]; then
+            echo "Unable to locate coverage result after artifact download"
+            exit 1
+          fi
+          cp "$RESULTSET_PATH" tmp/ci-coverage/resultset.json
+
+      - name: Run release packaging verification
+        env:
+          RAILS_ENV: test
+          POSTGRES_HOST: localhost
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_TEST_DB: feed_monitor_dummy_test
+          FEED_MONITOR_SKIP_COVERAGE: "true"
+        run: bin/rails test test/integration/release_packaging_test.rb
+
+      - name: Restore coverage result if missing
+        run: |
+          if [ ! -f coverage/.resultset.json ] && [ -f tmp/ci-coverage/resultset.json ]; then
+            echo "Restoring coverage result from backup after packaging verification"
+            mkdir -p coverage
+            cp tmp/ci-coverage/resultset.json coverage/.resultset.json
+          fi
+
+      - name: Enforce diff coverage
+        run: bundle exec ruby bin/check-diff-coverage

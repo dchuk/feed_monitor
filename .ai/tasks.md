@@ -885,9 +885,9 @@
 
 ### 22.05 Release Pipeline & Quality Gates
 
-- [ ] 22.05.01 Create release automation task (e.g., `bin/release`) that runs linters/tests, builds the gem, and tags versions with annotated changelog entries
-- [ ] 22.05.02 Introduce CI job that provisions the disposable host app harness, installs the built gem, runs generator, migrations, and smoke tests to guard future releases
-- [ ] 22.05.03 Document manual verification steps for release managers (check gem size, README rendering on RubyGems, confirm installation instructions) in `.ai/release_checklist.md`
+- [x] 22.05.01 Create release automation task (e.g., `bin/release`) that runs the full set of quality gates (`bin/rubocop`, `bin/brakeman`, `bin/test-coverage`, `bin/check-diff-coverage`), builds the gem, and tags versions with an annotated changelog entry
+- [x] 22.05.02 Expand CI with a release-verification job that installs the built gem into the disposable host app harness, runs the install generator and smoke tests, and reuses stored coverage to fail if diff coverage or harness assertions regress
+- [x] 22.05.03 Document manual release verification in `.ai/release_checklist.md`, including checking coverage artifacts/baseline freshness, gem size, README rendering on RubyGems, and confirmation that `bin/release` + the release-verification job both passed
 
 **Deliverable: Engine publishes as a gem with automated host app install verification, zero configuration bleed, and clear onboarding docs**
 **Test: Release pipeline builds the gem, CI installs it into a fresh Rails 8 host app, and generator-driven smoke tests pass without modifying host configurations**
