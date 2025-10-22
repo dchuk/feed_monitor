@@ -117,6 +117,43 @@ module FeedMonitor
         assert_equal "improving", @source.health_status
       end
 
+      test "private helpers compute failure and success streaks" do
+        monitor = FeedMonitor::Health::SourceHealthMonitor.new(source: @source)
+
+        simple_log = Class.new do
+          attr_reader :value
+
+          def initialize(value)
+            @value = value
+          end
+
+          def success?
+            value
+          end
+
+          def success
+            value
+          end
+        end
+
+        logs = [
+          simple_log.new(false),
+          simple_log.new(false),
+          simple_log.new(true)
+        ]
+
+        assert_equal 2, monitor.send(:consecutive_failures, logs)
+
+        improving_logs = [
+          simple_log.new(true),
+          simple_log.new(true),
+          simple_log.new(false)
+        ]
+
+        assert monitor.send(:improving_streak?, improving_logs)
+        refute monitor.send(:improving_streak?, logs)
+      end
+
       private
 
       def create_fetch_log(success:, minutes_ago: 0)

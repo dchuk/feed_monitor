@@ -64,12 +64,31 @@ module FeedMonitor
         assert_equal "readability", scrape_row.adapter
         assert scrape_row.failure?
         assert_equal scrape_log_path(@scrape_log), scrape_row.detail_path
+        assert_equal :scrape, scrape_row.type_variant
+        assert_equal "Failure", scrape_row.status_label
+        assert_equal :failure, scrape_row.status_variant
+        assert_equal "Presenter Source", scrape_row.source_label
+        assert_equal source_path(@source), scrape_row.source_path
+        assert_match(/500/, scrape_row.http_summary)
+        assert_equal "#{@scrape_log.duration_ms} ms", scrape_row.metrics_summary
+        assert_equal "scrape-#{@scrape_log.id}", scrape_row.dom_id
+        assert_equal "scrape", scrape_row.type_slug
+        assert_equal item_path(@item), scrape_row.primary_path
 
         assert_equal "Fetch", fetch_row.type_label
         assert_equal "Presenter Source", fetch_row.primary_label
         assert_equal "+5 / ~2 / ✕0", fetch_row.metrics_summary
         assert fetch_row.success?
         assert_equal fetch_log_path(@fetch_log), fetch_row.detail_path
+        assert_equal "Presenter Source", fetch_row.source_label
+        assert_equal source_path(@source), fetch_row.source_path
+        assert_equal "Success", fetch_row.status_label
+        assert_equal :success, fetch_row.status_variant
+        assert_equal :fetch, fetch_row.type_variant
+        assert_equal "fetch-#{@fetch_log.id}", fetch_row.dom_id
+        assert_equal "fetch", fetch_row.type_slug
+        assert_equal "Presenter Source", fetch_row.primary_label
+        assert_equal source_path(@source), fetch_row.primary_path
 
         assert_equal "Health Check", health_row.type_label
         assert_equal "Presenter Source", health_row.primary_label
@@ -77,6 +96,15 @@ module FeedMonitor
         assert_equal "200", health_row.http_summary
         assert_equal "150 ms", health_row.metrics_summary
         assert_nil health_row.detail_path
+        assert_equal :health_check, health_row.type_variant
+        assert_equal "Success", health_row.status_label
+        assert_equal :success, health_row.status_variant
+        assert_equal "health-check-#{@health_check_log.id}", health_row.dom_id
+        assert_equal "health-check", health_row.type_slug
+        assert health_row.health_check?
+        refute health_row.fetch?
+        refute health_row.scrape?
+        assert_equal source_path(@source), health_row.primary_path
       end
     end
   end

@@ -157,6 +157,25 @@ module FeedMonitor
       assert_match(/amber|rose/, badge[:classes])
     end
 
+    test "source_health_actions include recovery options for declining sources" do
+      source = FeedMonitor::Source.new(
+        id: 42,
+        health_status: "declining"
+      )
+
+      actions = source_health_actions(source)
+      keys = actions.map { |action| action[:key] }
+
+      assert_equal %i[full_fetch health_check], keys
+      assert actions.all? { |action| action[:data][:testid].present? }
+    end
+
+    test "interactive_health_status is enabled for declining sources" do
+      source = FeedMonitor::Source.new(health_status: "declining")
+
+      assert interactive_health_status?(source)
+    end
+
     test "item_scrape_status_badge shows scraped label for success" do
       source = FeedMonitor::Source.new(scraping_enabled: true)
       item = FeedMonitor::Item.new(source:, guid: "status-success", url: "https://example.com/success", scrape_status: "success")

@@ -97,5 +97,65 @@ module FeedMonitor
       assert_equal :success, toast[:level]
       assert_match(/Health check/i, toast[:message])
     end
+
+    test "records unexpected errors and broadcasts failure toast" do
+      source = create_source!(feed_url: "https://example.com/feed.xml")
+
+      broadcasts = []
+      toasts = []
+
+      failing_service = Class.new do
+        def initialize(*); end
+
+        def call
+          raise StandardError, "boom"
+        end
+      end
+
+      FeedMonitor::Health::SourceHealthCheck.stub(:new, ->(**) { failing_service.new }) do
+        FeedMonitor::Realtime.stub(:broadcast_source, ->(record) { broadcasts << record }) do
+          FeedMonitor::Realtime.stub(:broadcast_toast, ->(**payload) { toasts << payload }) do
+            FeedMonitor::SourceHealthCheckJob.perform_now(source.id)
+          end
+        end
+      end
+
+      log = FeedMonitor::HealthCheckLog.order(:created_at).last
+      assert_equal source, log.source
+      assert_equal false, log.success?
+      assert_equal "boom", log.error_message
+
+      assert_equal [ source ], broadcasts
+      assert_equal :error, toasts.last[:level]
+      assert_match(/failed/i, toasts.last[:message])
+    end
+
+    test "swallows logging errors when failure recording fails" do
+      source = create_source!(feed_url: "https://example.com/feed.xml")
+
+      failing_service = Class.new do
+        def initialize(*); end
+
+        def call
+          raise StandardError, "boom"
+        end
+      end
+
+      failing_service = Class.new do
+        def initialize(*); end
+
+        def call
+          raise StandardError, "boom"
+        end
+      end
+
+      FeedMonitor::Health::SourceHealthCheck.stub(:new, ->(**) { failing_service.new }) do
+        FeedMonitor::HealthCheckLog.stub(:create!, ->(**) { raise StandardError, "log failure" }) do
+          assert_nothing_raised do
+            FeedMonitor::SourceHealthCheckJob.perform_now(source.id)
+          end
+        end
+      end
+    end
   end
 end
