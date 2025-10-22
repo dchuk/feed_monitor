@@ -16,7 +16,7 @@ module FeedMonitor
       def call
         reload_source
 
-        logs = recent_logs
+        logs = recent_logs.to_a
         return if logs.empty?
 
         rate = calculate_success_rate(logs)
@@ -47,7 +47,7 @@ module FeedMonitor
 
         enforce_fixed_interval(attrs, auto_paused_until)
 
-        status = determine_status(rate, auto_paused_until)
+        status = determine_status(rate, auto_paused_until, logs)
         apply_status(attrs, status)
 
         source.update!(attrs)
@@ -114,9 +114,13 @@ module FeedMonitor
         end
       end
 
-      def determine_status(rate, auto_paused_until)
+      def determine_status(rate, auto_paused_until, logs)
         if auto_paused_active?(auto_paused_until)
           "auto_paused"
+        elsif consecutive_failures(logs) >= 3
+          "declining"
+        elsif improving_streak?(logs)
+          "improving"
         elsif rate >= healthy_threshold
           "healthy"
         elsif rate >= warning_threshold
@@ -174,6 +178,32 @@ module FeedMonitor
 
       def minimum_sample_size
         [ config.window_size.to_i, 1 ].max
+      end
+
+      def consecutive_failures(logs)
+        logs.take_while { |log| !log_success?(log) }.size
+      end
+
+      def improving_streak?(logs)
+        success_streak = 0
+        failure_seen = false
+
+        logs.each do |log|
+          if log_success?(log)
+            success_streak += 1
+          else
+            failure_seen = true
+            break
+          end
+        end
+
+        success_streak >= 2 && failure_seen
+      end
+
+      def log_success?(log)
+        return log.success? if log.respond_to?(:success?)
+
+        !!log.success
       end
     end
   end

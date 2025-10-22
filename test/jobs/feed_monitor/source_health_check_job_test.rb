@@ -44,8 +44,15 @@ module FeedMonitor
 
       stub_request(:get, source.feed_url).to_timeout
 
-      FeedMonitor::SourceHealthCheckJob.perform_later(source.id)
-      perform_enqueued_jobs
+      broadcasted_sources = []
+      toasts = []
+
+      FeedMonitor::Realtime.stub(:broadcast_source, ->(record) { broadcasted_sources << record }) do
+        FeedMonitor::Realtime.stub(:broadcast_toast, ->(**payload) { toasts << payload }) do
+          FeedMonitor::SourceHealthCheckJob.perform_later(source.id)
+          perform_enqueued_jobs
+        end
+      end
 
       log = FeedMonitor::HealthCheckLog.order(:created_at).last
       assert_not_nil log, "expected failure log to be stored"
@@ -58,6 +65,37 @@ module FeedMonitor
       assert_equal log, entry.loggable
       refute entry.success?
       assert_equal source, entry.source
+
+      assert_equal [ source ], broadcasted_sources
+      refute_empty toasts
+      assert_equal :error, toasts.last[:level]
+      assert_match(/Health check/i, toasts.last[:message])
+    end
+
+    test "broadcasts UI updates and toast when health check succeeds" do
+      source = create_source!(feed_url: "https://example.com/feed.xml")
+
+      stub_request(:get, source.feed_url).to_return(
+        status: 200,
+        body: "",
+        headers: { "Content-Type" => "application/rss+xml" }
+      )
+
+      broadcasted_sources = []
+      toasts = []
+
+      FeedMonitor::Realtime.stub(:broadcast_source, ->(record) { broadcasted_sources << record }) do
+        FeedMonitor::Realtime.stub(:broadcast_toast, ->(**payload) { toasts << payload }) do
+          FeedMonitor::SourceHealthCheckJob.perform_later(source.id)
+          perform_enqueued_jobs
+        end
+      end
+
+      assert_equal [ source ], broadcasted_sources
+      refute_empty toasts
+      toast = toasts.last
+      assert_equal :success, toast[:level]
+      assert_match(/Health check/i, toast[:message])
     end
   end
 end

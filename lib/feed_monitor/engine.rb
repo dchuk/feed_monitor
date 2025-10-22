@@ -32,9 +32,9 @@ module FeedMonitor
 
     initializer "feed_monitor.dashboard_streams" do
       config.to_prepare do
-        FeedMonitor::Dashboard::TurboBroadcaster.setup!
-        FeedMonitor::Realtime.setup!
         FeedMonitor::Health.setup!
+        FeedMonitor::Realtime.setup!
+        FeedMonitor::Dashboard::TurboBroadcaster.setup!
       end
     end
 

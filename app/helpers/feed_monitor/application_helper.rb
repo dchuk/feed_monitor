@@ -200,6 +200,8 @@ module FeedMonitor
         "healthy" => { label: "Healthy", classes: "bg-green-100 text-green-700", show_spinner: false },
         "warning" => { label: "Needs Attention", classes: "bg-amber-100 text-amber-700", show_spinner: false },
         "critical" => { label: "Failing", classes: "bg-rose-100 text-rose-700", show_spinner: false },
+        "declining" => { label: "Declining", classes: "bg-orange-100 text-orange-700", show_spinner: false },
+        "improving" => { label: "Improving", classes: "bg-sky-100 text-sky-700", show_spinner: false },
         "auto_paused" => { label: "Auto-Paused", classes: "bg-amber-100 text-amber-700", show_spinner: false },
         "unknown" => { label: "Unknown", classes: "bg-slate-100 text-slate-600", show_spinner: false }
       }
@@ -212,7 +214,7 @@ module FeedMonitor
       helpers = FeedMonitor::Engine.routes.url_helpers
 
       case status
-      when "critical"
+      when "critical", "declining"
         [
           {
             key: :full_fetch,
@@ -250,7 +252,7 @@ module FeedMonitor
     def interactive_health_status?(source, override: nil)
       return false if override.present?
 
-      %w[critical auto_paused].include?(source&.health_status.presence)
+      %w[critical declining auto_paused].include?(source&.health_status.presence)
     end
 
     def table_sort_direction(search_object, attribute)

@@ -130,6 +130,24 @@ module FeedMonitor
       assert_match(/green/, badge[:classes])
     end
 
+    test "source_health_badge highlights declining status" do
+      source = FeedMonitor::Source.new(health_status: "declining")
+
+      badge = source_health_badge(source)
+
+      assert_equal "Declining", badge[:label]
+      assert_match(/orange/, badge[:classes])
+    end
+
+    test "source_health_badge highlights improving status" do
+      source = FeedMonitor::Source.new(health_status: "improving")
+
+      badge = source_health_badge(source)
+
+      assert_equal "Improving", badge[:label]
+      assert_match(/sky|blue|green/, badge[:classes])
+    end
+
     test "source_health_badge indicates auto paused" do
       source = FeedMonitor::Source.new(health_status: "auto_paused")
 
