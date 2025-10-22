@@ -68,10 +68,19 @@ module FeedMonitor
           started_at: 5.days.ago
         )
 
+        @health_check = FeedMonitor::HealthCheckLog.create!(
+          source: @source_a,
+          success: true,
+          http_status: 204,
+          started_at: 10.minutes.ago,
+          duration_ms: 400
+        )
+
         @recent_fetch_entry = @recent_fetch.reload.log_entry
         @older_fetch_entry = @older_fetch.reload.log_entry
         @recent_scrape_entry = @recent_scrape.reload.log_entry
         @older_scrape_entry = @older_scrape.reload.log_entry
+        @health_check_entry = @health_check.reload.log_entry
       end
 
       def teardown
@@ -81,9 +90,9 @@ module FeedMonitor
       test "returns entries ordered by newest started_at first" do
         result = FeedMonitor::Logs::Query.new(params: {}).call
 
-        assert_equal [ @recent_scrape_entry.id, @recent_fetch_entry.id, @older_fetch_entry.id, @older_scrape_entry.id ],
+        assert_equal [ @health_check_entry.id, @recent_scrape_entry.id, @recent_fetch_entry.id, @older_fetch_entry.id, @older_scrape_entry.id ],
                      result.entries.map(&:id)
-        assert_equal [ :scrape, :fetch, :fetch, :scrape ],
+        assert_equal [ :health_check, :scrape, :fetch, :fetch, :scrape ],
                      result.entries.map(&:log_type)
       end
 
@@ -92,6 +101,13 @@ module FeedMonitor
 
         assert_equal [ :fetch, :fetch ], result.entries.map(&:log_type)
         assert_equal [ @recent_fetch_entry.id, @older_fetch_entry.id ], result.entries.map(&:id)
+      end
+
+      test "filters health check logs" do
+        result = FeedMonitor::Logs::Query.new(params: { log_type: "health_check" }).call
+
+        assert_equal [ :health_check ], result.entries.map(&:log_type)
+        assert_equal [ @health_check_entry.id ], result.entries.map(&:id)
       end
 
       test "filters by status" do
@@ -105,7 +121,7 @@ module FeedMonitor
       test "filters by timeframe shortcut" do
         result = FeedMonitor::Logs::Query.new(params: { timeframe: "24h" }).call
 
-        assert_equal [ @recent_scrape_entry.id, @recent_fetch_entry.id ], result.entries.map(&:id)
+        assert_equal [ @health_check_entry.id, @recent_scrape_entry.id, @recent_fetch_entry.id ], result.entries.map(&:id)
       end
 
       test "filters by explicit started_at range" do
@@ -116,13 +132,13 @@ module FeedMonitor
           }
         ).call
 
-        assert_equal [ @recent_scrape_entry.id, @recent_fetch_entry.id ], result.entries.map(&:id)
+        assert_equal [ @health_check_entry.id, @recent_scrape_entry.id, @recent_fetch_entry.id ], result.entries.map(&:id)
       end
 
       test "filters by source id" do
         result = FeedMonitor::Logs::Query.new(params: { source_id: @source_a.id.to_s }).call
 
-        assert_equal [ :scrape, :fetch ], result.entries.map(&:log_type)
+        assert_equal [ :health_check, :scrape, :fetch ], result.entries.map(&:log_type)
         assert result.entries.all? { |entry| entry.source_id == @source_a.id }
       end
 

@@ -37,8 +37,15 @@ module FeedMonitor
           error_message: "Failure"
         )
 
-        @fetch_log.reload
-        @scrape_log.reload
+        @health_check_log = FeedMonitor::HealthCheckLog.create!(
+          source: @source,
+          success: true,
+          http_status: 200,
+          started_at: Time.current - 2.minutes,
+          duration_ms: 150
+        )
+
+        [ @fetch_log, @scrape_log, @health_check_log ].each(&:reload)
       end
 
       test "builds typed row view models" do
@@ -50,6 +57,7 @@ module FeedMonitor
 
         scrape_row = presenter.rows.find { |row| row.dom_id == "scrape-#{@scrape_log.id}" }
         fetch_row = presenter.rows.find { |row| row.dom_id == "fetch-#{@fetch_log.id}" }
+        health_row = presenter.rows.find { |row| row.dom_id == "health-check-#{@health_check_log.id}" }
 
         assert_equal "Scrape", scrape_row.type_label
         assert_equal "Presenter Item", scrape_row.primary_label
@@ -62,6 +70,13 @@ module FeedMonitor
         assert_equal "+5 / ~2 / ✕0", fetch_row.metrics_summary
         assert fetch_row.success?
         assert_equal fetch_log_path(@fetch_log), fetch_row.detail_path
+
+        assert_equal "Health Check", health_row.type_label
+        assert_equal "Presenter Source", health_row.primary_label
+        assert health_row.success?
+        assert_equal "200", health_row.http_summary
+        assert_equal "150 ms", health_row.metrics_summary
+        assert_nil health_row.detail_path
       end
     end
   end

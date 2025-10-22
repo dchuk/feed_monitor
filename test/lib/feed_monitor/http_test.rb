@@ -42,6 +42,12 @@ module FeedMonitor
       assert_equal FeedMonitor::HTTP::RETRY_STATUSES, options[:retry_statuses]
     end
 
+    test "can disable retry middleware" do
+      connection = FeedMonitor::HTTP.client(retry_requests: false)
+
+      refute_includes connection.builder.handlers.map(&:klass), Faraday::Retry::Middleware
+    end
+
     test "uses configured http settings" do
       FeedMonitor.configure do |config|
         config.http.timeout = 45

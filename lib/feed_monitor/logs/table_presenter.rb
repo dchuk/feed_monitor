@@ -14,11 +14,23 @@ module FeedMonitor
         end
 
         def type_label
-          fetch? ? "Fetch" : "Scrape"
+          if fetch?
+            "Fetch"
+          elsif scrape?
+            "Scrape"
+          else
+            "Health Check"
+          end
         end
 
         def type_variant
-          fetch? ? :fetch : :scrape
+          if fetch?
+            :fetch
+          elsif scrape?
+            :scrape
+          else
+            :health_check
+          end
         end
 
         def status_label
@@ -44,8 +56,8 @@ module FeedMonitor
         def primary_path
           if scrape? && entry.item
             url_helpers.item_path(entry.item)
-          else
-            url_helpers.source_path(entry.source) if entry.source
+          elsif entry.source
+            url_helpers.source_path(entry.source)
           end
         end
 
@@ -60,11 +72,13 @@ module FeedMonitor
         def http_summary
           if fetch?
             entry.http_status.present? ? entry.http_status.to_s : "—"
-          else
+          elsif scrape?
             parts = []
             parts << entry.http_status.to_s if entry.http_status
             parts << entry.scraper_adapter if entry.scraper_adapter.present?
             parts.compact.join(" · ").presence || "—"
+          else
+            entry.http_status.present? ? entry.http_status.to_s : "—"
           end
         end
 
@@ -82,6 +96,8 @@ module FeedMonitor
             url_helpers.fetch_log_path(entry.loggable)
           when FeedMonitor::ScrapeLog
             url_helpers.scrape_log_path(entry.loggable)
+          else
+            nil
           end
         end
 
@@ -102,7 +118,13 @@ module FeedMonitor
         end
 
         def type_slug
-          fetch? ? "fetch" : "scrape"
+          if fetch?
+            "fetch"
+          elsif scrape?
+            "scrape"
+          else
+            "health-check"
+          end
         end
 
         def fetch?
@@ -111,6 +133,10 @@ module FeedMonitor
 
         def scrape?
           entry.scrape?
+        end
+
+        def health_check?
+          entry.health_check?
         end
 
         private

@@ -6,6 +6,7 @@ require "uri"
 module FeedMonitor
   class SourcesTest < ApplicationSystemTestCase
     include ActiveJob::TestHelper
+    include ActionView::RecordIdentifier
 
     setup do
       ActiveJob::Base.queue_adapter = :test
@@ -442,6 +443,89 @@ module FeedMonitor
       within find("tr", text: source.name) do
         assert_selector "span", text: "Auto-Paused"
       end
+    end
+
+    test "failing source dropdown enqueues recovery actions and shows processing state" do
+      clear_enqueued_jobs
+      FeedMonitor::Source.delete_all
+
+      source = create_source!(
+        name: "Problematic Feed",
+        feed_url: "https://problematic.example.com/feed.xml",
+        health_status: "critical",
+        rolling_success_rate: 0.15,
+        failure_count: 5,
+        last_error: "HTTP 500 response",
+        last_error_at: 30.minutes.ago
+      )
+
+      visit feed_monitor.sources_path
+
+      row = find("tr##{dom_id(source, :row)}")
+      health_menu = row.find("[data-testid='source-health-menu']")
+      health_menu.find("[data-testid='source-health-menu-toggle']").click
+
+      menu = health_menu.find("[data-dropdown-target='menu']", visible: :all)
+      page.execute_script("arguments[0].classList.remove('hidden')", menu.native)
+
+      menu_button = menu.find("button", text: /Run Health Check/i, visible: :all)
+      page.execute_script("arguments[0].click()", menu_button.native)
+
+      within "turbo-frame#feed_monitor_sources_table" do
+        assert_selector "span", text: /Processing/i
+      end
+
+      assert_text "Health check enqueued"
+      assert_equal FeedMonitor::SourceHealthCheckJob, enqueued_jobs.last[:job]
+
+      perform_enqueued_jobs
+
+      visit feed_monitor.logs_path(log_type: "health_check")
+
+      assert_selector "table tbody tr td", text: "Problematic Feed"
+      assert_selector "table tbody tr td", text: "Health Check"
+    end
+
+    test "resetting auto paused source clears state" do
+      FeedMonitor::Source.delete_all
+
+      source = create_source!(
+        name: "Auto Paused Feed",
+        feed_url: "https://paused.example.com/feed.xml",
+        health_status: "auto_paused",
+        auto_paused_at: 6.hours.ago,
+        auto_paused_until: 2.hours.from_now,
+        rolling_success_rate: 0.05,
+        failure_count: 10,
+        last_error: "Timeout",
+        last_error_at: 3.hours.ago,
+        backoff_until: 2.hours.from_now,
+        next_fetch_at: 2.hours.from_now
+      )
+
+      visit feed_monitor.source_path(source)
+
+      health_menu = find("[data-testid='source-health-menu']")
+      health_menu.find("[data-testid='source-health-menu-toggle']").click
+
+      menu = health_menu.find("[data-dropdown-target='menu']", visible: :all)
+      page.execute_script("arguments[0].classList.remove('hidden')", menu.native)
+
+      reset_button = menu.find("button", text: /Reset to Active Status/i, visible: :all)
+      page.execute_script("arguments[0].click()", reset_button.native)
+
+      assert_text "Health state reset"
+
+      source.reload
+
+      assert_nil source.auto_paused_until
+      assert_nil source.auto_paused_at
+      assert_equal "healthy", source.health_status
+      assert_equal 0, source.failure_count
+      assert_nil source.last_error
+      assert_nil source.last_error_at
+      assert_nil source.backoff_until
+      assert source.next_fetch_at > Time.current
     end
   end
 end

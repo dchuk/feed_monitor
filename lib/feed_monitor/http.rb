@@ -15,7 +15,7 @@ module FeedMonitor
     RETRY_STATUSES = [ 429, 500, 502, 503, 504 ].freeze
 
     class << self
-      def client(proxy: nil, headers: {}, timeout: nil, open_timeout: nil)
+      def client(proxy: nil, headers: {}, timeout: nil, open_timeout: nil, retry_requests: true)
         settings = FeedMonitor.config.http
 
         effective_proxy = resolve_proxy(proxy, settings)
@@ -28,20 +28,23 @@ module FeedMonitor
             headers,
             timeout: effective_timeout,
             open_timeout: effective_open_timeout,
-            settings: settings
+            settings: settings,
+            enable_retry: retry_requests
           )
         end
       end
 
       private
 
-      def configure_request(connection, headers, timeout:, open_timeout:, settings:) # rubocop:disable Metrics/MethodLength
-        connection.request :retry,
-                           max: settings.retry_max || 4,
-                           interval: settings.retry_interval || 0.5,
-                           interval_randomness: settings.retry_interval_randomness || 0.5,
-                           backoff_factor: settings.retry_backoff_factor || 2,
-                           retry_statuses: settings.retry_statuses || RETRY_STATUSES
+      def configure_request(connection, headers, timeout:, open_timeout:, settings:, enable_retry:) # rubocop:disable Metrics/MethodLength
+        if enable_retry
+          connection.request :retry,
+                             max: settings.retry_max || 4,
+                             interval: settings.retry_interval || 0.5,
+                             interval_randomness: settings.retry_interval_randomness || 0.5,
+                             backoff_factor: settings.retry_backoff_factor || 2,
+                             retry_statuses: settings.retry_statuses || RETRY_STATUSES
+        end
         connection.request :gzip
 
         connection.response :follow_redirects, limit: settings.max_redirects || DEFAULT_MAX_REDIRECTS
