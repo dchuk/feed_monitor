@@ -60,6 +60,31 @@ module FeedMonitor
       end
     end
 
+    test "skips sources already marked as queued" do
+      now = Time.current
+      source = create_source(next_fetch_at: now - 5.minutes, fetch_status: "queued")
+      source.update_columns(updated_at: now)
+
+      travel_to(now) do
+        assert_no_difference -> { enqueued_jobs.size } do
+          FeedMonitor::Scheduler.run(limit: nil)
+        end
+      end
+    end
+
+    test "re-enqueues sources stuck in queued state beyond timeout" do
+      now = Time.current
+      source = create_source(next_fetch_at: now - 1.hour, fetch_status: "queued")
+      stale_time = now - (FeedMonitor::Scheduler::STALE_QUEUE_TIMEOUT + 5.minutes)
+      source.update_columns(updated_at: stale_time)
+
+      travel_to(now) do
+        assert_difference -> { enqueued_jobs.size }, 1 do
+          FeedMonitor::Scheduler.run(limit: nil)
+        end
+      end
+    end
+
     test "instruments scheduler runs and updates metrics" do
       FeedMonitor::Metrics.reset!
       now = Time.current
