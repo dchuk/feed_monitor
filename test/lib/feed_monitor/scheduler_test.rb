@@ -101,25 +101,47 @@ module FeedMonitor
       assert_includes job_args, idle_source.id
     end
 
-    test "fetch status predicate includes eligible and stale queued sources" do
+    test "fetch_status_predicate executes all code paths through scheduler run" do
       now = Time.current
-      idle = create_source(fetch_status: "idle")
-      failed = create_source(fetch_status: "failed")
-      queued_recent = create_source(fetch_status: "queued")
-      queued_stale = create_source(fetch_status: "queued")
+      idle_source = create_source(next_fetch_at: now - 5.minutes, fetch_status: "idle")
+      failed_source = create_source(next_fetch_at: now - 5.minutes, fetch_status: "failed")
+      stale_queued_source = create_source(next_fetch_at: now - 1.hour, fetch_status: "queued")
+      stale_time = now - (FeedMonitor::Scheduler::STALE_QUEUE_TIMEOUT + 5.minutes)
+      stale_queued_source.update_columns(updated_at: stale_time)
+
+      travel_to(now) do
+        assert_difference -> { enqueued_jobs.size }, 3 do
+          FeedMonitor::Scheduler.run(limit: nil, now: now)
+        end
+      end
+
+      job_args = enqueued_jobs.map { |job| job[:args].first }
+      assert_includes job_args, idle_source.id
+      assert_includes job_args, failed_source.id
+      assert_includes job_args, stale_queued_source.id
+    end
+
+    test "fetch status predicate includes eligible and stale queued sources through scheduler" do
+      now = Time.current
+      idle = create_source(next_fetch_at: now - 5.minutes, fetch_status: "idle")
+      failed = create_source(next_fetch_at: now - 5.minutes, fetch_status: "failed")
+      queued_recent = create_source(next_fetch_at: now - 5.minutes, fetch_status: "queued")
+      queued_stale = create_source(next_fetch_at: now - 5.minutes, fetch_status: "queued")
 
       queued_recent.update_columns(updated_at: now)
       queued_stale.update_columns(updated_at: now - (FeedMonitor::Scheduler::STALE_QUEUE_TIMEOUT + 2.minutes))
 
-      scheduler = FeedMonitor::Scheduler.new(limit: 10, now: now)
-      predicate = scheduler.send(:fetch_status_predicate)
+      travel_to(now) do
+        assert_difference -> { enqueued_jobs.size }, 3 do
+          FeedMonitor::Scheduler.run(limit: nil, now: now)
+        end
+      end
 
-      ids = FeedMonitor::Source.where(predicate).pluck(:id)
-
-      assert_includes ids, idle.id
-      assert_includes ids, failed.id
-      assert_includes ids, queued_stale.id
-      refute_includes ids, queued_recent.id
+      job_args = enqueued_jobs.map { |job| job[:args].first }
+      assert_includes job_args, idle.id
+      assert_includes job_args, failed.id
+      assert_includes job_args, queued_stale.id
+      refute_includes job_args, queued_recent.id
     end
 
     test "instruments scheduler runs and updates metrics" do
