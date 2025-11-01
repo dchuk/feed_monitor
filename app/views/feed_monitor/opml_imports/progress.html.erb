@@ -1,0 +1,37 @@
+<% wizard = @wizard || {} %>
+<% file_name = wizard["file_name"] || "the uploaded file" %>
+<% results = @results || [] %>
+<% status = (@status || "pending").to_s %>
+
+<%= turbo_stream_from FeedMonitor::Importing::OpmlImportProgress.stream_name(@token) if @token.present? %>
+
+<div class="max-w-3xl mx-auto space-y-6">
+  <h2 class="text-xl font-semibold text-slate-900">Import Progress</h2>
+
+  <div data-testid="opml-import-progress" class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+    <% status_message = case status
+      when "completed"
+        "Import complete. Review the summary below."
+      when "pending"
+        "Preparing import for #{file_name}. Jobs will start shortly."
+      else
+        "Processing selected sources from #{file_name}. This page updates automatically."
+    end %>
+
+    <p class="text-sm <%= status == "completed" ? "text-emerald-700" : "text-slate-700" %>"><%= status_message %></p>
+
+    <%= turbo_frame_tag "opml-import-progress-results" do %>
+      <%= render "progress_results",
+        progress: @progress,
+        results:,
+        status: status,
+        audit_entries: @audit_entries,
+        upload: @upload_metadata,
+        wizard: @wizard %>
+    <% end %>
+
+    <div class="mt-6 flex items-center justify-end gap-3">
+      <%= link_to "View Sources", feed_monitor.sources_path, class: "text-sm text-blue-600 hover:text-blue-500" %>
+    </div>
+  </div>
+</div>

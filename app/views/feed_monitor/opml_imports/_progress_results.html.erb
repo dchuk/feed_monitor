@@ -1,0 +1,147 @@
+<% progress ||= {} %>
+<% wizard ||= {} %>
+<% upload ||= progress["upload"] || {} %>
+<% upload = upload.respond_to?(:with_indifferent_access) ? upload.with_indifferent_access : upload %>
+<% wizard = wizard.respond_to?(:with_indifferent_access) ? wizard.with_indifferent_access : wizard %>
+<% results = Array(results) %>
+<% status = status.to_s %>
+
+<% actor = upload[:actor] || wizard[:initiated_by] || { "label" => "Unknown admin" } %>
+<% actor = actor.respond_to?(:with_indifferent_access) ? actor.with_indifferent_access : actor %>
+<% actor_label = actor[:label].presence || actor[:name].presence || actor[:email].presence || "Unknown admin" %>
+<% actor_email = actor[:email].presence %>
+
+<% file_name = upload[:file_name].presence || wizard[:file_name].presence || "the uploaded file" %>
+<% file_size = upload[:file_size] || wizard[:file_size] %>
+<% outline_count = upload[:outline_count] || (wizard[:outlines].present? ? Array(wizard[:outlines]).size : nil) %>
+<% version = upload[:version].presence || wizard[:version].presence %>
+<% started_at = upload[:started_at] || wizard[:uploaded_at] %>
+
+<% size_label = file_size ? number_to_human_size(file_size) : nil %>
+<% count_label = outline_count ? pluralize(outline_count, "source") : nil %>
+<% timestamp_label = if started_at.present?
+  begin
+    l(started_at, format: :long)
+  rescue StandardError
+    started_at.to_s
+  end
+end %>
+
+<% audit_entries = Array(audit_entries || progress.fetch("audit_entries", [])).map do |entry|
+     entry.respond_to?(:with_indifferent_access) ? entry.with_indifferent_access : entry
+   end %>
+<% health_entries = audit_entries.select { |entry| entry[:kind].to_s == "health_check" } %>
+
+<div class="mt-4 space-y-6">
+  <div>
+    <% if results.empty? %>
+      <p class="text-sm text-slate-600">No sources have been queued yet.</p>
+    <% else %>
+      <ul class="space-y-2">
+        <% results.each do |result| %>
+          <% entry_status = result["status"].to_s.presence || "pending" %>
+          <% badge_classes = case entry_status
+            when "created", "updated"
+              "bg-emerald-600 text-white"
+            when "skipped"
+              "bg-amber-500 text-white"
+            when "failed"
+              "bg-rose-600 text-white"
+            when "pending"
+              "bg-slate-400 text-white"
+            else
+              "bg-slate-500 text-white"
+          end %>
+
+          <li data-testid="opml-import-progress-result" class="rounded border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="min-w-0 flex-1">
+                <span class="font-medium"><%= result["name"] %></span>
+                <span class="ml-2 truncate font-mono text-xs text-slate-500"><%= result["feed_url"] %></span>
+              </div>
+              <span class="inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold uppercase tracking-wide <%= badge_classes %>">
+                <%= entry_status.tr("_", " ").titleize %>
+              </span>
+            </div>
+
+            <% if result["message"].present? %>
+              <p class="mt-2 text-xs text-slate-500"><%= result["message"] %></p>
+            <% end %>
+
+            <% if result["health_check"].present? %>
+              <% health = result["health_check"] %>
+              <% health = health.respond_to?(:with_indifferent_access) ? health.with_indifferent_access : health %>
+              <p class="mt-2 text-xs <%= health[:success] ? "text-emerald-600" : "text-amber-600" %>">
+                Health check: <%= health[:message].presence || (health[:success] ? "Succeeded" : "Failed") %>
+              </p>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  </div>
+
+  <div data-testid="opml-import-audit" class="rounded border border-slate-200 bg-slate-50">
+    <div class="border-b border-slate-200 px-4 py-3">
+      <h3 class="text-sm font-semibold text-slate-900">Import Audit</h3>
+      <p class="mt-1 text-xs text-slate-500">Key details and health check outcomes for this import run.</p>
+    </div>
+    <div class="space-y-4 px-4 py-4 text-sm text-slate-700">
+      <div>
+        <p>
+          <span class="font-medium text-slate-900">Started by:</span>
+          <%= actor_label %>
+          <% if actor_email.present? && actor_email != actor_label %>
+            <span class="text-slate-500">(<%= actor_email %>)</span>
+          <% end %>
+        </p>
+        <p class="mt-1">
+          <span class="font-medium text-slate-900">File:</span>
+          <span><%= file_name %></span>
+          <% if size_label || count_label || version %>
+            <span class="text-slate-500">
+              <% metadata_parts = [] %>
+              <% metadata_parts << size_label if size_label.present? %>
+              <% metadata_parts << count_label if count_label.present? %>
+              <% metadata_parts << "OPML #{version}" if version.present? %>
+              (<%= metadata_parts.compact.join(" · ") %>)
+            </span>
+          <% end %>
+        </p>
+        <% if timestamp_label.present? %>
+          <p class="mt-1 text-xs text-slate-500">
+            Queued at <%= timestamp_label %>
+          </p>
+        <% end %>
+      </div>
+
+      <div>
+        <h4 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Health Checks</h4>
+        <% if health_entries.any? %>
+          <ul class="mt-2 space-y-2">
+            <% health_entries.each do |entry| %>
+              <% success = entry[:success] %>
+              <% message = entry[:message].presence || (success ? "Succeeded" : "Failed") %>
+              <li data-testid="opml-import-audit-entry" class="rounded border border-slate-200 bg-white px-3 py-2 text-xs">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <div class="min-w-0 flex-1">
+                    <span class="font-medium text-slate-900"><%= entry[:feed_name].presence || entry[:feed_url] %></span>
+                    <% if entry[:result_status].present? %>
+                      <span class="ml-2 text-slate-500"><%= entry[:result_status].to_s.titleize %></span>
+                    <% end %>
+                  </div>
+                  <span class="inline-flex items-center rounded px-2 py-0.5 font-semibold <%= success ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700" %>">
+                    <%= success ? "Passed" : "Needs Attention" %>
+                  </span>
+                </div>
+                <p class="mt-1 text-slate-600"><%= message %></p>
+              </li>
+            <% end %>
+          </ul>
+        <% else %>
+          <p class="mt-2 text-xs text-slate-500">No health checks have completed yet. Results will appear here as jobs finish.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
