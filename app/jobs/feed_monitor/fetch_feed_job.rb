@@ -3,6 +3,7 @@
 module FeedMonitor
   class FetchFeedJob < ApplicationJob
     FETCH_CONCURRENCY_RETRY_WAIT = 30.seconds
+    EARLY_EXECUTION_LEEWAY = 30.seconds
 
     feed_monitor_queue :fetch
 
@@ -15,12 +16,26 @@ module FeedMonitor
       source = FeedMonitor::Source.find_by(id: source_id)
       return unless source
 
+      return unless should_run?(source, force: force)
+
       FeedMonitor::Fetching::FetchRunner.new(source: source, force: force).run
     rescue FeedMonitor::Fetching::FetchError => error
       handle_transient_error(source, error)
     end
 
     private
+
+    def should_run?(source, force:)
+      return true if force
+
+      status = source.fetch_status.to_s
+      return true if %w[queued fetching].include?(status)
+
+      next_fetch_at = source.next_fetch_at
+      return true if next_fetch_at.blank?
+
+      next_fetch_at <= Time.current + EARLY_EXECUTION_LEEWAY
+    end
 
     def handle_transient_error(source, error)
       raise error unless transient_error?(error) && source

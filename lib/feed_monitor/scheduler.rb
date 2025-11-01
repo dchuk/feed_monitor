@@ -1,8 +1,12 @@
 # frozen_string_literal: true
 
+require "active_support/core_ext/numeric/time"
+
 module FeedMonitor
   class Scheduler
     DEFAULT_BATCH_SIZE = 100
+    STALE_QUEUE_TIMEOUT = 10.minutes
+    ELIGIBLE_FETCH_STATUSES = %w[idle failed].freeze
 
     def self.run(limit: DEFAULT_BATCH_SIZE, now: Time.current)
       new(limit:, now:).run
@@ -51,12 +55,23 @@ module FeedMonitor
       FeedMonitor::Source
         .active
         .where(due_for_fetch_predicate)
+        .where(fetch_status_predicate)
         .order(Arel.sql("next_fetch_at ASC NULLS FIRST"))
     end
 
     def due_for_fetch_predicate
       table = FeedMonitor::Source.arel_table
       table[:next_fetch_at].eq(nil).or(table[:next_fetch_at].lteq(now))
+    end
+
+    def fetch_status_predicate
+      table = FeedMonitor::Source.arel_table
+
+      eligible = table[:fetch_status].in(ELIGIBLE_FETCH_STATUSES)
+      stale_cutoff = now - STALE_QUEUE_TIMEOUT
+      stale_queued = table[:fetch_status].eq("queued").and(table[:updated_at].lteq(stale_cutoff))
+
+      eligible.or(stale_queued)
     end
   end
 end
