@@ -85,6 +85,27 @@ module FeedMonitor
       end
     end
 
+    test "fetch status predicate includes eligible and stale queued sources" do
+      now = Time.current
+      idle = create_source(fetch_status: "idle")
+      failed = create_source(fetch_status: "failed")
+      queued_recent = create_source(fetch_status: "queued")
+      queued_stale = create_source(fetch_status: "queued")
+
+      queued_recent.update_columns(updated_at: now)
+      queued_stale.update_columns(updated_at: now - (FeedMonitor::Scheduler::STALE_QUEUE_TIMEOUT + 2.minutes))
+
+      scheduler = FeedMonitor::Scheduler.new(limit: 10, now: now)
+      predicate = scheduler.send(:fetch_status_predicate)
+
+      ids = FeedMonitor::Source.where(predicate).pluck(:id)
+
+      assert_includes ids, idle.id
+      assert_includes ids, failed.id
+      assert_includes ids, queued_stale.id
+      refute_includes ids, queued_recent.id
+    end
+
     test "instruments scheduler runs and updates metrics" do
       FeedMonitor::Metrics.reset!
       now = Time.current
