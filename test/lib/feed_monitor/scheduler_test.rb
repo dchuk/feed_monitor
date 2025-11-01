@@ -124,25 +124,25 @@ module FeedMonitor
     test "fetch_status_predicate builds correct arel conditions" do
       now = Time.current
       scheduler = FeedMonitor::Scheduler.new(limit: 10, now: now)
-      
+
       # Explicitly call the predicate to ensure SimpleCov tracks execution
       predicate = scheduler.send(:fetch_status_predicate)
-      
+
       # Verify it's an Arel node
       assert predicate.is_a?(Arel::Nodes::Node)
-      
+
       # Create test sources to verify the predicate works correctly
       idle = create_source(fetch_status: "idle", next_fetch_at: now - 5.minutes)
       failed = create_source(fetch_status: "failed", next_fetch_at: now - 5.minutes)
       queued_recent = create_source(fetch_status: "queued", next_fetch_at: now - 5.minutes)
       queued_stale = create_source(fetch_status: "queued", next_fetch_at: now - 5.minutes)
-      
+
       queued_recent.update_columns(updated_at: now)
       queued_stale.update_columns(updated_at: now - (FeedMonitor::Scheduler::STALE_QUEUE_TIMEOUT + 2.minutes))
-      
+
       # Apply the predicate and verify results
       ids = FeedMonitor::Source.where(predicate).pluck(:id)
-      
+
       assert_includes ids, idle.id, "should include idle sources"
       assert_includes ids, failed.id, "should include failed sources"
       assert_includes ids, queued_stale.id, "should include stale queued sources"
