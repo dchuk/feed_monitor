@@ -85,6 +85,22 @@ module FeedMonitor
       end
     end
 
+    test "includes sources with failed status in eligible fetch statuses" do
+      now = Time.current
+      failed_source = create_source(next_fetch_at: now - 5.minutes, fetch_status: "failed")
+      idle_source = create_source(next_fetch_at: now - 5.minutes, fetch_status: "idle")
+
+      travel_to(now) do
+        assert_difference -> { enqueued_jobs.size }, 2 do
+          FeedMonitor::Scheduler.run(limit: nil)
+        end
+      end
+
+      job_args = enqueued_jobs.map { |job| job[:args].first }
+      assert_includes job_args, failed_source.id
+      assert_includes job_args, idle_source.id
+    end
+
     test "fetch status predicate includes eligible and stale queued sources" do
       now = Time.current
       idle = create_source(fetch_status: "idle")
