@@ -125,7 +125,7 @@ module FeedMonitor
         assert source.backoff_until.present?
         assert source.next_fetch_at.present?
         assert source.fetch_circuit_until >= Time.current
-        assert_equal source.fetch_circuit_until, source.next_fetch_at
+      assert_equal source.fetch_circuit_until, source.next_fetch_at
       end
     end
 
@@ -135,6 +135,100 @@ module FeedMonitor
       end
 
       assert_enqueued_jobs 0
+    end
+
+    test "skips execution when the next fetch is still in the future" do
+      travel_to Time.zone.local(2025, 10, 30, 12, 0, 0) do
+        source = create_source(next_fetch_at: 1.hour.from_now, fetch_status: "idle")
+
+        FeedMonitor::Fetching::FetchRunner.stub(:new, ->(**) { flunk("runner should not be initialized") }) do
+          FeedMonitor::FetchFeedJob.perform_now(source.id)
+        end
+
+        assert_enqueued_jobs 0
+      end
+    end
+
+    test "executes when status is queued even if next fetch is in the future" do
+      travel_to Time.zone.local(2025, 10, 30, 12, 0, 0) do
+        source = create_source(next_fetch_at: 2.hours.from_now, fetch_status: "queued")
+
+        runner = Minitest::Mock.new
+        runner.expect(:run, :ok)
+
+        FeedMonitor::Fetching::FetchRunner.stub(:new, ->(**_kwargs) { runner }) do
+          FeedMonitor::FetchFeedJob.perform_now(source.id)
+        end
+
+        runner.verify
+        assert_mock runner
+      end
+    end
+
+    test "executes when status is fetching even if next fetch is in the future" do
+      travel_to Time.zone.local(2025, 10, 30, 12, 0, 0) do
+        source = create_source(next_fetch_at: 2.hours.from_now, fetch_status: "fetching")
+
+        runner = Minitest::Mock.new
+        runner.expect(:run, :ok)
+
+        FeedMonitor::Fetching::FetchRunner.stub(:new, ->(**_kwargs) { runner }) do
+          FeedMonitor::FetchFeedJob.perform_now(source.id)
+        end
+
+        runner.verify
+        assert_mock runner
+      end
+    end
+
+    test "executes when force is true even if next fetch is in the future" do
+      travel_to Time.zone.local(2025, 10, 30, 12, 0, 0) do
+        source = create_source(next_fetch_at: 2.hours.from_now, fetch_status: "idle")
+
+        runner = Minitest::Mock.new
+        runner.expect(:run, :ok)
+
+        FeedMonitor::Fetching::FetchRunner.stub(:new, ->(**_kwargs) { runner }) do
+          FeedMonitor::FetchFeedJob.perform_now(source.id, force: true)
+        end
+
+        runner.verify
+        assert_mock runner
+      end
+    end
+
+    test "executes when next_fetch_at is blank" do
+      travel_to Time.zone.local(2025, 10, 30, 12, 0, 0) do
+        source = create_source(next_fetch_at: nil, fetch_status: "idle")
+
+        runner = Minitest::Mock.new
+        runner.expect(:run, :ok)
+
+        FeedMonitor::Fetching::FetchRunner.stub(:new, ->(**_kwargs) { runner }) do
+          FeedMonitor::FetchFeedJob.perform_now(source.id)
+        end
+
+        runner.verify
+        assert_mock runner
+      end
+    end
+
+    test "executes when next_fetch_at is within early execution leeway" do
+      now = Time.zone.local(2025, 10, 30, 12, 0, 0)
+      travel_to(now) do
+        leeway = FeedMonitor::FetchFeedJob::EARLY_EXECUTION_LEEWAY
+        source = create_source(next_fetch_at: now + (leeway - 10.seconds), fetch_status: "idle")
+
+        runner = Minitest::Mock.new
+        runner.expect(:run, :ok)
+
+        FeedMonitor::Fetching::FetchRunner.stub(:new, ->(**_kwargs) { runner }) do
+          FeedMonitor::FetchFeedJob.perform_now(source.id)
+        end
+
+        runner.verify
+        assert_mock runner
+      end
     end
 
     private

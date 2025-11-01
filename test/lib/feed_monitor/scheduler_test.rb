@@ -60,6 +60,118 @@ module FeedMonitor
       end
     end
 
+    test "skips sources already marked as queued" do
+      now = Time.current
+      source = create_source(next_fetch_at: now - 5.minutes, fetch_status: "queued")
+      source.update_columns(updated_at: now)
+
+      travel_to(now) do
+        assert_no_difference -> { enqueued_jobs.size } do
+          FeedMonitor::Scheduler.run(limit: nil)
+        end
+      end
+    end
+
+    test "re-enqueues sources stuck in queued state beyond timeout" do
+      now = Time.current
+      source = create_source(next_fetch_at: now - 1.hour, fetch_status: "queued")
+      stale_time = now - (FeedMonitor::Scheduler::STALE_QUEUE_TIMEOUT + 5.minutes)
+      source.update_columns(updated_at: stale_time)
+
+      travel_to(now) do
+        assert_difference -> { enqueued_jobs.size }, 1 do
+          FeedMonitor::Scheduler.run(limit: nil)
+        end
+      end
+    end
+
+    test "includes sources with failed status in eligible fetch statuses" do
+      now = Time.current
+      failed_source = create_source(next_fetch_at: now - 5.minutes, fetch_status: "failed")
+      idle_source = create_source(next_fetch_at: now - 5.minutes, fetch_status: "idle")
+
+      travel_to(now) do
+        assert_difference -> { enqueued_jobs.size }, 2 do
+          FeedMonitor::Scheduler.run(limit: nil)
+        end
+      end
+
+      job_args = enqueued_jobs.map { |job| job[:args].first }
+      assert_includes job_args, failed_source.id
+      assert_includes job_args, idle_source.id
+    end
+
+    test "fetch_status_predicate executes all code paths through scheduler run" do
+      now = Time.current
+      idle_source = create_source(next_fetch_at: now - 5.minutes, fetch_status: "idle")
+      failed_source = create_source(next_fetch_at: now - 5.minutes, fetch_status: "failed")
+      stale_queued_source = create_source(next_fetch_at: now - 1.hour, fetch_status: "queued")
+      stale_time = now - (FeedMonitor::Scheduler::STALE_QUEUE_TIMEOUT + 5.minutes)
+      stale_queued_source.update_columns(updated_at: stale_time)
+
+      travel_to(now) do
+        assert_difference -> { enqueued_jobs.size }, 3 do
+          FeedMonitor::Scheduler.run(limit: nil, now: now)
+        end
+      end
+
+      job_args = enqueued_jobs.map { |job| job[:args].first }
+      assert_includes job_args, idle_source.id
+      assert_includes job_args, failed_source.id
+      assert_includes job_args, stale_queued_source.id
+    end
+
+    test "fetch_status_predicate builds correct arel conditions" do
+      now = Time.current
+      scheduler = FeedMonitor::Scheduler.new(limit: 10, now: now)
+
+      # Explicitly call the predicate to ensure SimpleCov tracks execution
+      predicate = scheduler.send(:fetch_status_predicate)
+
+      # Verify it's an Arel node
+      assert predicate.is_a?(Arel::Nodes::Node)
+
+      # Create test sources to verify the predicate works correctly
+      idle = create_source(fetch_status: "idle", next_fetch_at: now - 5.minutes)
+      failed = create_source(fetch_status: "failed", next_fetch_at: now - 5.minutes)
+      queued_recent = create_source(fetch_status: "queued", next_fetch_at: now - 5.minutes)
+      queued_stale = create_source(fetch_status: "queued", next_fetch_at: now - 5.minutes)
+
+      queued_recent.update_columns(updated_at: now)
+      queued_stale.update_columns(updated_at: now - (FeedMonitor::Scheduler::STALE_QUEUE_TIMEOUT + 2.minutes))
+
+      # Apply the predicate and verify results
+      ids = FeedMonitor::Source.where(predicate).pluck(:id)
+
+      assert_includes ids, idle.id, "should include idle sources"
+      assert_includes ids, failed.id, "should include failed sources"
+      assert_includes ids, queued_stale.id, "should include stale queued sources"
+      refute_includes ids, queued_recent.id, "should not include recent queued sources"
+    end
+
+    test "fetch status predicate includes eligible and stale queued sources through scheduler" do
+      now = Time.current
+      idle = create_source(next_fetch_at: now - 5.minutes, fetch_status: "idle")
+      failed = create_source(next_fetch_at: now - 5.minutes, fetch_status: "failed")
+      queued_recent = create_source(next_fetch_at: now - 5.minutes, fetch_status: "queued")
+      queued_stale = create_source(next_fetch_at: now - 5.minutes, fetch_status: "queued")
+
+      queued_recent.update_columns(updated_at: now)
+      queued_stale.update_columns(updated_at: now - (FeedMonitor::Scheduler::STALE_QUEUE_TIMEOUT + 2.minutes))
+
+      travel_to(now) do
+        assert_difference -> { enqueued_jobs.size }, 3 do
+          FeedMonitor::Scheduler.run(limit: nil, now: now)
+        end
+      end
+
+      job_args = enqueued_jobs.map { |job| job[:args].first }
+      assert_includes job_args, idle.id
+      assert_includes job_args, failed.id
+      assert_includes job_args, queued_stale.id
+      refute_includes job_args, queued_recent.id
+    end
+
     test "instruments scheduler runs and updates metrics" do
       FeedMonitor::Metrics.reset!
       now = Time.current
