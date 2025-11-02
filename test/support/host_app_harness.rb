@@ -150,8 +150,15 @@ module HostAppHarness
     Bundler.with_unbundled_env do
       env = default_env(root)
       FileUtils.mkdir_p(env.fetch("BUNDLE_PATH"))
+      next if bundle_satisfied?(env, chdir: root)
+
       run_bundler!(env, %w[install --jobs 4 --retry 3 --quiet], chdir: root)
     end
+  end
+
+  def bundle_satisfied?(env, chdir: current_work_root)
+    bundle_command = rbenv_available? ? [ "rbenv", "exec", "bundle", "check" ] : [ "bundle", "check" ]
+    system(env, *bundle_command, chdir: chdir, out: File::NULL, err: File::NULL)
   end
 
   def with_working_directory(env: {})
@@ -198,7 +205,14 @@ module HostAppHarness
   end
 
   def work_root(template)
-    File.join(TMP_ROOT, "host_app_#{template}#{override_template_suffix}")
+    File.join(TMP_ROOT, "host_app_#{template}#{override_template_suffix}#{worker_suffix}")
+  end
+
+  def worker_suffix
+    value = ENV.fetch("TEST_ENV_NUMBER", "")
+    return "" if value.empty?
+
+    "_worker_#{value}"
   end
 
   def pin_ruby_version!(root)

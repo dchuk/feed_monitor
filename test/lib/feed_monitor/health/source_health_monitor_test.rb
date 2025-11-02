@@ -8,9 +8,6 @@ module FeedMonitor
       include ActiveSupport::Testing::TimeHelpers
 
       setup do
-        FeedMonitor::FetchLog.delete_all
-        FeedMonitor::Source.delete_all
-
         @source = FeedMonitor::Source.create!(
           name: "Health Source",
           feed_url: "https://example.com/healthy.xml",
@@ -30,91 +27,90 @@ module FeedMonitor
 
       teardown do
         restore_health_configuration
-        travel_back
       end
 
       test "updates rolling success rate and health status" do
-        travel_to Time.current
+        travel_to(Time.current) do
+          3.times { |index| create_fetch_log(success: true, minutes_ago: index + 1) }
+          2.times { |index| create_fetch_log(success: false, minutes_ago: index + 4) }
 
-        3.times { |index| create_fetch_log(success: true, minutes_ago: index + 1) }
-        2.times { |index| create_fetch_log(success: false, minutes_ago: index + 4) }
+          FeedMonitor::Health::SourceHealthMonitor.new(source: @source).call
 
-        FeedMonitor::Health::SourceHealthMonitor.new(source: @source).call
-
-        @source.reload
-        assert_in_delta 0.6, @source.rolling_success_rate, 0.001
-        assert_equal "improving", @source.health_status
+          @source.reload
+          assert_in_delta 0.6, @source.rolling_success_rate, 0.001
+          assert_equal "improving", @source.health_status
+        end
       end
 
       test "auto pauses when rolling success rate falls below threshold" do
-        travel_to Time.current
+        travel_to(Time.current) do
+          5.times { |index| create_fetch_log(success: false, minutes_ago: index + 1) }
 
-        5.times { |index| create_fetch_log(success: false, minutes_ago: index + 1) }
+          FeedMonitor::Health::SourceHealthMonitor.new(source: @source).call
 
-        FeedMonitor::Health::SourceHealthMonitor.new(source: @source).call
-
-        @source.reload
-        assert_equal "auto_paused", @source.health_status
-        assert_not_nil @source.auto_paused_at
-        assert_not_nil @source.auto_paused_until
-        assert_operator @source.auto_paused_until, :>, Time.current
-        assert_in_delta @source.auto_paused_until, @source.next_fetch_at, 1
+          @source.reload
+          assert_equal "auto_paused", @source.health_status
+          assert_not_nil @source.auto_paused_at
+          assert_not_nil @source.auto_paused_until
+          assert_operator @source.auto_paused_until, :>, Time.current
+          assert_in_delta @source.auto_paused_until, @source.next_fetch_at, 1
+        end
       end
 
       test "resumes automatically when success rate recovers" do
-        travel_to Time.current
+        travel_to(Time.current) do
+          5.times { |index| create_fetch_log(success: false, minutes_ago: index + 1) }
+          FeedMonitor::Health::SourceHealthMonitor.new(source: @source).call
 
-        5.times { |index| create_fetch_log(success: false, minutes_ago: index + 1) }
-        FeedMonitor::Health::SourceHealthMonitor.new(source: @source).call
+          travel 31.minutes
 
-        travel 31.minutes
+          5.times { |index| create_fetch_log(success: true, minutes_ago: index) }
 
-        5.times { |index| create_fetch_log(success: true, minutes_ago: index) }
+          FeedMonitor::Health::SourceHealthMonitor.new(source: @source).call
 
-        FeedMonitor::Health::SourceHealthMonitor.new(source: @source).call
-
-        @source.reload
-        assert_equal "healthy", @source.health_status
-        assert_nil @source.auto_paused_at
-        assert_nil @source.auto_paused_until
+          @source.reload
+          assert_equal "healthy", @source.health_status
+          assert_nil @source.auto_paused_at
+          assert_nil @source.auto_paused_until
+        end
       end
 
       test "uses per source auto pause threshold when provided" do
         @source.update!(health_auto_pause_threshold: 0.6)
 
-        travel_to Time.current
+        travel_to(Time.current) do
+          2.times { create_fetch_log(success: true) }
+          3.times { create_fetch_log(success: false) }
 
-        2.times { create_fetch_log(success: true) }
-        3.times { create_fetch_log(success: false) }
+          FeedMonitor::Health::SourceHealthMonitor.new(source: @source).call
 
-        FeedMonitor::Health::SourceHealthMonitor.new(source: @source).call
-
-        @source.reload
-        assert_equal "auto_paused", @source.health_status
+          @source.reload
+          assert_equal "auto_paused", @source.health_status
+        end
       end
 
       test "marks source as declining after three consecutive failures" do
-        travel_to Time.current
+        travel_to(Time.current) do
+          3.times { |index| create_fetch_log(success: false, minutes_ago: index) }
 
-        3.times { |index| create_fetch_log(success: false, minutes_ago: index) }
+          FeedMonitor::Health::SourceHealthMonitor.new(source: @source).call
 
-        FeedMonitor::Health::SourceHealthMonitor.new(source: @source).call
-
-        @source.reload
-        assert_equal "declining", @source.health_status
+          @source.reload
+          assert_equal "declining", @source.health_status
+        end
       end
 
       test "marks source as improving after consecutive recoveries" do
-        travel_to Time.current
+        travel_to(Time.current) do
+          create_fetch_log(success: false, minutes_ago: 2)
+          create_fetch_log(success: true, minutes_ago: 1)
+          create_fetch_log(success: true, minutes_ago: 0)
 
-        create_fetch_log(success: false, minutes_ago: 2)
-        create_fetch_log(success: true, minutes_ago: 1)
-        create_fetch_log(success: true, minutes_ago: 0)
+          FeedMonitor::Health::SourceHealthMonitor.new(source: @source).call
 
-        FeedMonitor::Health::SourceHealthMonitor.new(source: @source).call
-
-        @source.reload
-        assert_equal "improving", @source.health_status
+          @source.reload
+          assert_equal "improving", @source.health_status
+        end
       end
 
       test "private helpers compute failure and success streaks" do

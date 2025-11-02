@@ -3,13 +3,6 @@ require "securerandom"
 
 module FeedMonitor
   class LogCleanupJobTest < ActiveJob::TestCase
-    setup do
-      FeedMonitor::FetchLog.delete_all
-      FeedMonitor::ScrapeLog.delete_all
-      FeedMonitor::Item.delete_all
-      FeedMonitor::Source.delete_all
-    end
-
     test "removes fetch and scrape logs older than the configured thresholds" do
       source = create_source
       item = create_item(source:)

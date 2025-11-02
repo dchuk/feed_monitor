@@ -5,86 +5,90 @@ require "test_helper"
 module FeedMonitor
   module Logs
     class QueryTest < ActiveSupport::TestCase
-      def setup
-        travel_to Time.zone.local(2025, 10, 15, 10, 0, 0)
+      REFERENCE_TIME = Time.zone.parse("2025-10-15 10:00:00")
 
-        @source_a = create_source!(name: "Source A")
-        @source_b = create_source!(name: "Source B")
+      setup_once do
+        reference_time = REFERENCE_TIME
 
-        @item_a = FeedMonitor::Item.create!(
-          source: @source_a,
+        @source_a_id = create_source!(name: "Source A").id
+        @source_b_id = create_source!(name: "Source B").id
+
+        @item_a_id = FeedMonitor::Item.create!(
+          source_id: @source_a_id,
           guid: SecureRandom.uuid,
           title: "Primary Item",
           url: "https://example.com/articles/primary"
-        )
+        ).id
 
-        @item_b = FeedMonitor::Item.create!(
-          source: @source_b,
+        @item_b_id = FeedMonitor::Item.create!(
+          source_id: @source_b_id,
           guid: SecureRandom.uuid,
           title: "Secondary Item",
           url: "https://example.com/articles/secondary"
-        )
+        ).id
 
-        @recent_fetch = FeedMonitor::FetchLog.create!(
-          source: @source_a,
+        @recent_fetch_id = FeedMonitor::FetchLog.create!(
+          source_id: @source_a_id,
           success: true,
           http_status: 200,
           items_created: 2,
           items_updated: 1,
           items_failed: 0,
-          started_at: 30.minutes.ago,
+          started_at: reference_time - 30.minutes,
           error_message: "OK"
-        )
+        ).id
 
-        @older_fetch = FeedMonitor::FetchLog.create!(
-          source: @source_b,
+        @older_fetch_id = FeedMonitor::FetchLog.create!(
+          source_id: @source_b_id,
           success: false,
           http_status: 500,
           items_created: 0,
           items_updated: 0,
           items_failed: 1,
-          started_at: 3.days.ago,
+          started_at: reference_time - 3.days,
           error_message: "Timeout while fetching"
-        )
+        ).id
 
-        @recent_scrape = FeedMonitor::ScrapeLog.create!(
-          source: @source_a,
-          item: @item_a,
+        @recent_scrape_id = FeedMonitor::ScrapeLog.create!(
+          source_id: @source_a_id,
+          item_id: @item_a_id,
           success: false,
           http_status: 502,
           scraper_adapter: "readability",
           duration_ms: 1200,
-          started_at: 20.minutes.ago,
+          started_at: reference_time - 20.minutes,
           error_message: "Readability parse error"
-        )
+        ).id
 
-        @older_scrape = FeedMonitor::ScrapeLog.create!(
-          source: @source_b,
-          item: @item_b,
+        @older_scrape_id = FeedMonitor::ScrapeLog.create!(
+          source_id: @source_b_id,
+          item_id: @item_b_id,
           success: true,
           http_status: 200,
           scraper_adapter: "mercury",
           duration_ms: 900,
-          started_at: 5.days.ago
-        )
+          started_at: reference_time - 5.days
+        ).id
 
-        @health_check = FeedMonitor::HealthCheckLog.create!(
-          source: @source_a,
+        @health_check_id = FeedMonitor::HealthCheckLog.create!(
+          source_id: @source_a_id,
           success: true,
           http_status: 204,
-          started_at: 10.minutes.ago,
+          started_at: reference_time - 10.minutes,
           duration_ms: 400
-        )
-
-        @recent_fetch_entry = @recent_fetch.reload.log_entry
-        @older_fetch_entry = @older_fetch.reload.log_entry
-        @recent_scrape_entry = @recent_scrape.reload.log_entry
-        @older_scrape_entry = @older_scrape.reload.log_entry
-        @health_check_entry = @health_check.reload.log_entry
+        ).id
       end
 
-      def teardown
-        travel_back
+      setup do
+        @source_a = FeedMonitor::Source.find(@source_a_id)
+        @source_b = FeedMonitor::Source.find(@source_b_id)
+        @item_a = FeedMonitor::Item.find(@item_a_id)
+        @item_b = FeedMonitor::Item.find(@item_b_id)
+        @recent_fetch_entry = FeedMonitor::FetchLog.find(@recent_fetch_id).log_entry
+        @older_fetch_entry = FeedMonitor::FetchLog.find(@older_fetch_id).log_entry
+        @recent_scrape_entry = FeedMonitor::ScrapeLog.find(@recent_scrape_id).log_entry
+        @older_scrape_entry = FeedMonitor::ScrapeLog.find(@older_scrape_id).log_entry
+        @health_check_entry = FeedMonitor::HealthCheckLog.find(@health_check_id).log_entry
       end
 
       test "returns entries ordered by newest started_at first" do
@@ -119,20 +123,23 @@ module FeedMonitor
       end
 
       test "filters by timeframe shortcut" do
-        result = FeedMonitor::Logs::Query.new(params: { timeframe: "24h" }).call
-
-        assert_equal [ @health_check_entry.id, @recent_scrape_entry.id, @recent_fetch_entry.id ], result.entries.map(&:id)
+        travel_to(REFERENCE_TIME) do
+          result = FeedMonitor::Logs::Query.new(params: { timeframe: "24h" }).call
+          assert_equal [ @health_check_entry.id, @recent_scrape_entry.id, @recent_fetch_entry.id ], result.entries.map(&:id)
+        end
       end
 
       test "filters by explicit started_at range" do
-        result = FeedMonitor::Logs::Query.new(
-          params: {
-            started_after: 36.hours.ago.iso8601,
-            started_before: 10.minutes.from_now.iso8601
-          }
-        ).call
+        travel_to(REFERENCE_TIME) do
+          result = FeedMonitor::Logs::Query.new(
+            params: {
+              started_after: 36.hours.ago.iso8601,
+              started_before: 10.minutes.from_now.iso8601
+            }
+          ).call
 
-        assert_equal [ @health_check_entry.id, @recent_scrape_entry.id, @recent_fetch_entry.id ], result.entries.map(&:id)
+          assert_equal [ @health_check_entry.id, @recent_scrape_entry.id, @recent_fetch_entry.id ], result.entries.map(&:id)
+        end
       end
 
       test "filters by source id" do

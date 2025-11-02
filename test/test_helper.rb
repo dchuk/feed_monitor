@@ -32,6 +32,7 @@ require_relative "../test/dummy/config/environment"
 ActiveRecord::Migrator.migrations_paths = [ File.expand_path("../test/dummy/db/migrate", __dir__) ]
 ActiveRecord::Migrator.migrations_paths << File.expand_path("../db/migrate", __dir__)
 require "rails/test_help"
+require_relative "test_prof"
 require "webmock/minitest"
 require "vcr"
 require "turbo-rails"
@@ -42,6 +43,9 @@ require "minitest/mock"
 
 require "capybara/rails"
 require "capybara/minitest"
+
+# Use the lightweight test adapter by default to avoid enqueuing work inline.
+ActiveJob::Base.queue_adapter = :test
 
 # Load fixtures from the engine
 if ActiveSupport::TestCase.respond_to?(:fixture_paths=)
@@ -61,6 +65,12 @@ end
 WebMock.disable_net_connect!(allow_localhost: true)
 
 class ActiveSupport::TestCase
+  worker_count = ENV.fetch("FEED_MONITOR_TEST_WORKERS", :number_of_processors)
+  worker_count = worker_count.to_i if worker_count.is_a?(String) && !worker_count.empty?
+  worker_count = :number_of_processors if worker_count.respond_to?(:zero?) && worker_count.zero?
+  parallelize(workers: worker_count)
+  self.test_order = :random
+
   setup do
     FeedMonitor.reset_configuration!
   end

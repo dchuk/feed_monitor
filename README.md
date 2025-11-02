@@ -98,7 +98,7 @@ Common installation and runtime issues (missing migrations, realtime not streami
 ## Development & Testing (Engine Repository)
 - Install dependencies with `bundle install` and `npm install` (prefix with `rbenv exec` if using rbenv).
 - Use `test/dummy/bin/dev` to boot the dummy app with npm CSS/JS watchers, Solid Queue worker, and Rails server.
-- Run tests via `bin/test-coverage` (SimpleCov-enforced), or `bin/rails test` for targeted suites.
+- Run tests via `bin/test-coverage` (SimpleCov-enforced), `bundle exec rake app:test:smoke` for the fast subset, or `bin/rails test` for targeted suites.
 - Quality checks: `bin/rubocop`, `bin/brakeman --no-pager`, `bin/lint-assets`.
 - Record HTTP fixtures with VCR under `test/vcr_cassettes/` and keep coverage ≥ 90% for new code.
 

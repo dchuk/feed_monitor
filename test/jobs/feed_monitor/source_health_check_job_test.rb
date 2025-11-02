@@ -6,11 +6,7 @@ module FeedMonitor
   class SourceHealthCheckJobTest < ActiveJob::TestCase
     include ActiveJob::TestHelper
 
-    setup do
-      FeedMonitor::HealthCheckLog.delete_all if defined?(FeedMonitor::HealthCheckLog)
-      FeedMonitor::Source.delete_all
-      clear_enqueued_jobs
-    end
+    setup { clear_enqueued_jobs }
 
     teardown do
       clear_enqueued_jobs

@@ -915,6 +915,14 @@ Each phase must:
 4. **Be usable** immediately via UI or console
 5. **Add tangible value** that can be demonstrated
 
+---
+
+## Phase 23: Test Suite Performance Guardrails
+
+- [x] 23.01 Add TestProf tooling and helpers for Minitest (TagProf, EventProf, StackProf, setup_once support)
+- [x] 23.02 Optimize slow integration/lib suites, introduce smoke test target, and remove redundant DB writes
+- [x] 23.03 Automate profiling in CI with guardrails and document contributor guidelines
+
 ## Testing Strategy
 
 - **Unit Tests**: Every service, model, job

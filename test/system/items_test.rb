@@ -97,11 +97,11 @@ module FeedMonitor
       )
 
       FeedMonitor::Scrapers::Readability.stub(:call, result) do
-        click_button "Manual Scrape"
-        assert_selector "[data-testid='scrape-status-badge']", text: "Pending", wait: 5
-
         assert_difference("FeedMonitor::ScrapeLog.count", 1) do
-          perform_enqueued_jobs
+          with_inline_jobs do
+            click_button "Manual Scrape"
+            assert_selector "[data-testid='scrape-status-badge']", text: "Pending", wait: 5
+          end
         end
       end
       item.reload
@@ -114,7 +114,6 @@ module FeedMonitor
     end
 
     test "items table supports sorting" do
-      FeedMonitor::Item.delete_all
       source = create_source!(name: "Sorted Source")
 
       older = FeedMonitor::Item.create!(

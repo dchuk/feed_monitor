@@ -7,6 +7,8 @@ require "support/host_app_harness"
 module FeedMonitor
   module Integration
     class HostInstallFlowTest < ActiveSupport::TestCase
+      parallelize(workers: 1)
+
       SNAPSHOT_FILES = %w[
         config/application.rb
         config/cable.yml
@@ -15,15 +17,15 @@ module FeedMonitor
         config/environments/test.rb
       ].freeze
 
-    def setup
-      super
-      HostAppHarness.prepare_working_directory
-    end
+      def setup
+        super
+        HostAppHarness.prepare_working_directory
+      end
 
-    def teardown
-      HostAppHarness.cleanup_working_directory
-      super
-    end
+      def teardown
+        HostAppHarness.cleanup_working_directory
+        super
+      end
 
     test "install generator integrates cleanly into host app" do
       HostAppHarness.bundle_exec!("rails", "g", "feed_monitor:install")

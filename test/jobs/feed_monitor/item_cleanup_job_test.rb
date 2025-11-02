@@ -4,11 +4,6 @@ require "feed_monitor/items/retention_pruner"
 
 module FeedMonitor
   class ItemCleanupJobTest < ActiveJob::TestCase
-    setup do
-      FeedMonitor::Item.delete_all
-      FeedMonitor::Source.delete_all
-    end
-
     test "destroys items that violate retention policies" do
       source = create_source(items_retention_days: 5)
 

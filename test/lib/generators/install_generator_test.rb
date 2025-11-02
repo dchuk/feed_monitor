@@ -8,7 +8,12 @@ require "generators/feed_monitor/install/install_generator"
 module FeedMonitor
   class InstallGeneratorTest < Rails::Generators::TestCase
     tests FeedMonitor::Generators::InstallGenerator
-    destination File.expand_path("../tmp/install_generator", __dir__)
+    WORKER_SUFFIX = begin
+      value = ENV.fetch("TEST_ENV_NUMBER", "")
+      value.empty? ? "" : "_worker_#{value}"
+    end
+
+    destination File.expand_path("../tmp/install_generator#{WORKER_SUFFIX}", __dir__)
 
     def setup
       super

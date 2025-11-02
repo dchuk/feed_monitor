@@ -347,7 +347,9 @@ GEM
       fugit (~> 1.11.0)
       railties (>= 7.1)
       thor (>= 1.3.1)
+    stackprof (0.2.27)
     stringio (3.1.7)
+    test-prof (1.4.4)
     thor (1.4.0)
     timeout (0.4.3)
     tsort (0.2.0)
@@ -398,6 +400,8 @@ DEPENDENCIES
   rubocop-rails-omakase
   selenium-webdriver
   simplecov
+  stackprof
+  test-prof
   vcr
   webmock
 

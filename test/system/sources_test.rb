@@ -152,7 +152,6 @@ module FeedMonitor
     end
 
     test "sources table supports sorting and dropdown actions" do
-      FeedMonitor::Source.delete_all
       older = create_source!(name: "Alpha Feed", feed_url: "https://alpha.example.com/feed.xml")
       newer = create_source!(name: "Zeta Feed", feed_url: "https://zeta.example.com/feed.xml")
       older.update_columns(created_at: 1.hour.ago)
@@ -202,7 +201,6 @@ module FeedMonitor
     end
 
     test "source dropdown links navigate to view and edit pages" do
-      FeedMonitor::Source.delete_all
       source = create_source!(name: "Nav Feed", feed_url: "https://nav.example.com/feed.xml")
 
       visit feed_monitor.sources_path
@@ -225,8 +223,6 @@ module FeedMonitor
     end
 
     test "deleting a source from the index removes the row and refreshes heatmap" do
-      FeedMonitor::Source.delete_all
-
       keep_source = create_source!(
         name: "Keep Feed",
         feed_url: "https://keep.example.com/feed.xml",
@@ -371,9 +367,6 @@ module FeedMonitor
     end
 
     test "manually fetching a source" do
-      FeedMonitor::Item.delete_all
-      FeedMonitor::Source.delete_all
-
       source = create_source!(
         name: "Fetchable Source",
         feed_url: "https://www.ruby-lang.org/en/feeds/news.rss"
@@ -385,7 +378,7 @@ module FeedMonitor
       assert_selector "[data-testid='fetch-status-badge']", text: "Queued"
 
       VCR.use_cassette("feed_monitor/fetching/rss_success") do
-        perform_enqueued_jobs
+        with_inline_jobs { perform_enqueued_jobs }
       end
 
       visit feed_monitor.source_path(source)
@@ -402,8 +395,6 @@ module FeedMonitor
     end
 
     test "retrying a failed source queues a forced fetch" do
-      FeedMonitor::Source.delete_all
-
       source = create_source!(
         name: "Unstable Feed",
         feed_url: "https://unstable.example.com/feed.xml"
@@ -428,8 +419,6 @@ module FeedMonitor
     end
 
     test "auto paused sources show auto paused badge" do
-      FeedMonitor::Source.delete_all
-
       source = create_source!(
         name: "Flaky Feed",
         feed_url: "https://flaky.example.com/feed.xml",
@@ -447,7 +436,6 @@ module FeedMonitor
 
     test "failing source dropdown enqueues recovery actions and shows processing state" do
       clear_enqueued_jobs
-      FeedMonitor::Source.delete_all
 
       source = create_source!(
         name: "Problematic Feed",
@@ -478,7 +466,7 @@ module FeedMonitor
       assert_text "Health check enqueued"
       assert_equal FeedMonitor::SourceHealthCheckJob, enqueued_jobs.last[:job]
 
-      perform_enqueued_jobs
+      with_inline_jobs { perform_enqueued_jobs }
 
       visit feed_monitor.logs_path(log_type: "health_check")
 
@@ -487,8 +475,6 @@ module FeedMonitor
     end
 
     test "resetting auto paused source clears state" do
-      FeedMonitor::Source.delete_all
-
       source = create_source!(
         name: "Auto Paused Feed",
         feed_url: "https://paused.example.com/feed.xml",
