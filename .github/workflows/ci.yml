@@ -173,7 +173,7 @@ jobs:
         run: rm -rf coverage
 
       - name: Download coverage artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: coverage
           path: coverage
