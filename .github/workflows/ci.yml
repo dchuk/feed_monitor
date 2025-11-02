@@ -4,6 +4,8 @@ on:
   pull_request:
   push:
     branches: [ main ]
+  schedule:
+    - cron: "30 6 * * *"
 
 jobs:
   lint:
@@ -206,3 +208,107 @@ jobs:
 
       - name: Enforce diff coverage
         run: bundle exec ruby bin/check-diff-coverage
+
+  profiling:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: feed_monitor_test
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - name: Install packages
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y build-essential git libyaml-dev libsqlite3-dev pkg-config google-chrome-stable
+
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.4.4
+          bundler-cache: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Build assets
+        run: npm run build
+
+      - name: Prepare database
+        env:
+          RAILS_ENV: test
+          POSTGRES_HOST: localhost
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_TEST_DB: feed_monitor_dummy_test
+        run: bundle exec rails db:create db:migrate
+
+      - name: Run TagProf suite
+        env:
+          RAILS_ENV: test
+          POSTGRES_HOST: localhost
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_TEST_DB: feed_monitor_dummy_test
+          FEED_MONITOR_SKIP_COVERAGE: "true"
+          FEED_MONITOR_TEST_WORKERS: "1"
+          TAG_PROF: type
+        run: |
+          set -o pipefail
+          mkdir -p tmp/test_prof
+          bundle exec rails test | tee tmp/test_prof/tag_prof_type.log
+
+      - name: Run EventProf suite
+        env:
+          RAILS_ENV: test
+          POSTGRES_HOST: localhost
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_TEST_DB: feed_monitor_dummy_test
+          FEED_MONITOR_SKIP_COVERAGE: "true"
+          FEED_MONITOR_TEST_WORKERS: "1"
+          EVENT_PROF: sql.active_record
+        run: |
+          set -o pipefail
+          bundle exec rails test | tee tmp/test_prof/event_prof_sql.log
+
+      - name: Run StackProf on integration tests
+        env:
+          RAILS_ENV: test
+          POSTGRES_HOST: localhost
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_TEST_DB: feed_monitor_dummy_test
+          FEED_MONITOR_SKIP_COVERAGE: "true"
+          FEED_MONITOR_TEST_WORKERS: "1"
+          TEST_STACK_PROF: "1"
+        run: |
+          set -o pipefail
+          bundle exec rails test test/integration | tee tmp/test_prof/stack_prof_integration.log
+
+      - name: Enforce profiling guardrails
+        run: bundle exec ruby bin/check-test-prof-metrics
+
+      - name: Upload profiling artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-prof-metrics
+          path: tmp/test_prof
+          if-no-files-found: error

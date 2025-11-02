@@ -213,7 +213,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_22_100000) do
     t.index ["health_status"], name: "index_feed_monitor_sources_on_health_status"
     t.index ["next_fetch_at"], name: "index_feed_monitor_sources_on_next_fetch_at"
     t.index ["type"], name: "index_feed_monitor_sources_on_type"
-    t.check_constraint "fetch_status::text = ANY (ARRAY['idle'::character varying, 'queued'::character varying, 'fetching'::character varying, 'failed'::character varying]::text[])", name: "check_fetch_status_values"
+    t.check_constraint "fetch_status::text = ANY (ARRAY['idle'::character varying::text, 'queued'::character varying::text, 'fetching'::character varying::text, 'failed'::character varying::text])", name: "check_fetch_status_values"
   end
 
   create_table "solid_cable_messages", force: :cascade do |t|

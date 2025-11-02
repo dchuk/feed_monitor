@@ -1,0 +1,95 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "pathname"
+
+LOG_DIR = Pathname.new("tmp/test_prof")
+TAG_PROF_LOG = LOG_DIR.join("tag_prof_type.log")
+EVENT_PROF_LOG = LOG_DIR.join("event_prof_sql.log")
+
+THRESHOLDS = {
+  total_suite_seconds: 80.0,
+  integration_seconds: 35.0,
+  db_seconds: 5.0
+}.freeze
+
+def ensure_file!(path)
+  unless path.exist?
+    warn "Missing profiling log: #{path}"
+    exit 1
+  end
+end
+
+def parse_tag_prof_metrics
+  content = TAG_PROF_LOG.read
+
+  finished_line = content.lines.reverse.find { |line| line.include?("Finished in") }
+  unless finished_line
+    warn "Unable to locate suite timing in #{TAG_PROF_LOG}"
+    exit 1
+  end
+  total_seconds = finished_line[/Finished in ([0-9.]+)s/, 1]
+  total_seconds = total_seconds.to_f
+
+  integration_line = content.lines.find { |line| line.include?("integration") && line =~ /integration\s+\d{2}:\d{2}\.\d{3}/ }
+  unless integration_line
+    warn "Unable to locate integration row in #{TAG_PROF_LOG}"
+    exit 1
+  end
+  integration_time = integration_line[/integration\s+(\d{2}:\d{2}\.\d{3})/, 1]
+  integration_seconds = parse_mmss(integration_time)
+
+  { total_seconds:, integration_seconds: }
+end
+
+def parse_event_prof_metrics
+  content = EVENT_PROF_LOG.read
+  lines = content.lines
+  summary_index = lines.find_index { |line| line.include?("EventProf results") }
+  unless summary_index
+    warn "Unable to locate EventProf summary in #{EVENT_PROF_LOG}"
+    exit 1
+  end
+
+  total_line = lines[(summary_index + 1)..].find { |line| line.include?("Total time:") }
+  unless total_line
+    warn "Unable to locate EventProf total time in #{EVENT_PROF_LOG}"
+    exit 1
+  end
+
+  total_db_time = total_line[/Total time: (\d{2}:\d{2}\.\d{3})/, 1]
+  { db_seconds: parse_mmss(total_db_time) }
+end
+
+def parse_mmss(value)
+  minutes, seconds = value.split(":")
+  minutes.to_i * 60 + seconds.to_f
+end
+
+ensure_file!(TAG_PROF_LOG)
+ensure_file!(EVENT_PROF_LOG)
+
+metrics = parse_tag_prof_metrics.merge(parse_event_prof_metrics)
+
+violations = []
+
+if metrics[:total_seconds] > THRESHOLDS[:total_suite_seconds]
+  violations << "Total suite time #{metrics[:total_seconds].round(2)}s exceeds #{THRESHOLDS[:total_suite_seconds]}s"
+end
+
+if metrics[:integration_seconds] > THRESHOLDS[:integration_seconds]
+  violations << "Integration test time #{metrics[:integration_seconds].round(2)}s exceeds #{THRESHOLDS[:integration_seconds]}s"
+end
+
+if metrics[:db_seconds] > THRESHOLDS[:db_seconds]
+  violations << "DB time #{metrics[:db_seconds].round(2)}s exceeds #{THRESHOLDS[:db_seconds]}s"
+end
+
+metrics.each do |key, value|
+  puts format("%-22s %.3fs", key, value)
+end
+
+unless violations.empty?
+  warn "Profiling guardrails exceeded:\n  - #{violations.join("\n  - ")}"
+  exit 1
+end

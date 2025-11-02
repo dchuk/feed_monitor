@@ -5,12 +5,6 @@ require "digest"
 module FeedMonitor
   module Fetching
     class FeedFetcherTest < ActiveSupport::TestCase
-      setup do
-        FeedMonitor::FetchLog.delete_all
-        FeedMonitor::Item.delete_all
-        FeedMonitor::Source.delete_all
-      end
-
       test "continues processing when an item creation fails" do
         source = build_source(
           name: "RSS Sample with failure",

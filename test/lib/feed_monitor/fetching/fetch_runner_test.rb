@@ -7,12 +7,7 @@ module FeedMonitor
     class FetchRunnerTest < ActiveSupport::TestCase
       include ActiveJob::TestHelper
 
-      setup do
-        clear_enqueued_jobs
-        FeedMonitor::FetchLog.delete_all
-        FeedMonitor::Item.delete_all
-        FeedMonitor::Source.delete_all
-      end
+      setup { clear_enqueued_jobs }
 
       test "enqueues scrape jobs for newly created items when auto scrape is enabled" do
         source = create_source(scraping_enabled: true, auto_scrape: true)

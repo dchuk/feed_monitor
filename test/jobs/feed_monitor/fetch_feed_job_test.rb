@@ -5,11 +5,7 @@ module FeedMonitor
   class FetchFeedJobTest < ActiveJob::TestCase
     include ActiveJob::TestHelper
 
-    setup do
-      ActiveJob::Base.queue_adapter = :test
-      clear_enqueued_jobs
-      FeedMonitor::Source.delete_all
-    end
+    setup { clear_enqueued_jobs }
 
     test "invokes the fetch runner for the source" do
       source = create_source

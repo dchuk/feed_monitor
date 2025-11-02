@@ -21,6 +21,8 @@ end
 
 group :test do
   gem "simplecov", require: false
+  gem "test-prof", require: false
+  gem "stackprof", require: false
   gem "capybara"
   gem "webmock"
   gem "vcr"

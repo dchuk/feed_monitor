@@ -6,12 +6,6 @@ require "minitest/mock"
 
 module FeedMonitor
   class ScrapeItemJobTest < ActiveJob::TestCase
-    setup do
-      FeedMonitor::ScrapeLog.delete_all
-      FeedMonitor::Item.delete_all
-      FeedMonitor::Source.delete_all
-    end
-
     test "performs scraping via item scraper and records a log" do
       source = create_source(scraping_enabled: true)
       item = create_item(source:)
