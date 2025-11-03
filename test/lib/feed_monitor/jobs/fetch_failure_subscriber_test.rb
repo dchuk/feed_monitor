@@ -1,0 +1,90 @@
+# frozen_string_literal: true
+
+require "test_helper"
+
+module FeedMonitor
+  module Jobs
+    class FetchFailureSubscriberTest < ActiveSupport::TestCase
+      setup do
+        FeedMonitor::Jobs::FetchFailureSubscriber.setup!
+        cleanup_solid_queue_tables
+      end
+
+      teardown do
+        cleanup_solid_queue_tables
+      end
+
+      test "marks source as failed when a fetch job fails due to process exit" do
+        source = create_source!(fetch_status: "fetching", last_fetch_started_at: 20.minutes.ago, failure_count: 0)
+        job = enqueue_fetch_job_for(source)
+        source.update_columns(fetch_status: "fetching")
+
+        SolidQueue::FailedExecution.create!(
+          job:,
+          error: {
+            "exception_class" => "SolidQueue::Processes::ProcessExitError",
+            "message" => "Received unhandled signal 11.",
+            "backtrace" => nil
+          }
+        )
+
+        source.reload
+        assert_equal "failed", source.fetch_status
+        assert_match(/ProcessExitError/, source.last_error)
+        assert_equal 1, source.failure_count
+      end
+
+      test "ignores non process-exit failures" do
+        source = create_source!(fetch_status: "fetching", last_fetch_started_at: 10.minutes.ago, failure_count: 0)
+        job = enqueue_fetch_job_for(source)
+        source.update_columns(fetch_status: "fetching")
+
+        SolidQueue::FailedExecution.create!(
+          job:,
+          error: {
+            "exception_class" => "RuntimeError",
+            "message" => "Boom",
+            "backtrace" => nil
+          }
+        )
+
+        source.reload
+        assert_equal "fetching", source.fetch_status
+        assert_nil source.last_error
+        assert_equal 0, source.failure_count
+      end
+
+      private
+
+      def enqueue_fetch_job_for(source)
+        with_queue_adapter(:solid_queue) do
+          FeedMonitor::Fetching::FetchRunner.enqueue(source.id)
+        end
+
+        SolidQueue::Job.order(:id).last
+      end
+
+      def cleanup_solid_queue_tables
+        if defined?(SolidQueue::FailedExecution)
+          SolidQueue::FailedExecution.delete_all
+        end
+
+        if defined?(SolidQueue::ClaimedExecution)
+          SolidQueue::ClaimedExecution.delete_all
+        end
+
+        if defined?(SolidQueue::ReadyExecution)
+          SolidQueue::ReadyExecution.delete_all
+        end
+
+        if defined?(SolidQueue::ScheduledExecution)
+          SolidQueue::ScheduledExecution.delete_all
+        end
+
+        if defined?(SolidQueue::Job)
+          SolidQueue::Job.delete_all
+        end
+      end
+    end
+  end
+end

@@ -90,4 +90,12 @@ class ActiveSupport::TestCase
     source.save!(validate: false)
     source
   end
+
+  def with_queue_adapter(adapter)
+    previous = ActiveJob::Base.queue_adapter
+    ActiveJob::Base.queue_adapter = adapter
+    yield
+  ensure
+    ActiveJob::Base.queue_adapter = previous
+  end
 end

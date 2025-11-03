@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "active_support/core_ext/numeric/time"
+require "feed_monitor/fetching/stalled_fetch_reconciler"
 
 module FeedMonitor
   class Scheduler
@@ -19,6 +20,9 @@ module FeedMonitor
 
     def run
       payload = { limit: limit }
+      recovery = FeedMonitor::Fetching::StalledFetchReconciler.call(now:, stale_after: STALE_QUEUE_TIMEOUT)
+      payload[:stalled_recoveries] = recovery.recovered_source_ids.size
+      payload[:stalled_jobs_removed] = recovery.jobs_removed.size
 
       ActiveSupport::Notifications.instrument("feed_monitor.scheduler.run", payload) do
         start_monotonic = FeedMonitor::Instrumentation.monotonic_time
@@ -70,8 +74,9 @@ module FeedMonitor
       eligible = table[:fetch_status].in(ELIGIBLE_FETCH_STATUSES)
       stale_cutoff = now - STALE_QUEUE_TIMEOUT
       stale_queued = table[:fetch_status].eq("queued").and(table[:updated_at].lteq(stale_cutoff))
+      stale_fetching = table[:fetch_status].eq("fetching").and(table[:last_fetch_started_at].lteq(stale_cutoff))
 
-      eligible.or(stale_queued)
+      eligible.or(stale_queued).or(stale_fetching)
     end
   end
 end
