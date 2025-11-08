@@ -24,15 +24,8 @@ module FeedMonitor
 
       class << self
         def setup!
-          return unless defined?(::SolidQueue::FailedExecution)
-          return if configured?
-
-          ActiveSupport.on_load(:solid_queue) do
-            FeedMonitor::Jobs::FetchFailureSubscriber.attach_callbacks!
-          end
-
+          register_on_load_hook!
           attach_callbacks! if solid_queue_loaded?
-          @configured = true
         end
 
         def handle_failed_execution(failed_execution)
@@ -70,20 +63,39 @@ module FeedMonitor
         end
 
         def attach_callbacks!
-          return unless solid_queue_loaded?
-          return if ::SolidQueue::FailedExecution < FetchFailureCallbacks
+          failed_execution_class = load_failed_execution_class
+          return unless failed_execution_class
+          return if failed_execution_class < FetchFailureCallbacks
 
-          ::SolidQueue::FailedExecution.include(FetchFailureCallbacks)
+          failed_execution_class.include(FetchFailureCallbacks)
         end
 
         private
 
         def solid_queue_loaded?
-          defined?(::SolidQueue::FailedExecution)
+          !!load_failed_execution_class
         end
 
-        def configured?
-          !!@configured
+        def register_on_load_hook!
+          return if @hook_registered
+
+          ActiveSupport.on_load(:solid_queue) do
+            FeedMonitor::Jobs::FetchFailureSubscriber.attach_callbacks!
+          end
+
+          @hook_registered = true
+        end
+
+        def load_failed_execution_class
+          ::SolidQueue::FailedExecution
+        rescue NameError
+          begin
+            require "solid_queue/failed_execution"
+          rescue LoadError
+            return nil
+          end
+
+          ::SolidQueue::FailedExecution
         end
 
         def extract_source_id(job)
