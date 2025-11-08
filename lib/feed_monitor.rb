@@ -22,6 +22,7 @@ rescue LoadError
   # Ransack powers search forms when available.
 end
 
+require "feed_monitor/version"
 require "active_support/core_ext/module/redefine_method"
 
 FeedMonitor.singleton_class.redefine_method(:table_name_prefix) do
@@ -34,7 +35,6 @@ ActiveSupport.on_load(:active_record) do
   end
 end
 
-require "feed_monitor/version"
 require "feed_monitor/engine"
 require "feed_monitor/configuration"
 require "feed_monitor/model_extensions"

@@ -30,9 +30,9 @@ Gem::Specification.new do |spec|
   spec.require_paths = [ "lib" ]
 
   spec.add_dependency "rails", ">= 8.0.3", "< 9.0"
-  spec.add_dependency "cssbundling-rails"
-  spec.add_dependency "jsbundling-rails"
-  spec.add_dependency "turbo-rails"
+  spec.add_dependency "cssbundling-rails", "~> 1.4"
+  spec.add_dependency "jsbundling-rails", "~> 1.3"
+  spec.add_dependency "turbo-rails", "~> 2.0"
   spec.add_dependency "feedjira", ">= 3.2", "< 5.0"
   spec.add_dependency "faraday", "~> 2.9"
   spec.add_dependency "faraday-retry", "~> 2.2"
@@ -40,7 +40,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "faraday-gzip", "~> 3.0"
   spec.add_dependency "nokolexbor", "~> 0.5"
   spec.add_dependency "ruby-readability", "~> 0.7"
-  spec.add_dependency "solid_queue", ">= 0.3"
-  spec.add_dependency "solid_cable", ">= 0.2"
+  spec.add_dependency "solid_queue", ">= 0.3", "< 3.0"
+  spec.add_dependency "solid_cable", ">= 3.0", "< 4.0"
   spec.add_dependency "ransack", "~> 4.2"
 end
