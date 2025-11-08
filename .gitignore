@@ -11,5 +11,6 @@
 /test/dummy/storage/
 /test/dummy/tmp/
 /test/tmp/
+/test/lib/tmp/install_generator/config/routes.rb
 /app/assets/builds/*
 !/app/assets/builds/.keep

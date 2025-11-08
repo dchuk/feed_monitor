@@ -2,6 +2,7 @@ module FeedMonitor
   class Engine < ::Rails::Engine
     isolate_namespace FeedMonitor
     require "feed_monitor/assets/bundler"
+    require "feed_monitor/jobs/fetch_failure_subscriber"
 
     def self.table_name_prefix
       FeedMonitor.config.models.table_name_prefix
@@ -40,6 +41,7 @@ module FeedMonitor
 
     initializer "feed_monitor.jobs" do |app|
       FeedMonitor::Jobs::Visibility.setup!
+      FeedMonitor::Jobs::FetchFailureSubscriber.setup!
 
       if defined?(::SolidQueue)
         adapter_name = ActiveJob::Base.queue_adapter_name.to_s

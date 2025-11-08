@@ -60,6 +60,30 @@ module FeedMonitor
       end
     end
 
+    test "invokes stalled fetch reconciler before scheduling sources" do
+      now = Time.current
+      called = false
+
+      stubbed_result = FeedMonitor::Fetching::StalledFetchReconciler::Result.new(
+        recovered_source_ids: [],
+        jobs_removed: [],
+        executed_at: now
+      )
+
+      FeedMonitor::Fetching::StalledFetchReconciler.stub(:call, ->(**args) do
+        called = true
+        assert_equal now, args[:now]
+        assert_equal FeedMonitor::Scheduler::STALE_QUEUE_TIMEOUT, args[:stale_after]
+        stubbed_result
+      end) do
+        travel_to(now) do
+          FeedMonitor::Scheduler.run(limit: nil, now: now)
+        end
+      end
+
+      assert called, "expected stalled fetch reconciler to be invoked"
+    end
+
     test "skips sources already marked as queued" do
       now = Time.current
       source = create_source(next_fetch_at: now - 5.minutes, fetch_status: "queued")
@@ -170,6 +194,30 @@ module FeedMonitor
       assert_includes job_args, failed.id
       assert_includes job_args, queued_stale.id
       refute_includes job_args, queued_recent.id
+    end
+
+    test "includes stale fetching sources in eligible predicate" do
+      now = Time.current
+      stale_fetching = create_source(
+        next_fetch_at: now - 10.minutes,
+        fetch_status: "fetching",
+        last_fetch_started_at: now - (FeedMonitor::Scheduler::STALE_QUEUE_TIMEOUT + 5.minutes)
+      )
+      fresh_fetching = create_source(
+        next_fetch_at: now - 10.minutes,
+        fetch_status: "fetching",
+        last_fetch_started_at: now - 2.minutes
+      )
+
+      FeedMonitor::Fetching::StalledFetchReconciler.stub(:call, FeedMonitor::Fetching::StalledFetchReconciler::Result.new(recovered_source_ids: [], jobs_removed: [], executed_at: now)) do
+        travel_to(now) do
+          FeedMonitor::Scheduler.run(limit: nil, now: now)
+        end
+      end
+
+      job_ids = enqueued_jobs.map { |job| job[:args].first }
+      assert_includes job_ids, stale_fetching.id
+      refute_includes job_ids, fresh_fetching.id
     end
 
     test "instruments scheduler runs and updates metrics" do
