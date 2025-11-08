@@ -102,7 +102,7 @@ module FeedMonitor
 
       reconciler = FeedMonitor::Fetching::StalledFetchReconciler.send(:new, now:, stale_after: STALE_THRESHOLD)
       logger = Minitest::Mock.new
-      logger.expect(:error, nil, [String])
+      logger.expect(:error, nil, [ String ])
 
       source.define_singleton_method(:with_lock) do |&block|
         raise StandardError, "lock failure"
