@@ -9,6 +9,21 @@
 5. Update release notes in this file and tag the release (`git tag vX.Y.Z`)
 6. Push tags and publish the gem (`rbenv exec gem push pkg/feed_monitor-X.Y.Z.gem`)
 
+## 0.1.0 - 2025-11-08
+
+- First public release of the Feed Monitor engine with end-to-end feed ingest, scrape orchestration, and Solid Queue dashboards for monitoring, retries, and manual remediation.
+- Includes Feedjira-based fetch pipeline with structured error handling, retention pruning, and configurable HTTP/Scraper adapters.
+- Ships Solid Queue/Solid Cable defaults, Mission Control dashboard hooks, and CRUD UI for sources, items, and scraping state via the dummy host app.
+- Provides install generator, initializer template, cleanup jobs, recurring schedules, and Readability-based scraping adapter to unlock full-content extraction out of the box.
+
+### Upgrade Notes
+
+1. Add `gem "feed_monitor", "~> 0.1.0"` to your host `Gemfile` and run `rbenv exec bundle install`.
+2. Execute `rbenv exec bin/rails railties:install:migrations FROM=feed_monitor` followed by `rbenv exec bin/rails db:migrate` to copy and run Solid Queue + Feed Monitor migrations.
+3. Review `config/initializers/feed_monitor.rb` for queue, scraping, and Mission Control settings; adjust the generated defaults to fit your environment.
+4. If you surface Mission Control Jobs from the dashboard, ensure `mission_control-jobs` stays mounted and `config.mission_control_dashboard_path` is reachable.
+5. Restart Solid Queue workers, Action Cable (Solid Cable by default), and any recurring job runners to pick up the new engine version.
+
 ## 2025-10-14
 
 - Converted source fetch, retry, and bulk scrape member actions into nested resources. New controller endpoints:
