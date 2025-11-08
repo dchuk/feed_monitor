@@ -24,7 +24,6 @@ module FeedMonitor
 
       class << self
         def setup!
-          return unless defined?(::SolidQueue::FailedExecution)
           return if configured?
 
           ActiveSupport.on_load(:solid_queue) do
