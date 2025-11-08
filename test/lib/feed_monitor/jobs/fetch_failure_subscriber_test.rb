@@ -19,6 +19,8 @@ module FeedMonitor
         job = enqueue_fetch_job_for(source)
         source.update_columns(fetch_status: "fetching")
 
+        assert_includes SolidQueue::FailedExecution.ancestors, FeedMonitor::Jobs::FetchFailureCallbacks
+
         SolidQueue::FailedExecution.create!(
           job:,
           error: {
@@ -56,7 +58,7 @@ module FeedMonitor
 
       test "setup registers callbacks for later Solid Queue load" do
         subscriber = FeedMonitor::Jobs::FetchFailureSubscriber
-        subscriber.instance_variable_set(:@configured, false)
+        subscriber.instance_variable_set(:@hook_registered, false)
 
         captured = nil
 
@@ -75,7 +77,7 @@ module FeedMonitor
 
         assert_equal 1, attach_calls
       ensure
-        subscriber.instance_variable_set(:@configured, false)
+        subscriber.instance_variable_set(:@hook_registered, false)
       end
 
       private
