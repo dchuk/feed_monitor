@@ -58,12 +58,12 @@ module FeedMonitor
         assert_equal 1, matching_jobs.count, "expected a single fresh job in the fetch queue"
       end
 
-      test "ignores fetching sources that have not reached the stale threshold" do
-        now = Time.current
-        source = create_source!(
-          fetch_status: "fetching",
-          last_fetch_started_at: now - 2.minutes,
-          next_fetch_at: now - 30.minutes
+    test "ignores fetching sources that have not reached the stale threshold" do
+      now = Time.current
+      source = create_source!(
+        fetch_status: "fetching",
+        last_fetch_started_at: now - 2.minutes,
+        next_fetch_at: now - 30.minutes
         )
 
         enqueue_fetch_job_for(source)
@@ -75,11 +75,73 @@ module FeedMonitor
         end
 
         source.reload
-        assert_equal "fetching", source.fetch_status
-        assert_empty result.recovered_source_ids
+      assert_equal "fetching", source.fetch_status
+      assert_empty result.recovered_source_ids
+    end
+
+    test "default stale_after uses scheduler timeout when not provided" do
+      assert_equal STALE_THRESHOLD, FeedMonitor::Fetching::StalledFetchReconciler.send(:default_stale_after)
+    end
+
+    test "default stale_after falls back to ten minutes when scheduler timeout missing" do
+      scheduler = FeedMonitor::Scheduler
+      original = FeedMonitor::Scheduler::STALE_QUEUE_TIMEOUT
+      scheduler.send(:remove_const, :STALE_QUEUE_TIMEOUT)
+
+      assert_equal 10.minutes, FeedMonitor::Fetching::StalledFetchReconciler.send(:default_stale_after)
+    ensure
+      scheduler.const_set(:STALE_QUEUE_TIMEOUT, original)
+    end
+
+    test "recover_source logs and swallows unexpected errors" do
+      now = Time.current
+      source = create_source!(
+        fetch_status: "fetching",
+        last_fetch_started_at: now - (STALE_THRESHOLD + 1.minute)
+      )
+
+      reconciler = FeedMonitor::Fetching::StalledFetchReconciler.send(:new, now:, stale_after: STALE_THRESHOLD)
+      logger = Minitest::Mock.new
+      logger.expect(:error, nil, [String])
+
+      source.define_singleton_method(:with_lock) do |&block|
+        raise StandardError, "lock failure"
       end
 
-      private
+      result = Rails.stub(:logger, logger) do
+        reconciler.send(:recover_source, source, jobs_supported: false)
+      end
+
+      logger.verify
+      assert_nil result
+    end
+
+    test "discard_jobs_for destroys jobs without failed executions" do
+      now = Time.current
+      source = create_source!(
+        fetch_status: "fetching",
+        last_fetch_started_at: now - (STALE_THRESHOLD + 1.minute)
+      )
+
+      enqueue_fetch_job_for(source)
+
+      reconciler = FeedMonitor::Fetching::StalledFetchReconciler.send(:new, now:, stale_after: STALE_THRESHOLD)
+
+      assert_difference -> { SolidQueue::Job.count }, -1 do
+        reconciler.send(:discard_jobs_for, source)
+      end
+    end
+
+    test "jobs_supported? returns false when Solid Queue tables are unavailable" do
+      reconciler = FeedMonitor::Fetching::StalledFetchReconciler.send(:new, now: Time.current, stale_after: 1.minute)
+      error = ActiveRecord::StatementInvalid.new("boom")
+
+      SolidQueue::Job.stub(:table_exists?, -> { raise error }) do
+        refute reconciler.send(:jobs_supported?)
+      end
+    end
+
+    private
 
       def enqueue_fetch_job_for(source)
         with_queue_adapter(:solid_queue) do

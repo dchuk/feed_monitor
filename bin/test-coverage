@@ -19,6 +19,9 @@ TARGETED_TESTS=(
   "test/controllers/feed_monitor/source_health_checks_controller_test.rb"
   "test/controllers/feed_monitor/source_health_resets_controller_test.rb"
   "test/helpers/feed_monitor/application_helper_test.rb"
+  "test/lib/feed_monitor/fetching/stalled_fetch_reconciler_test.rb"
+  "test/lib/feed_monitor/jobs/fetch_failure_subscriber_test.rb"
+  "test/lib/feed_monitor/scheduler_test.rb"
 )
 
 run_tests() {
@@ -33,9 +36,9 @@ run_tests bundle exec rails test "$@"
 
 run_tests_with_env() {
   if command -v rbenv >/dev/null 2>&1; then
-    SIMPLECOV_COMMAND_NAME=feed_monitor:health_suite COVERAGE=true rbenv exec bundle exec rails test "$@"
+    FEED_MONITOR_TEST_WORKERS=1 SIMPLECOV_COMMAND_NAME=feed_monitor:health_suite COVERAGE=true rbenv exec bundle exec rails test "$@"
   else
-    SIMPLECOV_COMMAND_NAME=feed_monitor:health_suite COVERAGE=true bundle exec rails test "$@"
+    FEED_MONITOR_TEST_WORKERS=1 SIMPLECOV_COMMAND_NAME=feed_monitor:health_suite COVERAGE=true bundle exec rails test "$@"
   fi
 }
 
