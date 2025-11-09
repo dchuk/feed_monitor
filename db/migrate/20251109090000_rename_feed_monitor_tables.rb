@@ -93,7 +93,7 @@ class RenameFeedMonitorTables < ActiveRecord::Migration[8.0]
 
   def rename_index_if_exists(table_name, old_name, new_name)
     return unless table_exists?(table_name)
-    return unless index_name_exists?(table_name, old_name, false)
+    return unless index_name_exists?(table_name, old_name)
 
     rename_index(table_name, old_name, new_name)
   end
