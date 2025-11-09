@@ -132,7 +132,7 @@ module HostAppHarness
     args = [ template_root(template), *TEMPLATE_OPTIONS.fetch(template) ]
 
     Bundler.with_unbundled_env do
-      FeedMonitor::Engine.eager_load!
+      SourceMonitor::Engine.eager_load!
       Rails::Generators::AppGenerator.start(args, behavior: :invoke)
     end
   end
@@ -142,7 +142,7 @@ module HostAppHarness
     gem_path = override_gem_path || ENGINE_ROOT
     File.open(gemfile, "a") do |file|
       file.puts
-      file.puts %(gem "feed_monitor", path: "#{gem_path}")
+      file.puts %(gem "source_monitor", path: "#{gem_path}")
     end
   end
 
@@ -242,7 +242,7 @@ module HostAppHarness
   end
 
   def capture_override_from_env!
-    raw = ENV["FEED_MONITOR_GEM_PATH"]
+    raw = ENV["SOURCE_MONITOR_GEM_PATH"]
     return @override_gem_path = nil if raw.nil?
 
     value = raw.strip
@@ -256,12 +256,12 @@ module HostAppHarness
 
     if rbenv_available?
       raise <<~MESSAGE
-        FeedMonitor requires Ruby #{TARGET_RUBY_VERSION}. Detected #{::RUBY_VERSION}.
+        SourceMonitor requires Ruby #{TARGET_RUBY_VERSION}. Detected #{::RUBY_VERSION}.
         Please install #{TARGET_RUBY_VERSION} (e.g., via rbenv: `rbenv install #{TARGET_RUBY_VERSION}`) and re-run the test suite.
       MESSAGE
     else
       Kernel.warn <<~MESSAGE
-        FeedMonitor expected Ruby #{TARGET_RUBY_VERSION} but detected #{::RUBY_VERSION}.
+        SourceMonitor expected Ruby #{TARGET_RUBY_VERSION} but detected #{::RUBY_VERSION}.
         Proceeding with #{::RUBY_VERSION} because rbenv is not available; ensure CI installs Ruby #{TARGET_RUBY_VERSION} for full parity.
       MESSAGE
     end
@@ -271,7 +271,7 @@ module HostAppHarness
     Gem::Specification.find_by_name("rails", ">= 8.0.3")
   rescue Gem::LoadError
     raise <<~MESSAGE
-      FeedMonitor's host app harness expects Rails >= 8.0.3 to be installed.
+      SourceMonitor's host app harness expects Rails >= 8.0.3 to be installed.
       Run `bundle install` in the engine directory to install Rails before executing the test suite.
     MESSAGE
   end
@@ -321,8 +321,8 @@ module HostAppHarness
           next
         end
 
-        unless defined?(FeedMonitor::SQLiteJsonbShim)
-          module FeedMonitor
+        unless defined?(SourceMonitor::SQLiteJsonbShim)
+          module SourceMonitor
             module SQLiteJsonbShim
               def jsonb(name, **options)
                 json(name, **options)
@@ -345,9 +345,9 @@ module HostAppHarness
         end
 
         targets.each do |target|
-          next if target < FeedMonitor::SQLiteJsonbShim
+          next if target < SourceMonitor::SQLiteJsonbShim
 
-          target.prepend(FeedMonitor::SQLiteJsonbShim)
+          target.prepend(SourceMonitor::SQLiteJsonbShim)
         end
       end
     RUBY

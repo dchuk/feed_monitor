@@ -1,0 +1,302 @@
+<% source = local_assigns.fetch(:source) %>
+<% recent_fetch_logs = source.fetch_logs.order(started_at: :desc).limit(5) %>
+<% recent_scrape_logs = source.scrape_logs.order(started_at: :desc).limit(5) %>
+<% preview_limit = SourceMonitor::Scraping::BulkSourceScraper::DEFAULT_PREVIEW_LIMIT %>
+<% items = source.items.recent.limit(preview_limit) %>
+<% fetch_status = async_status_badge(source.fetch_status) %>
+<% health_status_override = local_assigns[:health_status_override] %>
+
+<div class="space-y-8">
+  <div class="flex items-start justify-between">
+    <div>
+      <h1 class="text-3xl font-semibold text-slate-900"><%= source.name %></h1>
+      <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
+        <span data-testid="fetch-status-badge" class="inline-flex items-center rounded-full px-3 py-1 font-semibold <%= fetch_status[:classes] %>">
+          <%= loading_spinner_svg if fetch_status[:show_spinner] %>
+          <%= fetch_status[:label] %>
+        </span>
+        <% if source.last_fetch_started_at.present? %>
+          <span class="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-600">
+            Started <%= time_ago_in_words(source.last_fetch_started_at) %> ago
+          </span>
+        <% elsif source.last_fetched_at.present? %>
+          <span class="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-600">
+            Last fetched <%= time_ago_in_words(source.last_fetched_at) %> ago
+          </span>
+        <% end %>
+      </div>
+      <p class="mt-2 text-sm text-slate-500">Feed URL: <%= source.feed_url %></p>
+    </div>
+    <div class="flex flex-wrap items-center justify-end gap-3">
+      <% fetch_disabled = %w[queued fetching].include?(source.fetch_status) %>
+      <%= button_to "Fetch Now",
+            source_monitor.source_fetch_path(source),
+            method: :post,
+            class: [
+              "inline-flex items-center rounded-md px-3 py-2 text-sm font-medium text-white shadow",
+              fetch_disabled ? "cursor-not-allowed bg-slate-400" : "bg-blue-600 hover:bg-blue-500"
+            ].join(" "),
+            disabled: fetch_disabled,
+            data: {
+              "async-submit-target": "button",
+              "async-submit-loading-text-value": "Enqueuing..."
+            },
+            form: {
+              class: "inline",
+              data: {
+                controller: "async-submit",
+                action: "turbo:submit-start->async-submit#start turbo:submit-end->async-submit#finish"
+              }
+            } %>
+      <%= render "source_monitor/sources/bulk_scrape_modal",
+            source: source,
+            selected: (@bulk_scrape_selection || :current),
+            preview_limit: preview_limit %>
+      <% if source.fetch_circuit_open? %>
+        <%= button_to "Retry Now",
+              source_monitor.source_retry_path(source),
+              method: :post,
+              class: "inline-flex items-center rounded-md bg-amber-600 px-3 py-2 text-sm font-medium text-white shadow hover:bg-amber-500",
+              data: {
+                "async-submit-target": "button",
+                "async-submit-loading-text-value": "Retrying..."
+              },
+              form: {
+                class: "inline",
+                data: {
+                  controller: "async-submit",
+                  action: "turbo:submit-start->async-submit#start turbo:submit-end->async-submit#finish"
+                }
+              } %>
+      <% end %>
+      <%= link_to "Edit", source_monitor.edit_source_path(source), class: "inline-flex items-center rounded-md bg-slate-800 px-3 py-2 text-sm font-medium text-white shadow hover:bg-slate-700" %>
+      <%= form_with url: source_monitor.source_path(source), method: :delete, data: { turbo_confirm: "Delete this source and remove all associated data?", turbo_frame: "_top" }, class: "inline" do %>
+        <%= hidden_field_tag :redirect_to, source_monitor.sources_path %>
+        <button type="submit" class="inline-flex items-center rounded-md border border-rose-400 px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50">
+          Delete
+        </button>
+      <% end %>
+    </div>
+  </div>
+
+  <% if source.fetch_circuit_open? %>
+    <div class="rounded-lg border border-amber-200 bg-amber-50 px-6 py-4 shadow-sm">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-medium text-amber-900">Circuit breaker open</h2>
+          <p class="mt-1 text-xs text-amber-700">
+            Recent failures paused automatic fetches until <%= source.fetch_circuit_until&.strftime("%b %d, %Y %H:%M %Z") || "later" %>. Use Retry Now to bypass the cooldown.
+          </p>
+        </div>
+        <span class="inline-flex items-center rounded-full bg-amber-600/10 px-3 py-1 text-xs font-semibold text-amber-700">
+          Failures: <%= source.failure_count %>
+        </span>
+      </div>
+    </div>
+  <% end %>
+
+  <% if source.items_retention_days.present? || source.max_items.present? %>
+    <div class="rounded-lg border border-blue-200 bg-blue-50 px-6 py-4 shadow-sm">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg font-medium text-slate-900">Retention Policy Active</h2>
+          <p class="mt-1 text-xs text-slate-600">
+            SourceMonitor prunes items for this source immediately after each fetch so stored data stays within the configured limits.
+          </p>
+        </div>
+        <div class="flex gap-2">
+          <% if source.items_retention_days.present? %>
+            <span class="inline-flex items-center rounded-full bg-blue-600/10 px-3 py-1 text-xs font-semibold text-blue-700">
+              <%= pluralize(source.items_retention_days, "day") %> window
+            </span>
+          <% end %>
+          <% if source.max_items.present? %>
+            <span class="inline-flex items-center rounded-full bg-blue-600/10 px-3 py-1 text-xs font-semibold text-blue-700">
+              Max <%= number_with_delimiter(source.max_items) %> items
+            </span>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="grid gap-6 lg:grid-cols-3 lg:items-start">
+    <div class="space-y-6 lg:col-span-1">
+      <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-5 py-4">
+          <h2 class="text-lg font-medium">Source Details</h2>
+        </div>
+        <dl class="divide-y divide-slate-100">
+          <% interval_hours = number_with_precision(source.fetch_interval_minutes / 60.0, precision: 2)
+             circuit_state =
+               if source.fetch_circuit_open?
+                 until_time = source.fetch_circuit_until&.strftime("%b %d, %Y %H:%M %Z") || "unknown"
+                 "Open until #{until_time}"
+               else
+                 "Closed"
+               end
+
+             details = {
+               "Website" => (source.website_url.presence || "—"),
+               "Fetch interval" => "#{source.fetch_interval_minutes} minutes (~#{interval_hours} hours)",
+               "Adaptive interval" => source.adaptive_fetching_enabled? ? "Auto" : "Fixed",
+               "Scraper" => source.scraper_adapter,
+               "Feed content" => source.feed_content_readability_enabled? ? "Readability" : "Raw",
+               "Active" => source.active? ? "Yes" : "No",
+               "Scraping" => source.scraping_enabled? ? "Enabled" : "Disabled",
+               "Auto scrape" => source.auto_scrape? ? "Enabled" : "Disabled",
+               "Requires JS" => source.requires_javascript? ? "Yes" : "No",
+               "Failure count" => source.failure_count,
+               "Retry attempt" => source.fetch_retry_attempt,
+               "Circuit state" => circuit_state,
+               "Last error" => source.last_error.presence || "None",
+               "Items count" => source.items_count,
+               "Retention days" => source.items_retention_days || "—",
+               "Max items" => source.max_items || "—"
+             } %>
+          <% details.each do |label, value| %>
+            <div class="flex items-center justify-between px-5 py-3">
+              <dt class="text-sm font-medium text-slate-600"><%= label %></dt>
+              <dd class="text-sm text-slate-900"><%= value %></dd>
+            </div>
+          <% end %>
+        </dl>
+      </div>
+
+      <div class="rounded-lg border border-slate-200 bg-white px-6 py-5 shadow-sm">
+        <div class="flex items-center justify-between">
+          <h2 class="text-lg font-medium text-slate-900">Health Monitoring</h2>
+          <%= render "source_monitor/sources/health_status_badge",
+                source: source,
+                health_status_override: health_status_override %>
+        </div>
+        <dl class="mt-4 divide-y divide-slate-100">
+          <% rows = {
+            "Rolling success" => (source.rolling_success_rate ? number_to_percentage(source.rolling_success_rate * 100, precision: 0) : "—"),
+            "Auto-pause threshold" => begin
+              threshold = source.health_auto_pause_threshold.presence || SourceMonitor.config.health.auto_pause_threshold
+              threshold ? number_to_percentage(threshold.to_f * 100, precision: 0) : "—"
+            end,
+            "Auto-pause started" => (source.auto_paused_at&.strftime("%b %d, %Y %H:%M %Z") || "—"),
+            "Auto-pause until" => (source.auto_paused_until&.strftime("%b %d, %Y %H:%M %Z") || "—")
+          } %>
+          <% rows.each do |label, value| %>
+            <div class="flex items-center justify-between py-3 text-sm">
+              <dt class="font-medium text-slate-600"><%= label %></dt>
+              <dd class="text-slate-900"><%= value %></dd>
+            </div>
+          <% end %>
+        </dl>
+      </div>
+
+      <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-5 py-4">
+          <h2 class="text-lg font-medium">Recent Fetches</h2>
+        </div>
+        <div class="divide-y divide-slate-100">
+          <% if recent_fetch_logs.any? %>
+            <% recent_fetch_logs.each do |log| %>
+              <div class="px-5 py-3 text-sm text-slate-700">
+                <div class="flex items-center justify-between">
+                  <span>Started <%= log.started_at&.strftime("%b %d, %H:%M") || "Unknown" %></span>
+                  <span class="ml-4 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold <%= log.success? ? "bg-green-100 text-green-700" : "bg-rose-100 text-rose-700" %>">
+                    <%= log.success? ? "Success" : "Failure" %>
+                  </span>
+                </div>
+                <p class="mt-1 text-xs text-slate-500"><%= log.items_created %> created · <%= log.items_updated %> updated · <%= log.items_failed %> failed</p>
+              </div>
+            <% end %>
+          <% else %>
+            <div class="px-5 py-4 text-sm text-slate-500">No fetch history yet.</div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-5 py-4">
+          <h2 class="text-lg font-medium">Recent Scrapes</h2>
+        </div>
+        <div class="divide-y divide-slate-100">
+          <% if recent_scrape_logs.any? %>
+            <% recent_scrape_logs.each do |log| %>
+              <div class="px-5 py-3 text-sm text-slate-700">
+                <div class="flex items-center justify-between">
+                  <span>Started <%= log.started_at&.strftime("%b %d, %H:%M") || "Unknown" %></span>
+                  <span class="ml-4 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold <%= log.success? ? "bg-green-100 text-green-700" : "bg-rose-100 text-rose-700" %>">
+                    <%= log.success? ? "Success" : "Failure" %>
+                  </span>
+                </div>
+                <p class="mt-1 text-xs text-slate-500"><%= log.scraper_adapter || "—" %></p>
+              </div>
+            <% end %>
+          <% else %>
+            <div class="px-5 py-4 text-sm text-slate-500">No scrape history yet.</div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="lg:col-span-2">
+      <div class="rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+          <h2 class="text-lg font-medium">Items</h2>
+          <%= link_to "View all items", source_monitor.items_path, class: "text-sm font-medium text-blue-600 hover:text-blue-500" %>
+        </div>
+        <% if items.any? %>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-left text-sm" data-testid="source-items-table">
+              <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th scope="col" class="px-5 py-3">Title</th>
+                  <th scope="col" class="px-5 py-3">Categories</th>
+                  <th scope="col" class="px-5 py-3">Tags</th>
+                  <th scope="col" class="px-5 py-3">Published</th>
+                  <th scope="col" class="px-5 py-3">Scrape Status</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 text-slate-700">
+                <% items.each do |item| %>
+                  <tr class="hover:bg-slate-50">
+                    <td class="px-5 py-4">
+                      <div class="font-medium text-slate-900">
+                        <%= link_to item.title.presence || "(untitled)", source_monitor.item_path(item), class: "hover:text-blue-600" %>
+                      </div>
+                      <% if item.summary.present? %>
+                        <div class="mt-1 text-xs text-slate-500"><%= item.summary %></div>
+                      <% end %>
+                    </td>
+                    <% categories = Array(item.categories).filter_map { |value| value.to_s.strip.presence } %>
+                    <% tags = Array(item.tags).filter_map { |value| value.to_s.strip.presence } %>
+                    <td class="px-5 py-4 text-xs text-slate-500"><%= categories.present? ? categories.join(", ") : "—" %></td>
+                    <td class="px-5 py-4 text-xs text-slate-500"><%= tags.present? ? tags.join(", ") : "—" %></td>
+                    <td class="px-5 py-4 text-xs text-slate-500">
+                      <%= item.published_at ? item.published_at.strftime("%b %d, %Y %H:%M") : "Unpublished" %>
+                    </td>
+                    <td class="px-5 py-4 text-xs">
+                      <% scrape_badge = item_scrape_status_badge(item: item, source: source) %>
+                      <span
+                        class="inline-flex items-center gap-1 rounded-full px-3 py-1 font-semibold <%= scrape_badge[:classes] %>"
+                        data-testid="item-scrape-status-badge"
+                        data-status="<%= scrape_badge[:status] %>"
+                      >
+                        <%= loading_spinner_svg(css_class: "h-3.5 w-3.5 animate-spin text-blue-500") if scrape_badge[:show_spinner] %>
+                        <%= scrape_badge[:label] %>
+                      </span>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+          <div class="border-t border-slate-200 px-5 py-3 text-xs text-slate-500">
+            Showing up to 10 most recent items.
+          </div>
+        <% else %>
+          <div class="px-5 py-6 text-sm text-slate-500">
+            No items for this source yet.
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

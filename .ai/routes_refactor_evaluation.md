@@ -43,9 +43,9 @@ This would create:
 
 1. **New Controllers** (3 files):
 
-   - `app/controllers/feed_monitor/source_fetches_controller.rb`
-   - `app/controllers/feed_monitor/source_retries_controller.rb`
-   - `app/controllers/feed_monitor/source_bulk_scrapes_controller.rb`
+   - `app/controllers/source_monitor/source_fetches_controller.rb`
+   - `app/controllers/source_monitor/source_retries_controller.rb`
+   - `app/controllers/source_monitor/source_bulk_scrapes_controller.rb`
 
 2. **Controller Code Migration**:
 

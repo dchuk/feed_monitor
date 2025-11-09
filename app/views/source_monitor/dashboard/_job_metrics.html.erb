@@ -1,0 +1,82 @@
+<div class="rounded-lg border border-slate-200 bg-white shadow-sm">
+  <div class="border-b border-slate-200 px-5 py-4">
+    <h2 class="text-lg font-medium">Job Queues</h2>
+    <p class="mt-1 text-xs text-slate-500">ActiveJob adapter: <span class="font-semibold text-slate-700"><%= adapter.presence || "unknown" %></span></p>
+  </div>
+
+  <div class="divide-y divide-slate-100">
+    <% available_metrics = metrics.select { |metric| metric[:summary].available } %>
+    <% if available_metrics.any? %>
+      <% metrics.each do |metric| %>
+        <% summary = metric[:summary] %>
+        <div class="px-5 py-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-slate-900"><%= metric[:role].to_s.titleize %> queue</p>
+              <p class="text-xs text-slate-500"><%= metric[:queue_name] %></p>
+            </div>
+            <div class="flex items-center gap-2">
+              <% unless summary.total_count.zero? %>
+                <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">Total: <%= summary.total_count %></span>
+              <% end %>
+              <% if summary.paused %>
+                <span class="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-600">Paused</span>
+              <% end %>
+            </div>
+          </div>
+
+          <% if summary.available %>
+            <dl class="mt-3 grid gap-2 text-xs text-slate-500">
+              <div class="flex justify-between">
+                <dt>Ready</dt>
+                <dd><%= summary.ready_count %></dd>
+              </div>
+              <div class="flex justify-between">
+                <dt>Scheduled</dt>
+                <dd><%= summary.scheduled_count %></dd>
+              </div>
+              <div class="flex justify-between">
+                <dt>Failed</dt>
+                <dd><%= summary.failed_count %></dd>
+              </div>
+              <div class="flex justify-between">
+                <dt>Recurring Tasks</dt>
+                <dd><%= summary.recurring_count %></dd>
+              </div>
+              <div class="flex justify-between">
+                <dt>Last enqueued</dt>
+                <dd><%= summary.last_enqueued_at.present? ? "#{time_ago_in_words(summary.last_enqueued_at)} ago" : "Never" %></dd>
+              </div>
+              <div class="flex justify-between">
+                <dt>Last started</dt>
+                <dd><%= summary.last_started_at.present? ? "#{time_ago_in_words(summary.last_started_at)} ago" : "Never" %></dd>
+              </div>
+              <div class="flex justify-between">
+                <dt>Last finished</dt>
+                <dd><%= summary.last_finished_at.present? ? "#{time_ago_in_words(summary.last_finished_at)} ago" : "Never" %></dd>
+              </div>
+            </dl>
+            <% if summary.total_count.zero? && summary.recurring_count.zero? %>
+              <p class="mt-3 text-xs text-slate-500">No jobs queued for this role yet.</p>
+            <% end %>
+          <% else %>
+            <p class="mt-3 text-xs text-slate-500">Solid Queue metrics are unavailable. Ensure Solid Queue migrations have been installed.</p>
+          <% end %>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="px-5 py-6 text-sm text-slate-500">Solid Queue metrics are unavailable. Confirm Solid Queue is installed and migrations have been run.</div>
+    <% end %>
+  </div>
+  <% if mission_control_enabled %>
+    <div class="border-t border-slate-200 bg-slate-50 px-5 py-4 text-xs text-slate-600">
+      <p class="font-semibold text-slate-700">Mission Control</p>
+      <% if mission_control_path.present? %>
+        <p class="mt-1">View detailed queue metrics in Mission Control.</p>
+        <%= link_to "Open Mission Control", mission_control_path, class: "mt-2 inline-flex items-center rounded-md bg-blue-600 px-3 py-1 text-xs font-semibold text-white shadow hover:bg-blue-500" %>
+      <% else %>
+        <p class="mt-1">Mission Control integration is enabled. Configure <code>SourceMonitor.config.mission_control_dashboard_path</code> with a host route to show a direct link.</p>
+      <% end %>
+    </div>
+  <% end %>
+</div>

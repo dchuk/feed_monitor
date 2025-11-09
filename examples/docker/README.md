@@ -1,4 +1,4 @@
-# Docker Support for Feed Monitor Examples
+# Docker Support for SourceMonitor Examples
 
 The files in this directory let you run any generated example application in containers alongside Postgres and Redis. Mount the repository into the containers, point `APP_PATH` at your generated host app, and start the stack with Docker Compose.
 
@@ -12,9 +12,9 @@ The files in this directory let you run any generated example application in con
 
 ## Quick Start
 
-1. Copy `.env.example` to `.env` and update `APP_PATH` so it points at your generated example directory (relative to the repository root). Example: `APP_PATH=/workspace/examples/feed_monitor_basic`.
+1. Copy `.env.example` to `.env` and update `APP_PATH` so it points at your generated example directory (relative to the repository root). Example: `APP_PATH=/workspace/examples/source_monitor_basic`.
 2. From `examples/docker`, run `docker compose up --build`.
-3. Visit <http://localhost:3000/feed_monitor> (basic/custom adapter) or <http://localhost:3000/operations/feed_monitor> (advanced).
+3. Visit <http://localhost:3000/source_monitor> (basic/custom adapter) or <http://localhost:3000/operations/source_monitor> (advanced).
 
 The stack launches three Rails processes:
 

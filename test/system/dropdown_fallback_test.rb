@@ -1,6 +1,6 @@
 require "application_system_test_case"
 
-module FeedMonitor
+module SourceMonitor
   class DropdownFallbackTest < ApplicationSystemTestCase
     test "dropdown gracefully toggles when transition module is unavailable" do
       visit "/test_support/dropdown_without_dependency"

@@ -1,0 +1,28 @@
+<div class="mx-auto max-w-2xl py-10">
+  <h1 class="text-3xl font-semibold">Edit Source</h1>
+
+  <% if @source.errors.any? %>
+    <div class="mt-4 rounded border border-red-300 bg-red-50 p-4">
+      <h2 class="font-medium text-red-700">Please fix the following:</h2>
+      <ul class="mt-2 list-disc space-y-1 pl-5 text-red-700">
+        <% @source.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="mt-6">
+    <%= render "form", source: @source %>
+  </div>
+
+  <div class="mt-6 flex items-center gap-4">
+    <%= link_to "Back", source_monitor.source_path(@source), class: "text-blue-600 hover:underline" %>
+    <%= form_with url: source_monitor.source_path(@source), method: :delete, data: { turbo_confirm: "Delete this source and remove all associated data?", turbo_frame: "_top" }, class: "inline" do %>
+      <%= hidden_field_tag :redirect_to, source_monitor.sources_path %>
+      <button type="submit" class="text-rose-600 hover:text-rose-500">
+        Delete
+      </button>
+    <% end %>
+  </div>
+</div>

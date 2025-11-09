@@ -1,11 +1,11 @@
 # Custom Scraper Adapter Example
 
-This example ships a Markdown scraping adapter that subclasses `FeedMonitor::Scrapers::Base`. Use it when your feeds supply Markdown payloads that you want to render as HTML with a plain-text fallback.
+This example ships a Markdown scraping adapter that subclasses `SourceMonitor::Scrapers::Base`. Use it when your feeds supply Markdown payloads that you want to render as HTML with a plain-text fallback.
 
 ## Generate the App
 
 ```bash
-rbenv exec rails new feed_monitor_custom_adapter \
+rbenv exec rails new source_monitor_custom_adapter \
   --main \
   --database=postgresql \
   -m ../path/to/examples/custom_adapter/template.rb
@@ -13,17 +13,17 @@ rbenv exec rails new feed_monitor_custom_adapter \
 
 ## What You Get
 
-- The adapter is copied to `lib/feed_monitor/examples/scrapers/markdown_scraper.rb`.
-- `FeedMonitor.configure` registers the adapter under the `:markdown` key.
+- The adapter is copied to `lib/source_monitor/examples/scrapers/markdown_scraper.rb`.
+- `SourceMonitor.configure` registers the adapter under the `:markdown` key.
 - Seeds create a demo source that uses the adapter automatically.
-- Documentation is copied into `README.feed_monitor.md` with usage notes.
+- Documentation is copied into `README.source_monitor.md` with usage notes.
 
 ## Registering the Adapter Manually
 
 If you want to integrate the adapter into an existing host:
 
-1. Copy `examples/custom_adapter/lib/feed_monitor/examples/scrapers/markdown_scraper.rb` into your app (any autoloaded path works).
-2. Add `config.scrapers.register(:markdown, "FeedMonitor::Examples::Scrapers::MarkdownScraper")` to your Feed Monitor initializer.
+1. Copy `examples/custom_adapter/lib/source_monitor/examples/scrapers/markdown_scraper.rb` into your app (any autoloaded path works).
+2. Add `config.scrapers.register(:markdown, "SourceMonitor::Examples::Scrapers::MarkdownScraper")` to your SourceMonitor initializer.
 3. Set `scraper_adapter` to `"markdown"` on any sources that publish Markdown.
 
 ## Settings

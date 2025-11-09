@@ -1,0 +1,52 @@
+# frozen_string_literal: true
+
+require "active_support/notifications"
+
+module SourceMonitor
+  module Instrumentation
+    FETCH_START_EVENT = "source_monitor.fetch.start".freeze
+    FETCH_FINISH_EVENT = "source_monitor.fetch.finish".freeze
+    ITEM_DUPLICATE_EVENT = "source_monitor.items.duplicate".freeze
+    ITEM_RETENTION_EVENT = "source_monitor.items.retention".freeze
+
+    module_function
+
+    def fetch(payload = {})
+      payload = payload.dup
+      instrument(FETCH_START_EVENT, payload)
+
+      started_at = monotonic_time
+      result = yield if block_given?
+      duration_ms = ((monotonic_time - started_at) * 1000.0).round(2)
+
+      instrument(FETCH_FINISH_EVENT, payload.merge(duration_ms: duration_ms))
+      result
+    end
+
+    def fetch_start(payload = {})
+      instrument(FETCH_START_EVENT, payload)
+    end
+
+    def fetch_finish(payload = {})
+      instrument(FETCH_FINISH_EVENT, payload)
+    end
+
+    def item_duplicate(payload = {})
+      instrument(ITEM_DUPLICATE_EVENT, payload)
+    end
+
+    def item_retention(payload = {})
+      instrument(ITEM_RETENTION_EVENT, payload)
+    end
+
+    def instrument(event_name, payload = {})
+      ActiveSupport::Notifications.instrument(event_name, payload) do
+        yield if block_given?
+      end
+    end
+
+    def monotonic_time
+      Process.clock_gettime(Process::CLOCK_MONOTONIC)
+    end
+  end
+end

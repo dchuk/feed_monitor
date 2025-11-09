@@ -1,0 +1,27 @@
+# frozen_string_literal: true
+
+module SourceMonitor
+  class DashboardController < ApplicationController
+    def index
+      queries = SourceMonitor::Dashboard::Queries.new
+      url_helpers = SourceMonitor::Engine.routes.url_helpers
+
+      @stats = queries.stats
+      @recent_activity = SourceMonitor::Dashboard::RecentActivityPresenter.new(
+        queries.recent_activity,
+        url_helpers:
+      ).to_a
+      @quick_actions = SourceMonitor::Dashboard::QuickActionsPresenter.new(
+        queries.quick_actions,
+        url_helpers:
+      ).to_a
+      @job_adapter = SourceMonitor::Jobs::Visibility.adapter_name
+      @job_metrics = queries.job_metrics
+      fetch_schedule = queries.upcoming_fetch_schedule
+      @fetch_schedule_groups = fetch_schedule.groups
+      @fetch_schedule_reference_time = fetch_schedule.reference_time
+      @mission_control_enabled = SourceMonitor.mission_control_enabled?
+      @mission_control_dashboard_path = SourceMonitor.mission_control_dashboard_path
+    end
+  end
+end

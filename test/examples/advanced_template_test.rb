@@ -2,9 +2,9 @@
 
 require "test_helper"
 
-module FeedMonitor
+module SourceMonitor
   class AdvancedTemplateTest < ActiveSupport::TestCase
-    TEMPLATE_PATH = FeedMonitor::Engine.root.join("examples/advanced_host/template.rb")
+    TEMPLATE_PATH = SourceMonitor::Engine.root.join("examples/advanced_host/template.rb")
 
     test "template enables mission control and redis realtime" do
       source = TEMPLATE_PATH.read
@@ -17,7 +17,7 @@ module FeedMonitor
     test "template copies instrumentation initializer" do
       source = TEMPLATE_PATH.read
 
-      assert_includes source, "feed_monitor_instrumentation.rb", "expected instrumentation initializer to be copied"
+      assert_includes source, "source_monitor_instrumentation.rb", "expected instrumentation initializer to be copied"
     end
   end
 end

@@ -4,28 +4,28 @@ require "application_system_test_case"
 require "securerandom"
 require "nokogiri"
 
-module FeedMonitor
+module SourceMonitor
   class DashboardTest < ApplicationSystemTestCase
     def setup
       super
-      FeedMonitor.reset_configuration!
-      FeedMonitor::Jobs::Visibility.reset!
-      FeedMonitor::Jobs::Visibility.setup!
+      SourceMonitor.reset_configuration!
+      SourceMonitor::Jobs::Visibility.reset!
+      SourceMonitor::Jobs::Visibility.setup!
       purge_solid_queue_tables
-      FeedMonitor::Dashboard::TurboBroadcaster.setup!
+      SourceMonitor::Dashboard::TurboBroadcaster.setup!
     end
 
     def teardown
-      FeedMonitor.reset_configuration!
-      FeedMonitor::Jobs::Visibility.reset!
+      SourceMonitor.reset_configuration!
+      SourceMonitor::Jobs::Visibility.reset!
       purge_solid_queue_tables
       super
     end
 
     test "dashboard displays stats, job metrics, and quick actions" do
-      FeedMonitor.configure do |config|
+      SourceMonitor.configure do |config|
         config.mission_control_enabled = true
-        config.mission_control_dashboard_path = -> { FeedMonitor::Engine.routes.url_helpers.root_path }
+        config.mission_control_dashboard_path = -> { SourceMonitor::Engine.routes.url_helpers.root_path }
       end
 
       source = Source.create!(name: "Example", feed_url: "https://example.com/feed", next_fetch_at: 1.hour.from_now)
@@ -35,7 +35,7 @@ module FeedMonitor
 
       seed_queue_activity
 
-      visit feed_monitor.root_path
+      visit source_monitor.root_path
 
       assert_text "Overview"
       assert_text "Recent Activity"
@@ -43,7 +43,7 @@ module FeedMonitor
       assert_text "Quick Actions"
       assert_text "Job Queues"
 
-      within "#feed_monitor_dashboard_stats" do
+      within "#source_monitor_dashboard_stats" do
         sources_card = find(:xpath, ".//div[./dt[text()='Sources']]")
         within sources_card do
           assert_text "1"
@@ -53,21 +53,21 @@ module FeedMonitor
       assert_selector "span", text: "Success"
       assert_selector "span", text: "Failure"
       assert_selector "a", text: "Go", count: 3
-      within "#feed_monitor_dashboard_recent_activity" do
+      within "#source_monitor_dashboard_recent_activity" do
         assert_selector "a", text: "Dashboard Item"
         assert_selector "a", text: "Fetch ##{fetch_log.id}"
         assert_selector "a", text: "Scrape ##{scrape_log.id}"
       end
 
-      within "#feed_monitor_dashboard_fetch_schedule" do
+      within "#source_monitor_dashboard_fetch_schedule" do
         assert_text "Upcoming Fetch Schedule"
         assert_text "Example"
       end
 
-      adapter_label = FeedMonitor::Jobs::Visibility.adapter_name.to_s
+      adapter_label = SourceMonitor::Jobs::Visibility.adapter_name.to_s
       assert_text adapter_label
-      assert_text FeedMonitor.queue_name(:fetch)
-      assert_text FeedMonitor.queue_name(:scrape)
+      assert_text SourceMonitor.queue_name(:fetch)
+      assert_text SourceMonitor.queue_name(:scrape)
       assert_text "Ready"
       assert_text "Scheduled"
       assert_text "Failed"
@@ -81,12 +81,12 @@ module FeedMonitor
     test "dashboard streams new items and fetch completions" do
       source = Source.create!(name: "Streamed Source", feed_url: "https://example.com/feed", next_fetch_at: 1.minute.from_now)
 
-      visit feed_monitor.dashboard_path
+      visit source_monitor.dashboard_path
       connect_turbo_cable_stream_sources
       assert_selector "turbo-cable-stream-source", visible: :all, wait: 5
 
       initial_item_count = Item.count
-      streamable = FeedMonitor::Dashboard::TurboBroadcaster::STREAM_NAME
+      streamable = SourceMonitor::Dashboard::TurboBroadcaster::STREAM_NAME
       item = Item.create!(
         source:,
         guid: "turbo-item-#{SecureRandom.hex(4)}",
@@ -95,19 +95,19 @@ module FeedMonitor
       )
 
       item_messages = capture_turbo_stream_broadcasts(streamable) do
-        FeedMonitor::Dashboard::TurboBroadcaster.broadcast_dashboard_updates
+        SourceMonitor::Dashboard::TurboBroadcaster.broadcast_dashboard_updates
       end
       assert item_messages.any?, "expected turbo broadcasts for dashboard updates"
       apply_turbo_stream_messages(item_messages)
 
-      within "#feed_monitor_dashboard_stats" do
+      within "#source_monitor_dashboard_stats" do
         assert_selector :xpath,
           ".//dt[text()='Items']/following-sibling::dd[1]",
           text: (initial_item_count + 1).to_s,
           wait: 5
       end
 
-      within "#feed_monitor_dashboard_recent_activity" do
+      within "#source_monitor_dashboard_recent_activity" do
         assert_text "Turbo Arrival", wait: 5
         assert_text "ITEM", wait: 5
       end
@@ -121,16 +121,16 @@ module FeedMonitor
       )
 
       fetch_messages = capture_turbo_stream_broadcasts(streamable) do
-        FeedMonitor::Dashboard::TurboBroadcaster.broadcast_dashboard_updates
+        SourceMonitor::Dashboard::TurboBroadcaster.broadcast_dashboard_updates
       end
       assert fetch_messages.any?, "expected turbo broadcasts for dashboard updates"
       apply_turbo_stream_messages(fetch_messages)
 
-      within "#feed_monitor_dashboard_recent_activity" do
+      within "#source_monitor_dashboard_recent_activity" do
         assert_text "Fetch ##{fetch_log.id}", wait: 5
       end
 
-      within "#feed_monitor_dashboard_fetch_schedule" do
+      within "#source_monitor_dashboard_fetch_schedule" do
         assert_text "Upcoming Fetch Schedule", wait: 5
       end
     end
@@ -138,24 +138,24 @@ module FeedMonitor
     private
 
     def seed_queue_activity
-      fetch_queue = FeedMonitor.queue_name(:fetch)
+      fetch_queue = SourceMonitor.queue_name(:fetch)
 
       SolidQueue::Job.create!(
         queue_name: fetch_queue,
-        class_name: "FeedMonitor::FetchFeedJob",
+        class_name: "SourceMonitor::FetchFeedJob",
         arguments: []
       )
 
       SolidQueue::Job.create!(
         queue_name: fetch_queue,
-        class_name: "FeedMonitor::FetchFeedJob",
+        class_name: "SourceMonitor::FetchFeedJob",
         arguments: [],
         scheduled_at: 10.minutes.from_now
       )
 
       failed_job = SolidQueue::Job.create!(
         queue_name: fetch_queue,
-        class_name: "FeedMonitor::FetchFeedJob",
+        class_name: "SourceMonitor::FetchFeedJob",
         arguments: []
       )
       failed_job.ready_execution&.destroy!
