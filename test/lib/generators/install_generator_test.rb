@@ -3,11 +3,11 @@
 require "test_helper"
 require "fileutils"
 require "rails/generators/test_case"
-require "generators/feed_monitor/install/install_generator"
+require "generators/feedmon/install/install_generator"
 
-module FeedMonitor
+module Feedmon
   class InstallGeneratorTest < Rails::Generators::TestCase
-    tests FeedMonitor::Generators::InstallGenerator
+    tests Feedmon::Generators::InstallGenerator
     WORKER_SUFFIX = begin
       value = ENV.fetch("TEST_ENV_NUMBER", "")
       value.empty? ? "" : "_worker_#{value}"
@@ -22,30 +22,30 @@ module FeedMonitor
     end
 
     def test_generator_class_exists
-      assert_kind_of Class, FeedMonitor::Generators::InstallGenerator
+      assert_kind_of Class, Feedmon::Generators::InstallGenerator
     end
 
     def test_mounts_engine_with_default_path
       run_generator
-      assert_file "config/routes.rb", /mount FeedMonitor::Engine, at: "\/feed_monitor"/
+      assert_file "config/routes.rb", /mount Feedmon::Engine, at: "\/feedmon"/
     end
 
     def test_mounts_engine_with_custom_path
       run_generator [ "--mount-path=/reader" ]
-      assert_file "config/routes.rb", /mount FeedMonitor::Engine, at: "\/reader"/
+      assert_file "config/routes.rb", /mount Feedmon::Engine, at: "\/reader"/
     end
 
     def test_mount_path_without_leading_slash_is_normalized
-      run_generator [ "--mount-path=admin/feed_monitor" ]
-      assert_file "config/routes.rb", /mount FeedMonitor::Engine, at: "\/admin\/feed_monitor"/
+      run_generator [ "--mount-path=admin/feedmon" ]
+      assert_file "config/routes.rb", /mount Feedmon::Engine, at: "\/admin\/feedmon"/
     end
 
     def test_creates_initializer_with_commented_defaults
       run_generator
 
-      assert_file "config/initializers/feed_monitor.rb" do |content|
-        assert_match(/FeedMonitor.configure do \|config\|/, content)
-        assert_match(/config.queue_namespace = "feed_monitor"/, content)
+      assert_file "config/initializers/feedmon.rb" do |content|
+        assert_match(/Feedmon.configure do \|config\|/, content)
+        assert_match(/config.queue_namespace = "feedmon"/, content)
         assert_match(/config.fetch_queue_name = "\#\{config.queue_namespace\}_fetch"/, content)
         assert_match(/config.scrape_queue_name = "\#\{config.queue_namespace\}_scrape"/, content)
         assert_match(/config.fetch_queue_concurrency = 2/, content)
@@ -63,11 +63,11 @@ module FeedMonitor
     def test_does_not_overwrite_existing_initializer
       initializer_path = File.join(destination_root, "config/initializers")
       FileUtils.mkdir_p(initializer_path)
-      File.write(File.join(initializer_path, "feed_monitor.rb"), "# existing")
+      File.write(File.join(initializer_path, "feedmon.rb"), "# existing")
 
       run_generator
 
-      assert_file "config/initializers/feed_monitor.rb", /# existing/
+      assert_file "config/initializers/feedmon.rb", /# existing/
     end
 
     def test_does_not_duplicate_routes_when_rerun
@@ -75,7 +75,7 @@ module FeedMonitor
       run_generator
 
       routes_contents = File.read(File.join(destination_root, "config/routes.rb"))
-      assert_equal 1, routes_contents.scan(/mount FeedMonitor::Engine/).count
+      assert_equal 1, routes_contents.scan(/mount Feedmon::Engine/).count
     end
 
     def test_outputs_next_steps_with_doc_links

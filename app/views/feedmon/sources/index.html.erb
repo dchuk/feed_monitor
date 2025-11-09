@@ -1,0 +1,153 @@
+<div class="space-y-6">
+  <%= turbo_stream_from "feedmon_sources" %>
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h1 class="text-3xl font-semibold text-slate-900">Sources</h1>
+      <p class="mt-1 text-sm text-slate-500">Manage feed endpoints and scraping settings.</p>
+    </div>
+    <div class="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+      <%= search_form_for @q, url: feedmon.sources_path, method: :get, html: { class: "w-full sm:w-auto", data: { turbo_frame: "feedmon_sources_table" } } do |form| %>
+        <%= form.label @search_field, "Search sources", class: "sr-only" %>
+        <div class="flex rounded-md shadow-sm">
+          <%= form.search_field @search_field, placeholder: "Search name or URL…", class: "w-full rounded-l-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:min-w-[16rem]" %>
+          <%= form.submit "Search", class: "rounded-r-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500" %>
+        </div>
+      <% end %>
+      <%= link_to "New Source", feedmon.new_source_path, class: "inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-500" %>
+    </div>
+  </div>
+
+  <%= render "feedmon/sources/fetch_interval_heatmap",
+        fetch_interval_distribution: @fetch_interval_distribution,
+        selected_bucket: @selected_fetch_interval_bucket,
+        search_params: @search_params %>
+
+  <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+    <%= turbo_frame_tag "feedmon_sources_table" do %>
+      <% if @search_term.present? || @fetch_interval_filter.present? %>
+        <div class="rounded-t-lg border-b border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-700">
+          <% if @search_term.present? %>
+            <% clear_search_query = @search_params.dup %>
+            <% clear_search_query.delete("name_or_feed_url_or_website_url_cont") %>
+            <% clear_search_query = if clear_search_query.respond_to?(:compact_blank)
+              clear_search_query.compact_blank
+            else
+              clear_search_query.reject { |_key, value| value.respond_to?(:blank?) ? value.blank? : value.nil? }
+            end %>
+            <% clear_search_path = clear_search_query.empty? ? feedmon.sources_path : feedmon.sources_path(q: clear_search_query) %>
+            <div>
+              Showing results for "<%= @search_term %>".
+              <%= link_to "Clear search", clear_search_path, class: "ml-2 font-medium text-blue-600 hover:text-blue-500", data: { turbo_frame: "feedmon_sources_table" } %>
+            </div>
+          <% end %>
+
+          <% if @fetch_interval_filter.present? %>
+            <% filter_label = fetch_interval_filter_label(@selected_fetch_interval_bucket, @fetch_interval_filter) %>
+            <div class="mt-1 flex items-center justify-between gap-2">
+              <span>Filtered by fetch interval <%= filter_label %>.</span>
+              <%= link_to "Clear interval filter",
+                    fetch_interval_bucket_path(@selected_fetch_interval_bucket, @search_params, selected: true),
+                    class: "font-medium text-blue-600 hover:text-blue-500" %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+      <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+        <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <tr>
+            <th scope="col"
+                class="px-6 py-3"
+                data-sort-column="name"
+                aria-sort="<%= table_sort_aria(@q, :name) %>">
+              <span class="inline-flex items-center gap-1">
+                <%= table_sort_link(
+                      @q,
+                      :name,
+                      "Source",
+                      frame: "feedmon_sources_table",
+                      default_order: :asc,
+                      secondary: ["created_at desc"],
+                      html_options: {
+                        class: "inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-600 hover:text-slate-900 focus:outline-none"
+                      }
+                    ) %>
+                <span class="text-[11px] text-slate-400" aria-hidden="true"><%= table_sort_arrow(@q, :name) %></span>
+              </span>
+            </th>
+            <th scope="col" class="px-6 py-3">Status</th>
+            <th scope="col"
+                class="px-6 py-3"
+                data-sort-column="fetch_interval_minutes"
+                aria-sort="<%= table_sort_aria(@q, :fetch_interval_minutes) %>">
+              <span class="inline-flex items-center gap-1">
+                <%= table_sort_link(
+                      @q,
+                      :fetch_interval_minutes,
+                      "Fetch Interval",
+                      frame: "feedmon_sources_table",
+                      default_order: :asc,
+                      secondary: ["created_at desc"],
+                      html_options: {
+                        class: "inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-600 hover:text-slate-900 focus:outline-none"
+                      }
+                    ) %>
+                <span class="text-[11px] text-slate-400" aria-hidden="true"><%= table_sort_arrow(@q, :fetch_interval_minutes) %></span>
+              </span>
+            </th>
+            <th scope="col"
+                class="px-6 py-3"
+                data-sort-column="items_count"
+                aria-sort="<%= table_sort_aria(@q, :items_count) %>">
+              <span class="inline-flex items-center gap-1">
+                <%= table_sort_link(
+                      @q,
+                      :items_count,
+                      "Items",
+                      frame: "feedmon_sources_table",
+                      default_order: :desc,
+                      secondary: ["created_at desc"],
+                      html_options: {
+                        class: "inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-600 hover:text-slate-900 focus:outline-none"
+                      }
+                    ) %>
+                <span class="text-[11px] text-slate-400" aria-hidden="true"><%= table_sort_arrow(@q, :items_count) %></span>
+              </span>
+            </th>
+            <th scope="col" class="px-6 py-3">New Items / Day</th>
+            <th scope="col"
+                class="px-6 py-3"
+                data-sort-column="last_fetched_at"
+                aria-sort="<%= table_sort_aria(@q, :last_fetched_at) %>">
+              <span class="inline-flex items-center gap-1">
+                <%= table_sort_link(
+                      @q,
+                      :last_fetched_at,
+                      "Last Fetch",
+                      frame: "feedmon_sources_table",
+                      default_order: :desc,
+                      secondary: ["created_at desc"],
+                      html_options: {
+                        class: "inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-slate-600 hover:text-slate-900 focus:outline-none"
+                      }
+                    ) %>
+                <span class="text-[11px] text-slate-400" aria-hidden="true"><%= table_sort_arrow(@q, :last_fetched_at) %></span>
+              </span>
+            </th>
+            <th scope="col" class="px-6 py-3"></th>
+          </tr>
+        </thead>
+        <tbody id="feedmon_sources_table_body" class="divide-y divide-slate-100 text-slate-700">
+          <%= render partial: "feedmon/sources/row",
+                collection: @sources,
+                as: :source,
+                locals: {
+                  item_activity_rates: @item_activity_rates,
+                  search_params: @search_params
+                } %>
+
+          <%= render("feedmon/sources/empty_state_row") if @sources.blank? %>
+        </tbody>
+      </table>
+    <% end %>
+  </div>
+</div>

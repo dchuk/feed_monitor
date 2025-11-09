@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require FeedMonitor::Engine.root.join("examples/custom_adapter/lib/feed_monitor/examples/scrapers/markdown_scraper.rb")
+require Feedmon::Engine.root.join("examples/custom_adapter/lib/feedmon/examples/scrapers/markdown_scraper.rb")
 
-module FeedMonitor
+module Feedmon
   module Examples
     class CustomAdapterExampleTest < ActiveSupport::TestCase
       ItemStub = Struct.new(:content, :scraped_content, :summary, keyword_init: true)

@@ -3,7 +3,7 @@
 require "application_system_test_case"
 require "minitest/mock"
 
-module FeedMonitor
+module Feedmon
   class ItemsTest < ApplicationSystemTestCase
     include ActiveJob::TestHelper
 
@@ -17,7 +17,7 @@ module FeedMonitor
     test "browsing items and viewing item details" do
       source = create_source!(name: "Example Source")
 
-      first_item = FeedMonitor::Item.create!(
+      first_item = Feedmon::Item.create!(
         source: source,
         guid: "item-1",
         title: "First Article",
@@ -34,7 +34,7 @@ module FeedMonitor
         metadata: { "word_count" => 450 }
       )
 
-      FeedMonitor::Item.create!(
+      Feedmon::Item.create!(
         source: source,
         guid: "item-2",
         title: "Second Post",
@@ -43,7 +43,7 @@ module FeedMonitor
         published_at: Time.current - 1.day
       )
 
-      visit feed_monitor.items_path
+      visit feedmon.items_path
 
       assert_text "First Article"
       assert_text "Second Post"
@@ -58,7 +58,7 @@ module FeedMonitor
 
       click_link "First Article"
 
-      assert_current_path feed_monitor.item_path(first_item)
+      assert_current_path feedmon.item_path(first_item)
       assert_text "Feed Summary"
       assert_text "Short summary about the first article."
       assert_text "Feed Content"
@@ -80,24 +80,24 @@ module FeedMonitor
     test "manually scraping an item updates content and records a log" do
       source = create_source!(name: "Manual Source", scraping_enabled: true)
 
-      item = FeedMonitor::Item.create!(
+      item = Feedmon::Item.create!(
         source: source,
         guid: "manual-1",
         title: "Needs Scraping",
         url: "https://example.com/articles/needs-scraping"
       )
 
-      visit feed_monitor.item_path(item)
+      visit feedmon.item_path(item)
 
-      result = FeedMonitor::Scrapers::Base::Result.new(
+      result = Feedmon::Scrapers::Base::Result.new(
         status: :success,
         html: "<article><p>Rendered HTML</p></article>",
         content: "Readable body text",
         metadata: { http_status: 200, extraction_strategy: "readability" }
       )
 
-      FeedMonitor::Scrapers::Readability.stub(:call, result) do
-        assert_difference("FeedMonitor::ScrapeLog.count", 1) do
+      Feedmon::Scrapers::Readability.stub(:call, result) do
+        assert_difference("Feedmon::ScrapeLog.count", 1) do
           with_inline_jobs do
             click_button "Manual Scrape"
             assert_selector "[data-testid='scrape-status-badge']", text: "Pending", wait: 5
@@ -106,7 +106,7 @@ module FeedMonitor
       end
       item.reload
       assert_equal "success", item.scrape_status
-      visit feed_monitor.item_path(item)
+      visit feedmon.item_path(item)
       assert_selector "[data-testid='scrape-status-badge']", text: "Scraped", wait: 10
       assert_text "Readable body text"
       find("summary", text: "View raw HTML").click
@@ -116,14 +116,14 @@ module FeedMonitor
     test "items table supports sorting" do
       source = create_source!(name: "Sorted Source")
 
-      older = FeedMonitor::Item.create!(
+      older = Feedmon::Item.create!(
         source: source,
         guid: "item-old",
         title: "Older Item",
         url: "https://example.com/items/old",
         published_at: 2.days.ago
       )
-      newer = FeedMonitor::Item.create!(
+      newer = Feedmon::Item.create!(
         source: source,
         guid: "item-new",
         title: "Newer Item",
@@ -131,26 +131,26 @@ module FeedMonitor
         published_at: 1.hour.ago
       )
 
-      visit feed_monitor.items_path
+      visit feedmon.items_path
 
       assert_item_order [ "Newer Item", "Older Item" ]
-      within "turbo-frame#feed_monitor_items_table thead th[data-sort-column='published_at']" do
+      within "turbo-frame#feedmon_items_table thead th[data-sort-column='published_at']" do
         assert_text "▼"
       end
 
-      within "turbo-frame#feed_monitor_items_table thead" do
+      within "turbo-frame#feedmon_items_table thead" do
         click_link "Published"
       end
       assert_item_order [ "Older Item", "Newer Item" ]
-      within "turbo-frame#feed_monitor_items_table thead th[data-sort-column='published_at']" do
+      within "turbo-frame#feedmon_items_table thead th[data-sort-column='published_at']" do
         assert_text "▲"
       end
 
-      within "turbo-frame#feed_monitor_items_table thead" do
+      within "turbo-frame#feedmon_items_table thead" do
         click_link "Published"
       end
       assert_item_order [ "Newer Item", "Older Item" ]
-      within "turbo-frame#feed_monitor_items_table thead th[data-sort-column='published_at']" do
+      within "turbo-frame#feedmon_items_table thead th[data-sort-column='published_at']" do
         assert_text "▼"
       end
     end
@@ -158,7 +158,7 @@ module FeedMonitor
     private
 
     def assert_item_order(expected)
-      within "turbo-frame#feed_monitor_items_table" do
+      within "turbo-frame#feedmon_items_table" do
         expected.each_with_index do |title, index|
           assert_selector :xpath,
             format(".//tbody/tr[%<row>d]/td[1]", row: index + 1),

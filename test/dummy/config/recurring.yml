@@ -10,22 +10,22 @@
 #     schedule: at 5am every day
 
 default: &default
-  feed_monitor_schedule_fetches:
-    class: FeedMonitor::ScheduleFetchesJob
+  feedmon_schedule_fetches:
+    class: Feedmon::ScheduleFetchesJob
     args:
       - limit: 100
     schedule: every minute
 
-  feed_monitor_schedule_scrapes:
-    command: "FeedMonitor::Scraping::Scheduler.run(limit: 100)"
+  feedmon_schedule_scrapes:
+    command: "Feedmon::Scraping::Scheduler.run(limit: 100)"
     schedule: every 2 minutes
 
-  feed_monitor_item_cleanup:
-    class: FeedMonitor::ItemCleanupJob
+  feedmon_item_cleanup:
+    class: Feedmon::ItemCleanupJob
     schedule: at 2am every day
 
-  feed_monitor_log_cleanup:
-    class: FeedMonitor::LogCleanupJob
+  feedmon_log_cleanup:
+    class: Feedmon::LogCleanupJob
     args:
       - fetch_logs_older_than_days: 90
         scrape_logs_older_than_days: 60

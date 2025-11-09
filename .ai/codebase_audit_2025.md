@@ -12,7 +12,7 @@ This comprehensive audit analyzed architecture, code quality, Rails conventions,
 
 **Key Strengths:**
 
-- ✅ Extensive use of service objects (60+ in `lib/feed_monitor`)
+- ✅ Extensive use of service objects (60+ in `lib/feedmon`)
 - ✅ Modern frontend with Import Maps, Turbo, and Stimulus
 - ✅ No callback hell or fat models
 - ✅ Security-conscious with consistent parameter sanitization
@@ -47,7 +47,7 @@ This comprehensive audit analyzed architecture, code quality, Rails conventions,
 ### 1. Fat SourcesController (356 lines)
 
 **Severity:** 🔴 CRITICAL
-**Location:** `app/controllers/feed_monitor/sources_controller.rb`
+**Location:** `app/controllers/feedmon/sources_controller.rb`
 **Impact:** High technical debt, difficult to test, poor maintainability
 
 **Problem:**
@@ -75,7 +75,7 @@ def destroy
       query.sorts = [ "created_at desc" ] if query.sorts.blank?
       sources = query.result
 
-      metrics = FeedMonitor::Analytics::SourcesIndexMetrics.new(...)
+      metrics = Feedmon::Analytics::SourcesIndexMetrics.new(...)
       # ... 40+ more lines of Turbo Stream building
     end
   end
@@ -96,8 +96,8 @@ end
 Extract service objects and presenters:
 
 ```ruby
-# app/services/feed_monitor/sources/destroy_service.rb
-module FeedMonitor
+# app/services/feedmon/sources/destroy_service.rb
+module Feedmon
   module Sources
     class DestroyService
       def initialize(source:, search_params:, redirect_to: nil)
@@ -129,7 +129,7 @@ module FeedMonitor
 
       def recalculate_metrics
         sources = rebuild_query.result
-        FeedMonitor::Analytics::SourcesIndexMetrics.new(
+        Feedmon::Analytics::SourcesIndexMetrics.new(
           base_scope: Source.all,
           result_scope: sources,
           search_params: @search_params
@@ -139,8 +139,8 @@ module FeedMonitor
   end
 end
 
-# app/presenters/feed_monitor/sources/turbo_stream_presenter.rb
-module FeedMonitor
+# app/presenters/feedmon/sources/turbo_stream_presenter.rb
+module Feedmon
   module Sources
     class TurboStreamPresenter
       def initialize(source:, responder:)
@@ -150,7 +150,7 @@ module FeedMonitor
 
       def render_deletion(metrics:, query:)
         @responder.remove_row(@source)
-        @responder.remove("feed_monitor_sources_empty_state")
+        @responder.remove("feedmon_sources_empty_state")
         render_heatmap_update(metrics)
         render_empty_state_if_needed(query)
         self
@@ -160,8 +160,8 @@ module FeedMonitor
 
       def render_heatmap_update(metrics)
         @responder.replace(
-          "feed_monitor_sources_heatmap",
-          partial: "feed_monitor/sources/fetch_interval_heatmap",
+          "feedmon_sources_heatmap",
+          partial: "feedmon/sources/fetch_interval_heatmap",
           locals: {
             fetch_interval_distribution: metrics.fetch_interval_distribution,
             selected_bucket: metrics.selected_fetch_interval_bucket,
@@ -173,8 +173,8 @@ module FeedMonitor
       def render_empty_state_if_needed(query)
         unless query.result.exists?
           @responder.append(
-            "feed_monitor_sources_table_body",
-            partial: "feed_monitor/sources/empty_state_row"
+            "feedmon_sources_table_body",
+            partial: "feedmon/sources/empty_state_row"
           )
         end
       end
@@ -184,7 +184,7 @@ end
 
 # Simplified controller:
 def destroy
-  service = FeedMonitor::Sources::DestroyService.new(
+  service = Feedmon::Sources::DestroyService.new(
     source: @source,
     search_params: sanitized_search_params,
     redirect_to: params[:redirect_to]
@@ -194,8 +194,8 @@ def destroy
 
   respond_to do |format|
     format.turbo_stream do
-      responder = FeedMonitor::TurboStreams::StreamResponder.new
-      presenter = FeedMonitor::Sources::TurboStreamPresenter.new(
+      responder = Feedmon::TurboStreams::StreamResponder.new
+      presenter = Feedmon::Sources::TurboStreamPresenter.new(
         source: @source,
         responder: responder
       )
@@ -212,7 +212,7 @@ def destroy
     end
 
     format.html do
-      redirect_to feed_monitor.sources_path, notice: result.message
+      redirect_to feedmon.sources_path, notice: result.message
     end
   end
 end
@@ -227,8 +227,8 @@ end
 **Severity:** 🔴 CRITICAL
 **Location:**
 
-- Controller: `app/controllers/feed_monitor/sources_controller.rb:20`
-- View: `app/views/feed_monitor/sources/_row.html.erb:3`
+- Controller: `app/controllers/feedmon/sources_controller.rb:20`
+- View: `app/views/feedmon/sources/_row.html.erb:3`
 
 **Impact:** Performance degradation with large datasets
 
@@ -238,17 +238,17 @@ end
 
 **Problem:**
 
-The view calls `FeedMonitor::Analytics::SourceActivityRates.rate_for(source)` for each source when `item_activity_rates` is nil or incomplete:
+The view calls `Feedmon::Analytics::SourceActivityRates.rate_for(source)` for each source when `item_activity_rates` is nil or incomplete:
 
 ```erb
 <% activity_rate = rate_map.fetch(source.id, nil) %>
-<% activity_rate = FeedMonitor::Analytics::SourceActivityRates.rate_for(source) if activity_rate.nil? %>
+<% activity_rate = Feedmon::Analytics::SourceActivityRates.rate_for(source) if activity_rate.nil? %>
 ```
 
 This triggers a database query **per source** to count items:
 
 ```ruby
-# lib/feed_monitor/analytics/source_activity_rates.rb:17-21
+# lib/feedmon/analytics/source_activity_rates.rb:17-21
 def self.rate_for(source)
   return 0.0 if source.items_count.to_i.zero?
 
@@ -288,7 +288,7 @@ def index
   @search_term = @search_params[SEARCH_FIELD.to_s].to_s.strip
   @search_field = SEARCH_FIELD
 
-  metrics = FeedMonitor::Analytics::SourcesIndexMetrics.new(
+  metrics = Feedmon::Analytics::SourcesIndexMetrics.new(
     base_scope:,
     result_scope: @sources,
     search_params: @search_params
@@ -323,7 +323,7 @@ Update the view to never fall back:
 ### 3. Inline JavaScript in View
 
 **Severity:** 🔴 CRITICAL
-**Location:** `app/views/feed_monitor/shared/_turbo_visit.html.erb:3-8`
+**Location:** `app/views/feedmon/shared/_turbo_visit.html.erb:3-8`
 **Impact:** CSP violations, untestable code, violates Rails conventions
 
 **Problem:**
@@ -360,7 +360,7 @@ end
 Create custom Turbo Stream action:
 
 ```javascript
-// app/assets/javascripts/feed_monitor/turbo_actions.js
+// app/assets/javascripts/feedmon/turbo_actions.js
 import { StreamActions } from "@hotwired/turbo";
 
 StreamActions.redirect = function () {
@@ -373,7 +373,7 @@ StreamActions.redirect = function () {
 #### Option B: Stimulus Controller
 
 ```javascript
-// app/assets/javascripts/feed_monitor/controllers/redirect_controller.js
+// app/assets/javascripts/feedmon/controllers/redirect_controller.js
 import { Controller } from "@hotwired/stimulus";
 
 export default class extends Controller {
@@ -405,7 +405,7 @@ Usage:
 ### 4. default_scope Anti-pattern
 
 **Severity:** 🟠 HIGH
-**Location:** `app/models/feed_monitor/item.rb:13`
+**Location:** `app/models/feedmon/item.rb:13`
 **Impact:** Hidden behavior, counter cache issues, association problems
 
 **Problem:**
@@ -428,7 +428,7 @@ scope :only_deleted, -> { with_deleted.where.not(deleted_at: nil) }
 
 ```ruby
 # In item.rb (lines 71-72)
-FeedMonitor::Source.decrement_counter(:items_count, source_id) if source_id
+Feedmon::Source.decrement_counter(:items_count, source_id) if source_id
 
 # The counter cache is manually managed because default_scope makes
 # automatic counter cache unreliable
@@ -439,7 +439,7 @@ FeedMonitor::Source.decrement_counter(:items_count, source_id) if source_id
 Remove `default_scope` and use explicit scoping:
 
 ```ruby
-# app/models/feed_monitor/item.rb
+# app/models/feedmon/item.rb
 # Remove: default_scope { where(deleted_at: nil) }
 
 # Add explicit scope
@@ -448,8 +448,8 @@ scope :deleted, -> { where.not(deleted_at: nil) }
 scope :with_deleted, -> { unscope(where: :deleted_at) }
 
 # Update associations in source.rb
-has_many :all_items, class_name: "FeedMonitor::Item", inverse_of: :source, dependent: :destroy
-has_many :items, -> { active }, class_name: "FeedMonitor::Item", inverse_of: :source
+has_many :all_items, class_name: "Feedmon::Item", inverse_of: :source, dependent: :destroy
+has_many :items, -> { active }, class_name: "Feedmon::Item", inverse_of: :source
 
 # Update scopes that use items
 scope :recent, -> { active.order(Arel.sql("published_at DESC NULLS LAST, created_at DESC")) }
@@ -471,8 +471,8 @@ end
 **Severity:** 🟠 HIGH
 **Location:**
 
-- `app/models/feed_monitor/source.rb:108-118`
-- `app/models/feed_monitor/item.rb:77-87`
+- `app/models/feedmon/source.rb:108-118`
+- `app/models/feedmon/item.rb:77-87`
 
 **Impact:** Maintenance overhead, duplicated logic in 5 methods across 2 files
 
@@ -511,8 +511,8 @@ end
 Extend the `UrlNormalizable` concern to handle validation declaratively:
 
 ```ruby
-# lib/feed_monitor/models/url_normalizable.rb
-module FeedMonitor
+# lib/feedmon/models/url_normalizable.rb
+module Feedmon
   module Models
     module UrlNormalizable
       extend ActiveSupport::Concern
@@ -564,8 +564,8 @@ end
 **Severity:** 🟠 HIGH
 **Location:**
 
-- `app/models/feed_monitor/fetch_log.rb:14-21`
-- `app/models/feed_monitor/scrape_log.rb:11-18`
+- `app/models/feedmon/fetch_log.rb:14-21`
+- `app/models/feedmon/scrape_log.rb:11-18`
 
 **Impact:** Duplicate validations, scopes, and attribute defaults
 
@@ -600,8 +600,8 @@ attribute :metadata, default: -> { {} }
 Create shared concern:
 
 ```ruby
-# app/models/concerns/feed_monitor/loggable.rb
-module FeedMonitor
+# app/models/concerns/feedmon/loggable.rb
+module Feedmon
   module Loggable
     extend ActiveSupport::Concern
 
@@ -620,7 +620,7 @@ end
 
 # Then use in models:
 class FetchLog < ApplicationRecord
-  include FeedMonitor::Loggable
+  include Feedmon::Loggable
   belongs_to :source
 
   validates :source, presence: true
@@ -629,7 +629,7 @@ class FetchLog < ApplicationRecord
 end
 
 class ScrapeLog < ApplicationRecord
-  include FeedMonitor::Loggable
+  include Feedmon::Loggable
   belongs_to :item
   belongs_to :source
 
@@ -647,8 +647,8 @@ end
 **Severity:** 🟠 HIGH
 **Location:**
 
-- `app/controllers/feed_monitor/sources_controller.rb:219-249, 251-295`
-- `app/controllers/feed_monitor/items_controller.rb:52-72`
+- `app/controllers/feedmon/sources_controller.rb:219-249, 251-295`
+- `app/controllers/feedmon/items_controller.rb:52-72`
 
 **Impact:** 50+ lines repeated 5+ times, inconsistent responses
 
@@ -661,17 +661,17 @@ Pattern repeated across multiple actions:
 refreshed = @source.reload
 respond_to do |format|
   format.turbo_stream do
-    responder = FeedMonitor::TurboStreams::StreamResponder.new
+    responder = Feedmon::TurboStreams::StreamResponder.new
 
     responder.replace_details(
       refreshed,
-      partial: "feed_monitor/sources/details_wrapper",
+      partial: "feedmon/sources/details_wrapper",
       locals: { source: refreshed }
     )
 
     responder.replace_row(
       refreshed,
-      partial: "feed_monitor/sources/row",
+      partial: "feedmon/sources/row",
       locals: { source: refreshed, item_activity_rates: {...} }
     )
 
@@ -680,7 +680,7 @@ respond_to do |format|
   end
 
   format.html do
-    redirect_to feed_monitor.source_path(refreshed), notice: message
+    redirect_to feedmon.source_path(refreshed), notice: message
   end
 end
 ```
@@ -690,8 +690,8 @@ end
 Extract to controller concern:
 
 ```ruby
-# app/controllers/concerns/feed_monitor/turbo_streamable.rb
-module FeedMonitor
+# app/controllers/concerns/feedmon/turbo_streamable.rb
+module Feedmon
   module TurboStreamable
     extend ActiveSupport::Concern
 
@@ -702,7 +702,7 @@ module FeedMonitor
 
       respond_to do |format|
         format.turbo_stream do
-          responder = FeedMonitor::TurboStreams::StreamResponder.new
+          responder = Feedmon::TurboStreams::StreamResponder.new
 
           # Standard replacements
           replace_record_views(responder, refreshed)
@@ -715,7 +715,7 @@ module FeedMonitor
         end
 
         format.html do
-          redirect_to polymorphic_path([:feed_monitor, refreshed]), notice: message
+          redirect_to polymorphic_path([:feedmon, refreshed]), notice: message
         end
       end
     end
@@ -725,13 +725,13 @@ module FeedMonitor
 
       responder.replace_details(
         record,
-        partial: "feed_monitor/#{resource_name.pluralize}/details_wrapper",
+        partial: "feedmon/#{resource_name.pluralize}/details_wrapper",
         locals: { resource_name.to_sym => record }
       )
 
       responder.replace_row(
         record,
-        partial: "feed_monitor/#{resource_name.pluralize}/row",
+        partial: "feedmon/#{resource_name.pluralize}/row",
         locals: row_locals(record)
       )
     end
@@ -740,10 +740,10 @@ end
 
 # Then in controller:
 class SourcesController < ApplicationController
-  include FeedMonitor::TurboStreamable
+  include Feedmon::TurboStreamable
 
   def fetch
-    FeedMonitor::Fetching::FetchRunner.enqueue(@source.id)
+    Feedmon::Fetching::FetchRunner.enqueue(@source.id)
     respond_with_turbo_update(@source, message: "Fetch has been enqueued")
   end
 end
@@ -758,8 +758,8 @@ end
 **Severity:** 🟠 HIGH
 **Location:**
 
-- `app/controllers/feed_monitor/sources_controller.rb:14-23, 90-93`
-- `app/controllers/feed_monitor/items_controller.rb:14-18`
+- `app/controllers/feedmon/sources_controller.rb:14-23, 90-93`
+- `app/controllers/feedmon/items_controller.rb:14-18`
 
 **Impact:** Default sort logic scattered, inconsistent query building
 
@@ -787,8 +787,8 @@ sources = query.result
 Enhance `SanitizesSearchParams` concern:
 
 ```ruby
-# app/controllers/concerns/feed_monitor/sanitizes_search_params.rb
-module FeedMonitor
+# app/controllers/concerns/feedmon/sanitizes_search_params.rb
+module Feedmon
   module SanitizesSearchParams
     extend ActiveSupport::Concern
 
@@ -812,7 +812,7 @@ end
 
 # Then in controllers:
 class SourcesController < ApplicationController
-  include FeedMonitor::SanitizesSearchParams
+  include Feedmon::SanitizesSearchParams
   searchable_with scope: -> { Source.all }, default_sorts: ["created_at desc"]
 
   def index
@@ -853,22 +853,22 @@ Create migration:
 class AddNotNullConstraintsToItems < ActiveRecord::Migration[8.0]
   def up
     # First, clean up any existing invalid data
-    FeedMonitor::Item.where(guid: nil).find_each do |item|
+    Feedmon::Item.where(guid: nil).find_each do |item|
       item.update_column(:guid, item.content_fingerprint || SecureRandom.uuid)
     end
 
-    FeedMonitor::Item.where(url: nil).find_each do |item|
+    Feedmon::Item.where(url: nil).find_each do |item|
       item.update_column(:url, item.canonical_url || 'https://unknown.example.com')
     end
 
     # Now add the constraints
-    change_column_null :feed_monitor_items, :guid, false
-    change_column_null :feed_monitor_items, :url, false
+    change_column_null :feedmon_items, :guid, false
+    change_column_null :feedmon_items, :url, false
   end
 
   def down
-    change_column_null :feed_monitor_items, :guid, true
-    change_column_null :feed_monitor_items, :url, true
+    change_column_null :feedmon_items, :guid, true
+    change_column_null :feedmon_items, :url, true
   end
 end
 ```
@@ -927,7 +927,7 @@ end
 ### 11. Multiple after_initialize Callbacks
 
 **Severity:** 🟡 MEDIUM
-**Location:** `app/models/feed_monitor/source.rb:32-34`
+**Location:** `app/models/feedmon/source.rb:32-34`
 
 **Problem:**
 
@@ -958,7 +958,7 @@ attribute :health_status, :string, default: "healthy"
 ### 12. Scope with Complex Logic
 
 **Severity:** 🟡 MEDIUM
-**Location:** `app/models/feed_monitor/source.rb:20-23`
+**Location:** `app/models/feedmon/source.rb:20-23`
 
 **Problem:**
 
@@ -988,7 +988,7 @@ end
 ### 13. Over-Engineering: Complex Flash Message Building
 
 **Severity:** 🟡 MEDIUM
-**Location:** `app/controllers/feed_monitor/sources_controller.rb:297-343`
+**Location:** `app/controllers/feedmon/sources_controller.rb:297-343`
 
 **Problem:** 47 lines of conditional logic in controller
 
@@ -1001,12 +1001,12 @@ end
 ### 14. Manual Counter Cache Updates
 
 **Severity:** 🟡 MEDIUM
-**Location:** `app/models/feed_monitor/item.rb:71`
+**Location:** `app/models/feedmon/item.rb:71`
 
 **Problem:**
 
 ```ruby
-FeedMonitor::Source.decrement_counter(:items_count, source_id) if source_id
+Feedmon::Source.decrement_counter(:items_count, source_id) if source_id
 ```
 
 Manual updates are error-prone.
@@ -1032,7 +1032,7 @@ end
 ### 15. Overly Permissive Nested Parameters
 
 **Severity:** 🟡 MEDIUM
-**Location:** `app/controllers/feed_monitor/sources_controller.rb:211-213`
+**Location:** `app/controllers/feedmon/sources_controller.rb:211-213`
 
 **Problem:**
 
@@ -1081,7 +1081,7 @@ end
 
 ### 21. Search Forms Trigger Full Page Reloads
 
-**Location:** `app/views/feed_monitor/sources/index.html.erb:9`
+**Location:** `app/views/feedmon/sources/index.html.erb:9`
 
 **Solution:** Add Turbo Frame targeting
 
@@ -1091,7 +1091,7 @@ end
 
 ### 22. Pagination Triggers Full Page Reloads
 
-**Location:** `app/views/feed_monitor/items/index.html.erb:136-146`
+**Location:** `app/views/feedmon/items/index.html.erb:136-146`
 
 **Solution:** Add `data: { turbo_frame: "..." }` to links
 
@@ -1101,7 +1101,7 @@ end
 
 ### 23. Global Event Listener
 
-**Location:** `app/assets/javascripts/feed_monitor/application.js:19-21`
+**Location:** `app/assets/javascripts/feedmon/application.js:19-21`
 
 **Problem:**
 
@@ -1139,14 +1139,14 @@ Never cleaned up, purpose unclear.
 
 ### ✅ Excellent Service Object Architecture
 
-**60+ well-designed service objects in `lib/feed_monitor/`:**
+**60+ well-designed service objects in `lib/feedmon/`:**
 
-- `FeedMonitor::Fetching::FetchRunner` - Coordinates feed fetching
-- `FeedMonitor::Scraping::Enqueuer` - Handles scrape job queuing
-- `FeedMonitor::Scraping::BulkSourceScraper` - Bulk scraping orchestration
-- `FeedMonitor::Analytics::SourcesIndexMetrics` - Metrics calculation
-- `FeedMonitor::Dashboard::Queries` - Dashboard data queries
-- `FeedMonitor::TurboStreams::StreamResponder` - Turbo Stream building
+- `Feedmon::Fetching::FetchRunner` - Coordinates feed fetching
+- `Feedmon::Scraping::Enqueuer` - Handles scrape job queuing
+- `Feedmon::Scraping::BulkSourceScraper` - Bulk scraping orchestration
+- `Feedmon::Analytics::SourcesIndexMetrics` - Metrics calculation
+- `Feedmon::Dashboard::Queries` - Dashboard data queries
+- `Feedmon::TurboStreams::StreamResponder` - Turbo Stream building
 
 **Strengths:**
 
@@ -1200,7 +1200,7 @@ No fat models found!
 
 ### ✅ Security-Conscious
 
-- Consistent use of `FeedMonitor::Security::ParameterSanitizer`
+- Consistent use of `Feedmon::Security::ParameterSanitizer`
 - Proper Ransack whitelisting
 - Strong parameters throughout
 

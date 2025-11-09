@@ -6,14 +6,14 @@ ENGINE_ROOT = File.expand_path("../../..", __dir__)
 DUMMY_ROOT  = File.expand_path("..", __dir__)
 
 def ensure_asset_build!(root)
-  css_path = File.join(root, "app/assets/builds/feed_monitor/application.css")
-  js_path  = File.join(root, "app/assets/builds/feed_monitor/application.js")
+  css_path = File.join(root, "app/assets/builds/feedmon/application.css")
+  js_path  = File.join(root, "app/assets/builds/feedmon/application.js")
   return if File.exist?(css_path) && File.exist?(js_path)
 
   env = { "BUNDLE_GEMFILE" => File.join(root, "Gemfile") }
-  command = [ "bundle", "exec", "rake", "app:feed_monitor:assets:build" ]
+  command = [ "bundle", "exec", "rake", "app:feedmon:assets:build" ]
 
-  puts "Prebuilding FeedMonitor asset bundles..."
+  puts "Prebuilding Feedmon asset bundles..."
   system(env, *command, chdir: root, exception: true)
 end
 

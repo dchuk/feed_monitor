@@ -4,31 +4,31 @@
 
 source_paths.unshift(__dir__)
 
-gem "feed_monitor", path: File.expand_path("../..", __dir__)
+gem "feedmon", path: File.expand_path("../..", __dir__)
 
 environment <<~RUBY
   config.active_job.queue_adapter = :solid_queue
 RUBY
 
 after_bundle do
-  rails_command "feed_monitor:install"
-  rails_command "railties:install:migrations FROM=feed_monitor"
+  rails_command "feedmon:install"
+  rails_command "railties:install:migrations FROM=feedmon"
   rails_command "db:prepare"
 
-  route %(mount FeedMonitor::Engine => "/feed_monitor")
-  route %(root to: redirect("/feed_monitor", status: 302))
+  route %(mount Feedmon::Engine => "/feedmon")
+  route %(root to: redirect("/feedmon", status: 302))
 
-  copy_file "README.md", "README.feed_monitor.md"
-  copy_file "lib/feed_monitor/examples/scrapers/markdown_scraper.rb",
-    "lib/feed_monitor/examples/scrapers/markdown_scraper.rb"
+  copy_file "README.md", "README.feedmon.md"
+  copy_file "lib/feedmon/examples/scrapers/markdown_scraper.rb",
+    "lib/feedmon/examples/scrapers/markdown_scraper.rb"
 
-  inject_into_file "config/initializers/feed_monitor.rb",
-    "\n  config.scrapers.register(:markdown, \"FeedMonitor::Examples::Scrapers::MarkdownScraper\")\n",
+  inject_into_file "config/initializers/feedmon.rb",
+    "\n  config.scrapers.register(:markdown, \"Feedmon::Examples::Scrapers::MarkdownScraper\")\n",
     after: "# config.scrapers.register(:custom, \"MyApp::Scrapers::CustomAdapter\")\n"
 
   append_to_file "db/seeds.rb", <<~RUBY
 
-    FeedMonitor::Source.find_or_create_by!(feed_url: "https://buttondown.email/cassidoo/rss") do |source|
+    Feedmon::Source.find_or_create_by!(feed_url: "https://buttondown.email/cassidoo/rss") do |source|
       source.name = "Cassidoo Newsletter"
       source.scraping_enabled = true
       source.auto_scrape = true

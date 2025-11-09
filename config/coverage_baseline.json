@@ -1,5 +1,5 @@
 {
-  "app/controllers/concerns/feed_monitor/sanitizes_search_params.rb": [
+  "app/controllers/concerns/feedmon/sanitizes_search_params.rb": [
     32,
     47,
     48,
@@ -8,11 +8,11 @@
     52,
     77
   ],
-  "app/controllers/feed_monitor/application_controller.rb": [
+  "app/controllers/feedmon/application_controller.rb": [
     33,
     37
   ],
-  "app/controllers/feed_monitor/fetch_logs_controller.rb": [
+  "app/controllers/feedmon/fetch_logs_controller.rb": [
     3,
     4,
     5,
@@ -21,7 +21,7 @@
     8,
     9
   ],
-  "app/controllers/feed_monitor/items_controller.rb": [
+  "app/controllers/feedmon/items_controller.rb": [
     40,
     42,
     43,
@@ -55,7 +55,7 @@
     111,
     113
   ],
-  "app/controllers/feed_monitor/scrape_logs_controller.rb": [
+  "app/controllers/feedmon/scrape_logs_controller.rb": [
     3,
     4,
     5,
@@ -64,14 +64,14 @@
     8,
     9
   ],
-  "app/controllers/feed_monitor/source_turbo_responses.rb": [
+  "app/controllers/feedmon/source_turbo_responses.rb": [
     41,
     58,
     100,
     101,
     103
   ],
-  "app/controllers/feed_monitor/sources_controller.rb": [
+  "app/controllers/feedmon/sources_controller.rb": [
     41,
     42,
     43,
@@ -90,7 +90,7 @@
     121,
     131
   ],
-  "app/helpers/feed_monitor/application_helper.rb": [
+  "app/helpers/feedmon/application_helper.rb": [
     64,
     80,
     95,
@@ -99,7 +99,7 @@
     270,
     283
   ],
-  "app/jobs/feed_monitor/fetch_feed_job.rb": [
+  "app/jobs/feedmon/fetch_feed_job.rb": [
     52,
     53,
     93,
@@ -107,31 +107,31 @@
     95,
     114
   ],
-  "app/jobs/feed_monitor/item_cleanup_job.rb": [
+  "app/jobs/feedmon/item_cleanup_job.rb": [
     40
   ],
-  "app/jobs/feed_monitor/log_cleanup_job.rb": [
+  "app/jobs/feedmon/log_cleanup_job.rb": [
     26
   ],
-  "app/jobs/feed_monitor/schedule_fetches_job.rb": [
+  "app/jobs/feedmon/schedule_fetches_job.rb": [
     19
   ],
-  "app/jobs/feed_monitor/scrape_item_job.rb": [
+  "app/jobs/feedmon/scrape_item_job.rb": [
     44
   ],
-  "app/models/feed_monitor/item.rb": [
+  "app/models/feedmon/item.rb": [
     98
   ],
-  "app/models/feed_monitor/log_entry.rb": [
+  "app/models/feedmon/log_entry.rb": [
     21,
     33
   ],
-  "app/models/feed_monitor/source.rb": [
+  "app/models/feedmon/source.rb": [
     76,
     80,
     82
   ],
-  "lib/feed_monitor.rb": [
+  "lib/feedmon.rb": [
     28,
     97,
     113,
@@ -148,10 +148,10 @@
     144,
     146
   ],
-  "lib/feed_monitor/analytics/source_activity_rates.rb": [
+  "lib/feedmon/analytics/source_activity_rates.rb": [
     44
   ],
-  "lib/feed_monitor/analytics/source_fetch_interval_distribution.rb": [
+  "lib/feedmon/analytics/source_fetch_interval_distribution.rb": [
     18,
     22,
     30,
@@ -168,7 +168,7 @@
     48,
     53
   ],
-  "lib/feed_monitor/analytics/sources_index_metrics.rb": [
+  "lib/feedmon/analytics/sources_index_metrics.rb": [
     15,
     16,
     17,
@@ -204,7 +204,7 @@
     85,
     87
   ],
-  "lib/feed_monitor/assets/bundler.rb": [
+  "lib/feedmon/assets/bundler.rb": [
     9,
     13,
     17,
@@ -218,7 +218,7 @@
     41,
     45
   ],
-  "lib/feed_monitor/configuration.rb": [
+  "lib/feedmon/configuration.rb": [
     49,
     51,
     58,
@@ -314,7 +314,7 @@
     646,
     650
   ],
-  "lib/feed_monitor/dashboard/queries.rb": [
+  "lib/feedmon/dashboard/queries.rb": [
     10,
     11,
     15,
@@ -382,17 +382,17 @@
     313,
     333
   ],
-  "lib/feed_monitor/dashboard/quick_actions_presenter.rb": [
+  "lib/feedmon/dashboard/quick_actions_presenter.rb": [
     7,
     8,
     12,
     14
   ],
-  "lib/feed_monitor/dashboard/recent_activity.rb": [
+  "lib/feedmon/dashboard/recent_activity.rb": [
     21,
     25
   ],
-  "lib/feed_monitor/dashboard/recent_activity_presenter.rb": [
+  "lib/feedmon/dashboard/recent_activity_presenter.rb": [
     7,
     8,
     12,
@@ -410,7 +410,7 @@
     67,
     69
   ],
-  "lib/feed_monitor/dashboard/turbo_broadcaster.rb": [
+  "lib/feedmon/dashboard/turbo_broadcaster.rb": [
     26,
     28,
     29,
@@ -421,7 +421,7 @@
     60,
     71
   ],
-  "lib/feed_monitor/dashboard/upcoming_fetch_schedule.rb": [
+  "lib/feedmon/dashboard/upcoming_fetch_schedule.rb": [
     18,
     33,
     34,
@@ -457,7 +457,7 @@
     120,
     121
   ],
-  "lib/feed_monitor/engine.rb": [
+  "lib/feedmon/engine.rb": [
     47,
     51,
     52,
@@ -481,7 +481,7 @@
     97,
     99
   ],
-  "lib/feed_monitor/events.rb": [
+  "lib/feedmon/events.rb": [
     9,
     15,
     26,
@@ -509,12 +509,12 @@
     104,
     107
   ],
-  "lib/feed_monitor/feedjira_extensions.rb": [
+  "lib/feedmon/feedjira_extensions.rb": [
     92,
     93,
     97
   ],
-  "lib/feed_monitor/fetching/advisory_lock.rb": [
+  "lib/feedmon/fetching/advisory_lock.rb": [
     11,
     12,
     13,
@@ -529,11 +529,11 @@
     46,
     50
   ],
-  "lib/feed_monitor/fetching/completion/event_publisher.rb": [
+  "lib/feedmon/fetching/completion/event_publisher.rb": [
     9,
     13
   ],
-  "lib/feed_monitor/fetching/completion/follow_up_handler.rb": [
+  "lib/feedmon/fetching/completion/follow_up_handler.rb": [
     9,
     10,
     14,
@@ -545,13 +545,13 @@
     30,
     32
   ],
-  "lib/feed_monitor/fetching/completion/retention_handler.rb": [
+  "lib/feedmon/fetching/completion/retention_handler.rb": [
     9,
     13,
     18,
     21
   ],
-  "lib/feed_monitor/fetching/feed_fetcher.rb": [
+  "lib/feedmon/fetching/feed_fetcher.rb": [
     36,
     37,
     38,
@@ -798,7 +798,7 @@
     618,
     623
   ],
-  "lib/feed_monitor/fetching/fetch_error.rb": [
+  "lib/feedmon/fetching/fetch_error.rb": [
     11,
     12,
     13,
@@ -813,7 +813,7 @@
     74,
     84
   ],
-  "lib/feed_monitor/fetching/fetch_runner.rb": [
+  "lib/feedmon/fetching/fetch_runner.rb": [
     22,
     23,
     24,
@@ -869,7 +869,7 @@
     134,
     138
   ],
-  "lib/feed_monitor/fetching/retry_policy.rb": [
+  "lib/feedmon/fetching/retry_policy.rb": [
     31,
     32,
     33,
@@ -894,7 +894,7 @@
     79,
     81
   ],
-  "lib/feed_monitor/health.rb": [
+  "lib/feedmon/health.rb": [
     22,
     35,
     36,
@@ -902,10 +902,10 @@
     39,
     42
   ],
-  "lib/feed_monitor/health/source_health_check.rb": [
+  "lib/feedmon/health/source_health_check.rb": [
     43
   ],
-  "lib/feed_monitor/health/source_health_monitor.rb": [
+  "lib/feedmon/health/source_health_monitor.rb": [
     56,
     104,
     126,
@@ -919,7 +919,7 @@
     142,
     206
   ],
-  "lib/feed_monitor/instrumentation.rb": [
+  "lib/feedmon/instrumentation.rb": [
     15,
     16,
     18,
@@ -935,7 +935,7 @@
     44,
     49
   ],
-  "lib/feed_monitor/items/item_creator.rb": [
+  "lib/feedmon/items/item_creator.rb": [
     16,
     20,
     29,
@@ -1165,7 +1165,7 @@
     595,
     597
   ],
-  "lib/feed_monitor/items/retention_pruner.rb": [
+  "lib/feedmon/items/retention_pruner.rb": [
     15,
     25,
     29,
@@ -1214,7 +1214,7 @@
     140,
     142
   ],
-  "lib/feed_monitor/items/retention_strategies/destroy.rb": [
+  "lib/feedmon/items/retention_strategies/destroy.rb": [
     8,
     12,
     13,
@@ -1222,7 +1222,7 @@
     15,
     17
   ],
-  "lib/feed_monitor/items/retention_strategies/soft_delete.rb": [
+  "lib/feedmon/items/retention_strategies/soft_delete.rb": [
     8,
     12,
     13,
@@ -1238,7 +1238,7 @@
     44,
     45
   ],
-  "lib/feed_monitor/jobs/cleanup_options.rb": [
+  "lib/feedmon/jobs/cleanup_options.rb": [
     11,
     13,
     15,
@@ -1268,7 +1268,7 @@
     77,
     80
   ],
-  "lib/feed_monitor/jobs/solid_queue_metrics.rb": [
+  "lib/feedmon/jobs/solid_queue_metrics.rb": [
     20,
     27,
     31,
@@ -1320,7 +1320,7 @@
     191,
     195
   ],
-  "lib/feed_monitor/jobs/visibility.rb": [
+  "lib/feedmon/jobs/visibility.rb": [
     22,
     26,
     30,
@@ -1365,11 +1365,11 @@
     126,
     127
   ],
-  "lib/feed_monitor/logs/entry_sync.rb": [
+  "lib/feedmon/logs/entry_sync.rb": [
     22,
     23
   ],
-  "lib/feed_monitor/logs/filter_set.rb": [
+  "lib/feedmon/logs/filter_set.rb": [
     64,
     106,
     107,
@@ -1385,18 +1385,18 @@
     154,
     159
   ],
-  "lib/feed_monitor/logs/query.rb": [
+  "lib/feedmon/logs/query.rb": [
     16,
     20,
     62,
     64
   ],
-  "lib/feed_monitor/logs/table_presenter.rb": [
+  "lib/feedmon/logs/table_presenter.rb": [
     45,
     74,
     117
   ],
-  "lib/feed_monitor/metrics.rb": [
+  "lib/feedmon/metrics.rb": [
     10,
     14,
     18,
@@ -1423,7 +1423,7 @@
     70,
     74
   ],
-  "lib/feed_monitor/model_extensions.rb": [
+  "lib/feedmon/model_extensions.rb": [
     53,
     55,
     56,
@@ -1444,10 +1444,10 @@
     104,
     105
   ],
-  "lib/feed_monitor/models/sanitizable.rb": [
+  "lib/feedmon/models/sanitizable.rb": [
     57
   ],
-  "lib/feed_monitor/pagination/paginator.rb": [
+  "lib/feedmon/pagination/paginator.rb": [
     22,
     24,
     28,
@@ -1456,7 +1456,7 @@
     77,
     86
   ],
-  "lib/feed_monitor/realtime/adapter.rb": [
+  "lib/feedmon/realtime/adapter.rb": [
     25,
     59,
     81,
@@ -1464,7 +1464,7 @@
     88,
     93
   ],
-  "lib/feed_monitor/realtime/broadcaster.rb": [
+  "lib/feedmon/realtime/broadcaster.rb": [
     33,
     34,
     35,
@@ -1528,13 +1528,13 @@
     231,
     233
   ],
-  "lib/feed_monitor/release/changelog.rb": [
+  "lib/feedmon/release/changelog.rb": [
     36
   ],
-  "lib/feed_monitor/release/runner.rb": [
+  "lib/feedmon/release/runner.rb": [
     68
   ],
-  "lib/feed_monitor/scheduler.rb": [
+  "lib/feedmon/scheduler.rb": [
     12,
     16,
     17,
@@ -1562,7 +1562,7 @@
     72,
     74
   ],
-  "lib/feed_monitor/scrapers/base.rb": [
+  "lib/feedmon/scrapers/base.rb": [
     29,
     33,
     37,
@@ -1590,7 +1590,7 @@
     98,
     100
   ],
-  "lib/feed_monitor/scrapers/fetchers/http_fetcher.rb": [
+  "lib/feedmon/scrapers/fetchers/http_fetcher.rb": [
     12,
     16,
     18,
@@ -1619,7 +1619,7 @@
     88,
     92
   ],
-  "lib/feed_monitor/scrapers/parsers/readability_parser.rb": [
+  "lib/feedmon/scrapers/parsers/readability_parser.rb": [
     14,
     15,
     16,
@@ -1657,7 +1657,7 @@
     93,
     96
   ],
-  "lib/feed_monitor/scrapers/readability.rb": [
+  "lib/feedmon/scrapers/readability.rb": [
     17,
     40,
     41,
@@ -1690,10 +1690,10 @@
     149,
     151
   ],
-  "lib/feed_monitor/scraping/bulk_result_presenter.rb": [
+  "lib/feedmon/scraping/bulk_result_presenter.rb": [
     71
   ],
-  "lib/feed_monitor/scraping/bulk_source_scraper.rb": [
+  "lib/feedmon/scraping/bulk_source_scraper.rb": [
     30,
     34,
     38,
@@ -1761,7 +1761,7 @@
     205,
     219
   ],
-  "lib/feed_monitor/scraping/enqueuer.rb": [
+  "lib/feedmon/scraping/enqueuer.rb": [
     10,
     14,
     18,
@@ -1817,7 +1817,7 @@
     120,
     121
   ],
-  "lib/feed_monitor/scraping/item_scraper.rb": [
+  "lib/feedmon/scraping/item_scraper.rb": [
     17,
     21,
     28,
@@ -1848,7 +1848,7 @@
     78,
     80
   ],
-  "lib/feed_monitor/scraping/item_scraper/adapter_resolver.rb": [
+  "lib/feedmon/scraping/item_scraper/adapter_resolver.rb": [
     11,
     12,
     16,
@@ -1862,7 +1862,7 @@
     35,
     39
   ],
-  "lib/feed_monitor/scraping/item_scraper/persistence.rb": [
+  "lib/feedmon/scraping/item_scraper/persistence.rb": [
     13,
     14,
     15,
@@ -1920,7 +1920,7 @@
     181,
     183
   ],
-  "lib/feed_monitor/scraping/scheduler.rb": [
+  "lib/feedmon/scraping/scheduler.rb": [
     12,
     16,
     20,
@@ -1930,7 +1930,7 @@
     25,
     34
   ],
-  "lib/feed_monitor/scraping/state.rb": [
+  "lib/feedmon/scraping/state.rb": [
     13,
     17,
     21,
@@ -1955,7 +1955,7 @@
     73,
     75
   ],
-  "lib/feed_monitor/security/authentication.rb": [
+  "lib/feedmon/security/authentication.rb": [
     15,
     16,
     20,
@@ -1985,13 +1985,13 @@
     74,
     75
   ],
-  "lib/feed_monitor/security/parameter_sanitizer.rb": [
+  "lib/feedmon/security/parameter_sanitizer.rb": [
     13,
     16,
     19,
     23
   ],
-  "lib/feed_monitor/turbo_streams/stream_responder.rb": [
+  "lib/feedmon/turbo_streams/stream_responder.rb": [
     35,
     36,
     40,
@@ -2002,7 +2002,7 @@
     72,
     86
   ],
-  "lib/feed_monitor/version.rb": [
+  "lib/feedmon/version.rb": [
     1,
     2,
     3

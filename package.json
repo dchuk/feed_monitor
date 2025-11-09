@@ -1,11 +1,11 @@
 {
-  "name": "feed-monitor",
+  "name": "feedmon",
   "private": true,
   "scripts": {
     "build": "npm run build:css && npm run build:js",
-    "build:css": "tailwindcss -c ./config/tailwind.config.js -i ./app/assets/stylesheets/feed_monitor/application.tailwind.css -o ./app/assets/builds/feed_monitor/application.css",
-    "build:css:watch": "tailwindcss -c ./config/tailwind.config.js -i ./app/assets/stylesheets/feed_monitor/application.tailwind.css -o ./app/assets/builds/feed_monitor/application.css --watch",
-    "build:js": "esbuild app/assets/javascripts/feed_monitor/application.js --bundle --format=esm --sourcemap --outfile=app/assets/builds/feed_monitor/application.js --log-level=warning --alias:stimulus-use=stimulus-use",
+    "build:css": "tailwindcss -c ./config/tailwind.config.js -i ./app/assets/stylesheets/feedmon/application.tailwind.css -o ./app/assets/builds/feedmon/application.css",
+    "build:css:watch": "tailwindcss -c ./config/tailwind.config.js -i ./app/assets/stylesheets/feedmon/application.tailwind.css -o ./app/assets/builds/feedmon/application.css --watch",
+    "build:js": "esbuild app/assets/javascripts/feedmon/application.js --bundle --format=esm --sourcemap --outfile=app/assets/builds/feedmon/application.js --log-level=warning --alias:stimulus-use=stimulus-use",
     "build:js:watch": "npm run build:js -- --watch",
     "lint:js": "eslint \"app/assets/javascripts/**/*.js\"",
     "lint:css": "stylelint \"app/assets/**/*.css\"",

@@ -1,17 +1,17 @@
 require "test_helper"
 
-module FeedMonitor
+module Feedmon
   class EngineMountingTest < ActionDispatch::IntegrationTest
-    test "host app routes mount the engine at /feed_monitor" do
+    test "host app routes mount the engine at /feedmon" do
       helpers = Rails.application.routes.url_helpers
-      assert_respond_to helpers, :feed_monitor_path
-      assert_equal "/feed_monitor", helpers.feed_monitor_path
+      assert_respond_to helpers, :feedmon_path
+      assert_equal "/feedmon", helpers.feedmon_path
     end
 
     test "engine root responds with welcome content" do
-      get "/feed_monitor"
+      get "/feedmon"
       assert_response :success
-      assert_match "Feed Monitor", response.body
+      assert_match "Feedmon", response.body
     end
   end
 end

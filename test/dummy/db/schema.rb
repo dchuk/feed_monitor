@@ -14,7 +14,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_08_120116) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
-  create_table "feed_monitor_fetch_logs", force: :cascade do |t|
+  create_table "feedmon_fetch_logs", force: :cascade do |t|
     t.datetime "completed_at"
     t.datetime "created_at", null: false
     t.integer "duration_ms"
@@ -34,14 +34,14 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_08_120116) do
     t.datetime "started_at", null: false
     t.boolean "success"
     t.datetime "updated_at", null: false
-    t.index ["created_at"], name: "index_feed_monitor_fetch_logs_on_created_at"
-    t.index ["job_id"], name: "index_feed_monitor_fetch_logs_on_job_id"
-    t.index ["source_id"], name: "index_feed_monitor_fetch_logs_on_source_id"
-    t.index ["started_at"], name: "index_feed_monitor_fetch_logs_on_started_at"
-    t.index ["success"], name: "index_feed_monitor_fetch_logs_on_success"
+    t.index ["created_at"], name: "index_feedmon_fetch_logs_on_created_at"
+    t.index ["job_id"], name: "index_feedmon_fetch_logs_on_job_id"
+    t.index ["source_id"], name: "index_feedmon_fetch_logs_on_source_id"
+    t.index ["started_at"], name: "index_feedmon_fetch_logs_on_started_at"
+    t.index ["success"], name: "index_feedmon_fetch_logs_on_success"
   end
 
-  create_table "feed_monitor_health_check_logs", force: :cascade do |t|
+  create_table "feedmon_health_check_logs", force: :cascade do |t|
     t.datetime "completed_at"
     t.datetime "created_at", null: false
     t.integer "duration_ms"
@@ -53,21 +53,21 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_08_120116) do
     t.datetime "started_at", null: false
     t.boolean "success", default: false, null: false
     t.datetime "updated_at", null: false
-    t.index ["source_id"], name: "index_feed_monitor_health_check_logs_on_source_id"
-    t.index ["started_at"], name: "index_feed_monitor_health_check_logs_on_started_at"
-    t.index ["success"], name: "index_feed_monitor_health_check_logs_on_success"
+    t.index ["source_id"], name: "index_feedmon_health_check_logs_on_source_id"
+    t.index ["started_at"], name: "index_feedmon_health_check_logs_on_started_at"
+    t.index ["success"], name: "index_feedmon_health_check_logs_on_success"
   end
 
-  create_table "feed_monitor_item_contents", force: :cascade do |t|
+  create_table "feedmon_item_contents", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "item_id", null: false
     t.text "scraped_content"
     t.text "scraped_html"
     t.datetime "updated_at", null: false
-    t.index ["item_id"], name: "index_feed_monitor_item_contents_on_item_id", unique: true
+    t.index ["item_id"], name: "index_feedmon_item_contents_on_item_id", unique: true
   end
 
-  create_table "feed_monitor_items", force: :cascade do |t|
+  create_table "feedmon_items", force: :cascade do |t|
     t.string "author"
     t.jsonb "authors", default: [], null: false
     t.string "canonical_url"
@@ -96,20 +96,20 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_08_120116) do
     t.datetime "updated_at", null: false
     t.datetime "updated_at_source"
     t.string "url", null: false
-    t.index ["content_fingerprint"], name: "index_feed_monitor_items_on_content_fingerprint"
-    t.index ["deleted_at"], name: "index_feed_monitor_items_on_deleted_at"
-    t.index ["guid"], name: "index_feed_monitor_items_on_guid"
-    t.index ["published_at"], name: "index_feed_monitor_items_on_published_at"
-    t.index ["scrape_status"], name: "index_feed_monitor_items_on_scrape_status"
-    t.index ["source_id", "content_fingerprint"], name: "index_feed_monitor_items_on_source_id_and_content_fingerprint", unique: true
+    t.index ["content_fingerprint"], name: "index_feedmon_items_on_content_fingerprint"
+    t.index ["deleted_at"], name: "index_feedmon_items_on_deleted_at"
+    t.index ["guid"], name: "index_feedmon_items_on_guid"
+    t.index ["published_at"], name: "index_feedmon_items_on_published_at"
+    t.index ["scrape_status"], name: "index_feedmon_items_on_scrape_status"
+    t.index ["source_id", "content_fingerprint"], name: "index_feedmon_items_on_source_id_and_content_fingerprint", unique: true
     t.index ["source_id", "created_at"], name: "index_items_on_source_and_created_at_for_rates"
-    t.index ["source_id", "guid"], name: "index_feed_monitor_items_on_source_id_and_guid", unique: true
-    t.index ["source_id", "published_at", "created_at"], name: "index_feed_monitor_items_on_source_and_published_at"
-    t.index ["source_id"], name: "index_feed_monitor_items_on_source_id"
-    t.index ["url"], name: "index_feed_monitor_items_on_url"
+    t.index ["source_id", "guid"], name: "index_feedmon_items_on_source_id_and_guid", unique: true
+    t.index ["source_id", "published_at", "created_at"], name: "index_feedmon_items_on_source_and_published_at"
+    t.index ["source_id"], name: "index_feedmon_items_on_source_id"
+    t.index ["url"], name: "index_feedmon_items_on_url"
   end
 
-  create_table "feed_monitor_log_entries", force: :cascade do |t|
+  create_table "feedmon_log_entries", force: :cascade do |t|
     t.datetime "completed_at"
     t.integer "content_length"
     t.datetime "created_at", null: false
@@ -128,15 +128,15 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_08_120116) do
     t.datetime "started_at", null: false
     t.boolean "success", default: false, null: false
     t.datetime "updated_at", null: false
-    t.index ["item_id"], name: "index_feed_monitor_log_entries_on_item_id"
-    t.index ["loggable_type", "loggable_id"], name: "index_feed_monitor_log_entries_on_loggable"
-    t.index ["scraper_adapter"], name: "index_feed_monitor_log_entries_on_scraper_adapter"
-    t.index ["source_id"], name: "index_feed_monitor_log_entries_on_source_id"
-    t.index ["started_at"], name: "index_feed_monitor_log_entries_on_started_at"
-    t.index ["success"], name: "index_feed_monitor_log_entries_on_success"
+    t.index ["item_id"], name: "index_feedmon_log_entries_on_item_id"
+    t.index ["loggable_type", "loggable_id"], name: "index_feedmon_log_entries_on_loggable"
+    t.index ["scraper_adapter"], name: "index_feedmon_log_entries_on_scraper_adapter"
+    t.index ["source_id"], name: "index_feedmon_log_entries_on_source_id"
+    t.index ["started_at"], name: "index_feedmon_log_entries_on_started_at"
+    t.index ["success"], name: "index_feedmon_log_entries_on_success"
   end
 
-  create_table "feed_monitor_scrape_logs", force: :cascade do |t|
+  create_table "feedmon_scrape_logs", force: :cascade do |t|
     t.datetime "completed_at"
     t.integer "content_length"
     t.datetime "created_at", null: false
@@ -151,14 +151,14 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_08_120116) do
     t.datetime "started_at", null: false
     t.boolean "success"
     t.datetime "updated_at", null: false
-    t.index ["created_at"], name: "index_feed_monitor_scrape_logs_on_created_at"
-    t.index ["item_id"], name: "index_feed_monitor_scrape_logs_on_item_id"
-    t.index ["source_id"], name: "index_feed_monitor_scrape_logs_on_source_id"
-    t.index ["started_at"], name: "index_feed_monitor_scrape_logs_on_started_at"
-    t.index ["success"], name: "index_feed_monitor_scrape_logs_on_success"
+    t.index ["created_at"], name: "index_feedmon_scrape_logs_on_created_at"
+    t.index ["item_id"], name: "index_feedmon_scrape_logs_on_item_id"
+    t.index ["source_id"], name: "index_feedmon_scrape_logs_on_source_id"
+    t.index ["started_at"], name: "index_feedmon_scrape_logs_on_started_at"
+    t.index ["success"], name: "index_feedmon_scrape_logs_on_success"
   end
 
-  create_table "feed_monitor_sources", force: :cascade do |t|
+  create_table "feedmon_sources", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.boolean "adaptive_fetching_enabled", default: true, null: false
     t.datetime "auto_paused_at"
@@ -202,17 +202,17 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_08_120116) do
     t.datetime "updated_at", null: false
     t.string "website_url"
     t.index ["active", "next_fetch_at"], name: "index_sources_on_active_and_next_fetch", where: "(active = true)"
-    t.index ["active"], name: "index_feed_monitor_sources_on_active"
-    t.index ["auto_paused_until"], name: "index_feed_monitor_sources_on_auto_paused_until"
-    t.index ["created_at"], name: "index_feed_monitor_sources_on_created_at"
+    t.index ["active"], name: "index_feedmon_sources_on_active"
+    t.index ["auto_paused_until"], name: "index_feedmon_sources_on_auto_paused_until"
+    t.index ["created_at"], name: "index_feedmon_sources_on_created_at"
     t.index ["failure_count"], name: "index_sources_on_failures", where: "(failure_count > 0)"
-    t.index ["feed_url"], name: "index_feed_monitor_sources_on_feed_url", unique: true
-    t.index ["fetch_circuit_until"], name: "index_feed_monitor_sources_on_fetch_circuit_until"
-    t.index ["fetch_retry_attempt"], name: "index_feed_monitor_sources_on_fetch_retry_attempt"
-    t.index ["fetch_status"], name: "index_feed_monitor_sources_on_fetch_status"
-    t.index ["health_status"], name: "index_feed_monitor_sources_on_health_status"
-    t.index ["next_fetch_at"], name: "index_feed_monitor_sources_on_next_fetch_at"
-    t.index ["type"], name: "index_feed_monitor_sources_on_type"
+    t.index ["feed_url"], name: "index_feedmon_sources_on_feed_url", unique: true
+    t.index ["fetch_circuit_until"], name: "index_feedmon_sources_on_fetch_circuit_until"
+    t.index ["fetch_retry_attempt"], name: "index_feedmon_sources_on_fetch_retry_attempt"
+    t.index ["fetch_status"], name: "index_feedmon_sources_on_fetch_status"
+    t.index ["health_status"], name: "index_feedmon_sources_on_health_status"
+    t.index ["next_fetch_at"], name: "index_feedmon_sources_on_next_fetch_at"
+    t.index ["type"], name: "index_feedmon_sources_on_type"
     t.check_constraint "fetch_status::text = ANY (ARRAY['idle'::character varying, 'queued'::character varying, 'fetching'::character varying, 'failed'::character varying, 'invalid'::character varying]::text[])", name: "check_fetch_status_values"
   end
 
@@ -347,14 +347,14 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_08_120116) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
-  add_foreign_key "feed_monitor_fetch_logs", "feed_monitor_sources", column: "source_id"
-  add_foreign_key "feed_monitor_health_check_logs", "feed_monitor_sources", column: "source_id"
-  add_foreign_key "feed_monitor_item_contents", "feed_monitor_items", column: "item_id"
-  add_foreign_key "feed_monitor_items", "feed_monitor_sources", column: "source_id"
-  add_foreign_key "feed_monitor_log_entries", "feed_monitor_items", column: "item_id"
-  add_foreign_key "feed_monitor_log_entries", "feed_monitor_sources", column: "source_id"
-  add_foreign_key "feed_monitor_scrape_logs", "feed_monitor_items", column: "item_id"
-  add_foreign_key "feed_monitor_scrape_logs", "feed_monitor_sources", column: "source_id"
+  add_foreign_key "feedmon_fetch_logs", "feedmon_sources", column: "source_id"
+  add_foreign_key "feedmon_health_check_logs", "feedmon_sources", column: "source_id"
+  add_foreign_key "feedmon_item_contents", "feedmon_items", column: "item_id"
+  add_foreign_key "feedmon_items", "feedmon_sources", column: "source_id"
+  add_foreign_key "feedmon_log_entries", "feedmon_items", column: "item_id"
+  add_foreign_key "feedmon_log_entries", "feedmon_sources", column: "source_id"
+  add_foreign_key "feedmon_scrape_logs", "feedmon_items", column: "item_id"
+  add_foreign_key "feedmon_scrape_logs", "feedmon_sources", column: "source_id"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

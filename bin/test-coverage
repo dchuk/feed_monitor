@@ -2,26 +2,26 @@
 set -euo pipefail
 
 export COVERAGE=true
-export SIMPLECOV_COMMAND_NAME="${SIMPLECOV_COMMAND_NAME:-feed_monitor:test}"
+export SIMPLECOV_COMMAND_NAME="${SIMPLECOV_COMMAND_NAME:-feedmon:test}"
 
 if [ -d coverage ]; then
   rm -rf coverage
 fi
 
 TARGETED_TESTS=(
-  "test/lib/feed_monitor/health/source_health_check_test.rb"
-  "test/lib/feed_monitor/health/source_health_monitor_test.rb"
-  "test/lib/feed_monitor/health/source_health_reset_test.rb"
-  "test/lib/feed_monitor/health/health_module_test.rb"
-  "test/lib/feed_monitor/http_test.rb"
-  "test/lib/feed_monitor/logs/table_presenter_test.rb"
-  "test/models/feed_monitor/log_entry_test.rb"
-  "test/controllers/feed_monitor/source_health_checks_controller_test.rb"
-  "test/controllers/feed_monitor/source_health_resets_controller_test.rb"
-  "test/helpers/feed_monitor/application_helper_test.rb"
-  "test/lib/feed_monitor/fetching/stalled_fetch_reconciler_test.rb"
-  "test/lib/feed_monitor/jobs/fetch_failure_subscriber_test.rb"
-  "test/lib/feed_monitor/scheduler_test.rb"
+  "test/lib/feedmon/health/source_health_check_test.rb"
+  "test/lib/feedmon/health/source_health_monitor_test.rb"
+  "test/lib/feedmon/health/source_health_reset_test.rb"
+  "test/lib/feedmon/health/health_module_test.rb"
+  "test/lib/feedmon/http_test.rb"
+  "test/lib/feedmon/logs/table_presenter_test.rb"
+  "test/models/feedmon/log_entry_test.rb"
+  "test/controllers/feedmon/source_health_checks_controller_test.rb"
+  "test/controllers/feedmon/source_health_resets_controller_test.rb"
+  "test/helpers/feedmon/application_helper_test.rb"
+  "test/lib/feedmon/fetching/stalled_fetch_reconciler_test.rb"
+  "test/lib/feedmon/jobs/fetch_failure_subscriber_test.rb"
+  "test/lib/feedmon/scheduler_test.rb"
 )
 
 run_tests() {
@@ -36,9 +36,9 @@ run_tests bundle exec rails test "$@"
 
 run_tests_with_env() {
   if command -v rbenv >/dev/null 2>&1; then
-    FEED_MONITOR_TEST_WORKERS=1 SIMPLECOV_COMMAND_NAME=feed_monitor:health_suite COVERAGE=true rbenv exec bundle exec rails test "$@"
+    FEEDMON_TEST_WORKERS=1 SIMPLECOV_COMMAND_NAME=feedmon:health_suite COVERAGE=true rbenv exec bundle exec rails test "$@"
   else
-    FEED_MONITOR_TEST_WORKERS=1 SIMPLECOV_COMMAND_NAME=feed_monitor:health_suite COVERAGE=true bundle exec rails test "$@"
+    FEEDMON_TEST_WORKERS=1 SIMPLECOV_COMMAND_NAME=feedmon:health_suite COVERAGE=true bundle exec rails test "$@"
   fi
 }
 

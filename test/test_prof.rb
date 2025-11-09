@@ -12,7 +12,7 @@ end
 # Allow running focused subsets locally using SAMPLE/SAMPLE_GROUPS env vars.
 TestProf::MinitestSample.call
 
-module FeedMonitor
+module Feedmon
   module TestProfSupport
     module SetupOnce
       def setup_once(setup_fixtures: false, &block)
@@ -33,5 +33,5 @@ module FeedMonitor
 end
 
 ActiveSupport::TestCase.include TestProf::BeforeAll::Minitest
-ActiveSupport::TestCase.extend FeedMonitor::TestProfSupport::SetupOnce
-ActiveSupport::TestCase.include FeedMonitor::TestProfSupport::InlineJobs
+ActiveSupport::TestCase.extend Feedmon::TestProfSupport::SetupOnce
+ActiveSupport::TestCase.include Feedmon::TestProfSupport::InlineJobs

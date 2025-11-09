@@ -4,7 +4,7 @@ require "test_helper"
 require "fileutils"
 require "support/host_app_harness"
 
-module FeedMonitor
+module Feedmon
   module Integration
     class HostInstallFlowTest < ActiveSupport::TestCase
       parallelize(workers: 1)
@@ -28,23 +28,23 @@ module FeedMonitor
       end
 
     test "install generator integrates cleanly into host app" do
-      HostAppHarness.bundle_exec!("rails", "g", "feed_monitor:install")
+      HostAppHarness.bundle_exec!("rails", "g", "feedmon:install")
 
-      assert HostAppHarness.exist?("config/initializers/feed_monitor.rb"), "initializer was not created"
+      assert HostAppHarness.exist?("config/initializers/feedmon.rb"), "initializer was not created"
 
       routes_contents = HostAppHarness.read("config/routes.rb")
-      assert_includes routes_contents, "mount FeedMonitor::Engine, at: \"/feed_monitor\""
+      assert_includes routes_contents, "mount Feedmon::Engine, at: \"/feedmon\""
     end
 
     test "install generator is idempotent" do
-      HostAppHarness.bundle_exec!("rails", "g", "feed_monitor:install")
-      initializer_snapshot = HostAppHarness.read("config/initializers/feed_monitor.rb")
+      HostAppHarness.bundle_exec!("rails", "g", "feedmon:install")
+      initializer_snapshot = HostAppHarness.read("config/initializers/feedmon.rb")
 
-      HostAppHarness.bundle_exec!("rails", "g", "feed_monitor:install")
+      HostAppHarness.bundle_exec!("rails", "g", "feedmon:install")
 
       routes_contents = HostAppHarness.read("config/routes.rb")
-      assert_equal 1, routes_contents.scan(/mount FeedMonitor::Engine/).count
-      assert_equal initializer_snapshot, HostAppHarness.read("config/initializers/feed_monitor.rb")
+      assert_equal 1, routes_contents.scan(/mount Feedmon::Engine/).count
+      assert_equal initializer_snapshot, HostAppHarness.read("config/initializers/feedmon.rb")
     end
 
     test "install generator preserves host configuration files" do
@@ -52,7 +52,7 @@ module FeedMonitor
 
       original_redis_url = ENV.delete("REDIS_URL")
       ENV["REDIS_URL"] = "redis://localhost:6379/1"
-      HostAppHarness.bundle_exec!("rails", "g", "feed_monitor:install", env: { "REDIS_URL" => "redis://localhost:6379/1" })
+      HostAppHarness.bundle_exec!("rails", "g", "feedmon:install", env: { "REDIS_URL" => "redis://localhost:6379/1" })
     ensure
       if original_redis_url
         ENV["REDIS_URL"] = original_redis_url
@@ -69,12 +69,12 @@ module FeedMonitor
       HostAppHarness.prepare_working_directory do |root|
         initializer_path = File.join(root, "config/initializers")
         FileUtils.mkdir_p(initializer_path)
-        File.write(File.join(initializer_path, "feed_monitor.rb"), "# existing initializer")
+        File.write(File.join(initializer_path, "feedmon.rb"), "# existing initializer")
       end
 
-      HostAppHarness.bundle_exec!("rails", "g", "feed_monitor:install")
+      HostAppHarness.bundle_exec!("rails", "g", "feedmon:install")
 
-      content = HostAppHarness.read("config/initializers/feed_monitor.rb")
+      content = HostAppHarness.read("config/initializers/feedmon.rb")
       assert_equal "# existing initializer", content.strip
     end
 
@@ -91,7 +91,7 @@ module FeedMonitor
         File.write(application_rb, contents)
       end
 
-      HostAppHarness.bundle_exec!("rails", "g", "feed_monitor:install")
+      HostAppHarness.bundle_exec!("rails", "g", "feedmon:install")
       output = HostAppHarness.bundle_exec!("rails", "runner", "puts ActiveJob::Base.queue_adapter_name")
 
       assert_match(/inline/, output)
@@ -100,10 +100,10 @@ module FeedMonitor
     test "install generator supports API only hosts" do
       HostAppHarness.prepare_working_directory(template: :api)
 
-      HostAppHarness.bundle_exec!("rails", "g", "feed_monitor:install")
+      HostAppHarness.bundle_exec!("rails", "g", "feedmon:install")
 
       routes_contents = HostAppHarness.read("config/routes.rb")
-      assert_includes routes_contents, "mount FeedMonitor::Engine"
+      assert_includes routes_contents, "mount Feedmon::Engine"
     end
 
     test "install generator preserves custom queue configuration" do
@@ -113,7 +113,7 @@ module FeedMonitor
         File.write(queue_config, "custom_queue_config: true\n" + content)
       end
 
-      HostAppHarness.bundle_exec!("rails", "g", "feed_monitor:install")
+      HostAppHarness.bundle_exec!("rails", "g", "feedmon:install")
 
       assert_match(/custom_queue_config: true/, HostAppHarness.read("config/queue.yml"))
     end
@@ -134,7 +134,7 @@ module FeedMonitor
         YAML
       end
 
-      HostAppHarness.bundle_exec!("rails", "g", "feed_monitor:install")
+      HostAppHarness.bundle_exec!("rails", "g", "feedmon:install")
 
       cable_contents = HostAppHarness.read("config/cable.yml")
       assert_match(/adapter: redis/, cable_contents)

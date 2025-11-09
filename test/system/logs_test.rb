@@ -2,12 +2,12 @@
 
 require "application_system_test_case"
 
-module FeedMonitor
+module Feedmon
   class LogsTest < ApplicationSystemTestCase
     setup do
       @source = create_source!(name: "Log Source", fetch_interval_minutes: 360)
 
-      @item = FeedMonitor::Item.create!(
+      @item = Feedmon::Item.create!(
         source: @source,
         guid: "log-item-1",
         title: "Log Item",
@@ -16,7 +16,7 @@ module FeedMonitor
         published_at: Time.current
       )
 
-      @success_fetch_log = FeedMonitor::FetchLog.create!(
+      @success_fetch_log = Feedmon::FetchLog.create!(
         source: @source,
         success: true,
         started_at: Time.current - 2.hours,
@@ -29,7 +29,7 @@ module FeedMonitor
         metadata: { "etag" => "abc123" }
       )
 
-      @failure_fetch_log = FeedMonitor::FetchLog.create!(
+      @failure_fetch_log = Feedmon::FetchLog.create!(
         source: @source,
         success: false,
         started_at: Time.current - 1.hour,
@@ -43,7 +43,7 @@ module FeedMonitor
         error_message: "execution expired"
       )
 
-      @success_scrape_log = FeedMonitor::ScrapeLog.create!(
+      @success_scrape_log = Feedmon::ScrapeLog.create!(
         source: @source,
         item: @item,
         success: true,
@@ -55,7 +55,7 @@ module FeedMonitor
         content_length: 12_345
       )
 
-      @failure_scrape_log = FeedMonitor::ScrapeLog.create!(
+      @failure_scrape_log = Feedmon::ScrapeLog.create!(
         source: @source,
         item: @item,
         success: false,
@@ -70,7 +70,7 @@ module FeedMonitor
     end
 
     test "filtering consolidated logs by type and status" do
-      visit feed_monitor.logs_path
+      visit feedmon.logs_path
 
       assert_text "Logs"
       assert_selector "[data-log-row='fetch-#{@success_fetch_log.id}']"
@@ -86,12 +86,12 @@ module FeedMonitor
 
       click_link "View Details", match: :first
       assert_text "Scrape Log"
-      assert_current_path feed_monitor.scrape_log_path(@failure_scrape_log)
+      assert_current_path feedmon.scrape_log_path(@failure_scrape_log)
     end
 
     test "searching logs and paging through results" do
       40.times do |index|
-        FeedMonitor::FetchLog.create!(
+        Feedmon::FetchLog.create!(
           source: @source,
           success: false,
           http_status: 500,
@@ -103,7 +103,7 @@ module FeedMonitor
         )
       end
 
-      visit feed_monitor.logs_path
+      visit feedmon.logs_path
 
       fill_in "Search logs", with: "Batch failure 3"
       click_button "Search"

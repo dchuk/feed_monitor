@@ -1,7 +1,7 @@
 const defaultContent = [
   "./app/views/**/*.{erb,html,html.erb}",
   "./app/helpers/**/*.rb",
-  "./app/assets/stylesheets/feed_monitor/**/*.css",
+  "./app/assets/stylesheets/feedmon/**/*.css",
   "./app/assets/javascripts/**/*.{js,ts,jsx,tsx}",
   "./lib/**/*.rb",
   "./test/dummy/app/views/**/*.{erb,html,html.erb}"

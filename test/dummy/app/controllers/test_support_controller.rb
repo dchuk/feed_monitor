@@ -1,5 +1,5 @@
 class TestSupportController < ApplicationController
-  layout "feed_monitor/application"
+  layout "feedmon/application"
 
   def dropdown_without_dependency
   end

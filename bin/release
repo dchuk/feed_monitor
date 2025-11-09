@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require_relative "../lib/feed_monitor/release/runner"
+require_relative "../lib/feedmon/release/runner"
 
 version = ARGV.shift
 
@@ -11,8 +11,8 @@ if version.nil? || version.strip.empty?
 end
 
 begin
-  FeedMonitor::Release::Runner.new(version:).call
-rescue FeedMonitor::Release::Runner::CommandFailure => e
+  Feedmon::Release::Runner.new(version:).call
+rescue Feedmon::Release::Runner::CommandFailure => e
   warn e.message
   exit 1
 rescue StandardError => e
