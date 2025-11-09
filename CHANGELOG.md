@@ -1,5 +1,7 @@
 # Changelog
 
+All notable changes to this project are documented below. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to Semantic Versioning.
+
 ## Release Checklist
 
 1. `rbenv exec bundle exec rails test`
@@ -9,33 +11,46 @@
 5. Update release notes in this file and tag the release (`git tag vX.Y.Z`)
 6. Push tags and publish the gem (`rbenv exec gem push pkg/source_monitor-X.Y.Z.gem`)
 
-## 0.1.0 - 2025-11-08
+## [Unreleased]
 
-- First public release of the SourceMonitor engine with end-to-end feed ingest, scrape orchestration, and Solid Queue dashboards for monitoring, retries, and manual remediation.
-- Includes Feedjira-based fetch pipeline with structured error handling, retention pruning, and configurable HTTP/Scraper adapters.
-- Ships Solid Queue/Solid Cable defaults, Mission Control dashboard hooks, and CRUD UI for sources, items, and scraping state via the dummy host app.
-- Provides install generator, initializer template, cleanup jobs, recurring schedules, and Readability-based scraping adapter to unlock full-content extraction out of the box.
+- No unreleased changes yet.
+
+## [0.1.0] - 2025-11-08
+
+### Added
+
+- Shipped the initial SourceMonitor mountable Rails engine with Source and Item models, Tailwind-powered admin UI, Turbo-powered dashboards, and a dummy host app for full-stack validation.
+- Implemented the full feed ingestion pipeline: Feedjira-based fetcher, Faraday HTTP stack with retry/timeout controls, adaptive scheduling, structured error types, retention policies, and fetch log instrumentation surfaced in the UI.
+- Introduced comprehensive scraping support with a scraper adapter base class, Readability parser, dedicated `ItemContent` storage, manual/bulk scrape controls, and queue-backed `ScrapeItemJob` orchestration.
+- Established Solid Queue and Solid Cable defaults, including recurring schedule config, Mission Control hooks, `FetchFeedJob`/`ScheduleFetchesJob`, queue metrics dashboards, and helper APIs for namespaced queue names.
+- Added health monitoring, failure recovery controls, analytics widgets (heatmaps, distribution insights), and notification hooks so operators can triage outages and re-run work with confidence.
+- Delivered install tooling—generator, initializer template, cleanup/retention rake tasks, host harness smoke tests, and example host templates—plus Faraday/HTTP, scraper, retention, realtime, and mission control configuration DSLs.
+
+### Changed
+
+- Rebranded the engine, routes, and namespaces to `SourceMonitor`, aligning configuration defaults, installer output, and docs with the new identity.
+- Modernized the asset and JavaScript pipeline (esbuild, bundler, Stimulus fixes) and widened admin layouts, sortable tables, and bulk action UX for better operator ergonomics.
+- Restructured source member actions into nested REST resources (fetch, retry, bulk scrape) and consolidated log views/analytics for clearer operator workflows.
+
+### Fixed
+
+- Hardened scheduler behavior to avoid duplicate catch-up fetches, ensured stalled fetch recovery paths requeue work, and guaranteed fetch failure callbacks always attach logs/state.
+- Resolved Solid Cable initialization issues, host Action Cable dependencies, and dummy host/environment parity problems so realtime updates function out of the box.
+- Stabilized the host harness across Ruby versions, added Postgres-backed CI services, patched rbenv mismatches, and tightened sqlite shims plus asset/database setup to keep tests green on every platform.
+
+### Documentation
+
+- Published install and upgrade guides, roadmap phase notes, PR workflow requirements, health configuration guidance, and mission control instructions; expanded AGENT guidance for future contributors.
+
+### CI/CD
+
+- Added layered coverage guardrails (diff coverage enforcement, result-set merging, targeted health coverage suites), automated release verification, and artifact preservation across the packaging workflow.
+- Upgraded GitHub Actions dependencies, introduced reusable workflows for test/lint/build jobs, and ensured release verification prepares databases, locks dependencies, and emits the packaged gem.
 
 ### Upgrade Notes
 
 1. Add `gem "source_monitor", "~> 0.1.0"` to your host `Gemfile` and run `rbenv exec bundle install`.
 2. Execute `rbenv exec bin/rails railties:install:migrations FROM=source_monitor` followed by `rbenv exec bin/rails db:migrate` to copy and run Solid Queue + SourceMonitor migrations.
-3. Review `config/initializers/source_monitor.rb` for queue, scraping, and Mission Control settings; adjust the generated defaults to fit your environment.
-4. If you surface Mission Control Jobs from the dashboard, ensure `mission_control-jobs` stays mounted and `config.mission_control_dashboard_path` is reachable.
-5. Restart Solid Queue workers, Action Cable (Solid Cable by default), and any recurring job runners to pick up the new engine version.
-
-## 2025-10-14
-
-- Converted source fetch, retry, and bulk scrape member actions into nested resources. New controller endpoints:
-  - `POST /source_monitor/sources/:source_id/fetch` (`SourceMonitor::SourceFetchesController#create`)
-  - `POST /source_monitor/sources/:source_id/retry` (`SourceMonitor::SourceRetriesController#create`)
-  - `POST /source_monitor/sources/:source_id/bulk_scrape` (`SourceMonitor::SourceBulkScrapesController#create`)
-  Route helpers are now `source_monitor.source_fetch_path`, `source_monitor.source_retry_path`, and `source_monitor.source_bulk_scrape_path`.
-
-### Upgrade Notes
-
-1. Update your host `Gemfile` to the new version and run `rbenv exec bundle install`.
-2. Re-run `rbenv exec bin/rails railties:install:migrations FROM=source_monitor` followed by `rbenv exec bin/rails db:migrate` to apply new engine migrations (Solid Queue tables remain idempotent).
-3. Diff `config/initializers/source_monitor.rb` against the generated template to adopt new configuration defaults (queue visibility tweaks, HTTP knobs, mission control toggles).
-4. If you surface Mission Control Jobs from the dashboard, ensure `mission_control-jobs` stays mounted and `config.mission_control_dashboard_path` points to the correct route helper.
-5. Restart Solid Queue workers and Action Cable after deploying to pick up configuration changes.
+3. Review `config/initializers/source_monitor.rb` for queue, scraping, retention, HTTP, and Mission Control settings; adjust the generated defaults to fit your environment.
+4. If you surface Mission Control Jobs from the dashboard, ensure `mission_control-jobs` stays mounted and `SourceMonitor.mission_control_dashboard_path` resolves correctly.
+5. Restart Solid Queue workers, Solid Cable (or Redis Action Cable), and any recurring job runners to pick up the new engine version.
