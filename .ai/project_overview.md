@@ -1,8 +1,8 @@
-# Feed Monitor Engine - Project Overview & Capabilities
+# SourceMonitor Engine - Project Overview & Capabilities
 
 ## Project Overview
 
-Feed Monitor Engine is a production-ready Rails 8 mountable engine for aggregating, monitoring, and managing RSS/Atom/JSON feeds at scale. Built with Rails 8 defaults and minimal dependencies, it provides a complete solution for feed ingestion, content scraping, and real-time monitoring.
+SourceMonitor Engine is a production-ready Rails 8 mountable engine for aggregating, monitoring, and managing RSS/Atom/JSON feeds at scale. Built with Rails 8 defaults and minimal dependencies, it provides a complete solution for feed ingestion, content scraping, and real-time monitoring.
 
 ### Core Philosophy
 
@@ -311,10 +311,10 @@ Feed Monitor Engine is a production-ready Rails 8 mountable engine for aggregati
 
 **ActiveSupport Notifications**
 
-- `feed_monitor.fetch.start` - Before fetch begins
-- `feed_monitor.fetch.finish` - After fetch completes
-- `feed_monitor.scrape.start` - Before scraping
-- `feed_monitor.scrape.finish` - After scraping
+- `source_monitor.fetch.start` - Before fetch begins
+- `source_monitor.fetch.finish` - After fetch completes
+- `source_monitor.scrape.start` - Before scraping
+- `source_monitor.scrape.finish` - After scraping
 - Custom event support for host apps
 
 **Health Monitoring**
@@ -386,7 +386,7 @@ Feed Monitor Engine is a production-ready Rails 8 mountable engine for aggregati
 **Configuration DSL**
 
 ```ruby
-FeedMonitor.configure do |config|
+SourceMonitor.configure do |config|
   config.fetch_timeout = 30
   config.scrape_timeout = 60
   config.user_agent = "MyApp Bot"
@@ -620,9 +620,9 @@ Modify the admin interface:
 - Additional views and actions
 - Integration with host app navigation
 - White-label branding
-- Stimulus controllers ship as ES modules via Importmap (`feed_monitor/application`); host apps can override controller registrations with `importmap.rb`
+- Stimulus controllers ship as ES modules via Importmap (`source_monitor/application`); host apps can override controller registrations with `importmap.rb`
 - Dropdown interactions use `stimulus-use` transitions when available and automatically fall back to class toggling when the module is not pinned
-- `bin/rails app:feed_monitor:assets:build` and `app:feed_monitor:assets:verify` keep Tailwind builds current; verification runs before `rails test`
+- `bin/rails app:source_monitor:assets:build` and `app:source_monitor:assets:verify` keep Tailwind builds current; verification runs before `rails test`
 
 ---
 
@@ -688,10 +688,10 @@ Modify the admin interface:
 - **Release Checklist**:
   1. `rbenv exec bundle exec rails test`
   2. `rbenv exec bundle exec rubocop`
-  3. `rbenv exec bundle exec rake app:feed_monitor:assets:verify`
-  4. `rbenv exec bundle exec gem build feed_monitor.gemspec`
+  3. `rbenv exec bundle exec rake app:source_monitor:assets:verify`
+  4. `rbenv exec bundle exec gem build source_monitor.gemspec`
   5. Update `CHANGELOG.md` with release notes and tag commit (`git tag vX.Y.Z`)
-  6. Push tag and publish gem (`rbenv exec gem push pkg/feed_monitor-X.Y.Z.gem`)
+  6. Push tag and publish gem (`rbenv exec gem push pkg/source_monitor-X.Y.Z.gem`)
   7. Announce release in project README/CHANGELOG summary as needed
 
 ---
@@ -734,11 +734,11 @@ Modify the admin interface:
 
 ## Getting Started
 
-1. Add to Gemfile: `gem 'feed_monitor'`
-2. Run: `rails g feed_monitor:install`
+1. Add to Gemfile: `gem 'source_monitor'`
+2. Run: `rails g source_monitor:install`
 3. Run: `rails db:migrate`
-4. Mount in routes: `mount FeedMonitor::Engine => "/feed_monitor"`
-5. Visit: `http://localhost:3000/feed_monitor`
+4. Mount in routes: `mount SourceMonitor::Engine => "/source_monitor"`
+5. Visit: `http://localhost:3000/source_monitor`
 6. Add your first source and click "Fetch Now"
 
 The engine is production-ready from day one with sensible defaults and can be customized extensively for specific needs.

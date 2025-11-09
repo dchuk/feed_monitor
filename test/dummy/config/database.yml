@@ -10,12 +10,12 @@ default: &default
 
 development:
   <<: *default
-  database: <%= ENV.fetch("POSTGRES_DB", "feed_monitor_dummy_development") %>
+  database: <%= ENV.fetch("POSTGRES_DB", "sourcemon_dummy_development") %>
 
 test:
   <<: *default
-  database: <%= ENV.fetch("POSTGRES_TEST_DB", "feed_monitor_dummy_test") %>
+  database: <%= ENV.fetch("POSTGRES_TEST_DB", "sourcemon_dummy_test") %>
 
 production:
   <<: *default
-  database: <%= ENV.fetch("POSTGRES_PRODUCTION_DB", "feed_monitor_dummy_production") %>
+  database: <%= ENV.fetch("POSTGRES_PRODUCTION_DB", "sourcemon_dummy_production") %>

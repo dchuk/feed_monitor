@@ -3,7 +3,7 @@
 require "application_system_test_case"
 require "uri"
 
-module FeedMonitor
+module SourceMonitor
   class SourcesTest < ApplicationSystemTestCase
     include ActiveJob::TestHelper
     include ActionView::RecordIdentifier
@@ -17,7 +17,7 @@ module FeedMonitor
       clear_enqueued_jobs
     end
     test "managing a source end to end" do
-      visit feed_monitor.sources_path
+      visit source_monitor.sources_path
 
       within "header nav" do
         assert_no_link "New Source"
@@ -38,14 +38,14 @@ module FeedMonitor
 
       click_button "Create Source"
       assert_selector "h1", text: "UI Source"
-      source = FeedMonitor::Source.find_by!(feed_url: "https://example.com/feed")
+      source = SourceMonitor::Source.find_by!(feed_url: "https://example.com/feed")
       assert_equal "UI Source", source.name
-      assert_current_path feed_monitor.source_path(FeedMonitor::Source.last)
+      assert_current_path source_monitor.source_path(SourceMonitor::Source.last)
       assert_text "Retention Policy Active"
 
-      source = FeedMonitor::Source.last
+      source = SourceMonitor::Source.last
 
-      FeedMonitor::Item.create!(
+      SourceMonitor::Item.create!(
         source: source,
         guid: "ui-item-1",
         title: "UI Item Article",
@@ -57,7 +57,7 @@ module FeedMonitor
         published_at: Time.current
       )
 
-      visit feed_monitor.source_path(source)
+      visit source_monitor.source_path(source)
 
       assert_selector "[data-testid='source-items-table']"
       assert_text "UI Item Article"
@@ -75,28 +75,28 @@ module FeedMonitor
       uncheck "Active"
       click_button "Update Source"
 
-      assert_current_path feed_monitor.source_path(source)
+      assert_current_path source_monitor.source_path(source)
       assert_text "Updated Source"
 
       click_link "Sources"
-      assert_current_path feed_monitor.sources_path
+      assert_current_path source_monitor.sources_path
       assert_text "Updated Source"
       assert_selector "span", text: "Paused"
       within find("tr", text: "Updated Source") do
         assert_selector "td", text: %r{/ day}
       end
 
-      visit feed_monitor.source_path(source)
-      delete_form = find("form[action='#{feed_monitor.source_path(source)}']")
+      visit source_monitor.source_path(source)
+      delete_form = find("form[action='#{source_monitor.source_path(source)}']")
       assert_equal "Delete this source and remove all associated data?", delete_form["data-turbo-confirm"]
 
       page.execute_script("window.__feedMonitorConfirm = window.confirm; window.confirm = () => true;")
       click_button "Delete"
       page.execute_script("window.confirm = window.__feedMonitorConfirm || window.confirm; window.__feedMonitorConfirm = undefined;")
       assert_no_text "Updated Source"
-      refute FeedMonitor::Source.exists?(source.id)
+      refute SourceMonitor::Source.exists?(source.id)
 
-      assert_current_path feed_monitor.sources_path
+      assert_current_path source_monitor.sources_path
       assert_no_text "Updated Source"
     end
 
@@ -104,7 +104,7 @@ module FeedMonitor
       create_source!(name: "Ruby Updates", feed_url: "https://ruby.example.com/feed.xml")
       create_source!(name: "Elixir News", feed_url: "https://elixir.example.com/feed.xml")
 
-      visit feed_monitor.sources_path
+      visit source_monitor.sources_path
 
       assert_text "Ruby Updates"
       assert_text "Elixir News"
@@ -127,7 +127,7 @@ module FeedMonitor
       create_source!(name: "Regular Source", fetch_interval_minutes: 45, feed_url: "https://regular.example.com/feed.xml")
       create_source!(name: "Slow Source", fetch_interval_minutes: 95, feed_url: "https://slow.example.com/feed.xml")
 
-      visit feed_monitor.sources_path
+      visit source_monitor.sources_path
 
       find("[data-testid='fetch-interval-bucket-30-60']").click
 
@@ -157,32 +157,32 @@ module FeedMonitor
       older.update_columns(created_at: 1.hour.ago)
       newer.update_columns(created_at: Time.current)
 
-      visit feed_monitor.sources_path
+      visit source_monitor.sources_path
 
       assert_source_order [ "Zeta Feed", "Alpha Feed" ]
 
-      within "turbo-frame#feed_monitor_sources_table thead" do
+      within "turbo-frame#source_monitor_sources_table thead" do
         click_link "Source"
       end
 
       assert_source_order [ "Alpha Feed", "Zeta Feed" ]
-      within "turbo-frame#feed_monitor_sources_table thead th[data-sort-column='name']" do
+      within "turbo-frame#source_monitor_sources_table thead th[data-sort-column='name']" do
         assert_text "▲"
       end
 
-      within "turbo-frame#feed_monitor_sources_table thead" do
+      within "turbo-frame#source_monitor_sources_table thead" do
         click_link "Source"
       end
       assert_source_order [ "Zeta Feed", "Alpha Feed" ]
-      within "turbo-frame#feed_monitor_sources_table thead th[data-sort-column='name']" do
+      within "turbo-frame#source_monitor_sources_table thead th[data-sort-column='name']" do
         assert_text "▼"
       end
 
-      within "turbo-frame#feed_monitor_sources_table" do
+      within "turbo-frame#source_monitor_sources_table" do
         first_row = find("tbody tr:first-child")
         within first_row do
           name_link = find("td:first-child a", text: "Zeta Feed")
-          assert_equal feed_monitor.source_path(newer), URI.parse(name_link[:href]).path
+          assert_equal source_monitor.source_path(newer), URI.parse(name_link[:href]).path
 
           assert_no_link "View"
           assert_no_link "Edit"
@@ -203,23 +203,23 @@ module FeedMonitor
     test "source dropdown links navigate to view and edit pages" do
       source = create_source!(name: "Nav Feed", feed_url: "https://nav.example.com/feed.xml")
 
-      visit feed_monitor.sources_path
+      visit source_monitor.sources_path
 
-      within "turbo-frame#feed_monitor_sources_table" do
+      within "turbo-frame#source_monitor_sources_table" do
         find("button[aria-label='Source actions']").click
         click_link "View"
       end
 
-      assert_current_path feed_monitor.source_path(source)
+      assert_current_path source_monitor.source_path(source)
 
-      visit feed_monitor.sources_path
+      visit source_monitor.sources_path
 
-      within "turbo-frame#feed_monitor_sources_table" do
+      within "turbo-frame#source_monitor_sources_table" do
         find("button[aria-label='Source actions']").click
         click_link "Edit"
       end
 
-      assert_current_path feed_monitor.edit_source_path(source)
+      assert_current_path source_monitor.edit_source_path(source)
     end
 
     test "deleting a source from the index removes the row and refreshes heatmap" do
@@ -234,7 +234,7 @@ module FeedMonitor
         fetch_interval_minutes: 45
       )
 
-      visit feed_monitor.sources_path
+      visit source_monitor.sources_path
 
       within "[data-testid='fetch-interval-bucket-30-60']" do
         assert_text "1"
@@ -253,7 +253,7 @@ module FeedMonitor
       end
 
       assert_no_selector "tr", text: delete_source.name
-      assert FeedMonitor::Source.exists?(keep_source.id), "expected other sources to remain"
+      assert SourceMonitor::Source.exists?(keep_source.id), "expected other sources to remain"
 
       within "[data-testid='fetch-interval-bucket-30-60']" do
         assert_text "0"
@@ -276,7 +276,7 @@ module FeedMonitor
         published_at: Time.current
       )
 
-      visit feed_monitor.source_path(source)
+      visit source_monitor.source_path(source)
 
       within "[data-testid='source-items-table'] tbody tr:first-child" do
         badge = find("[data-testid='item-scrape-status-badge']")
@@ -289,7 +289,7 @@ module FeedMonitor
       source.reload
 
       payloads = capture_turbo_stream_broadcasts([ source, :details ]) do
-        FeedMonitor::Realtime.broadcast_source(source)
+        SourceMonitor::Realtime.broadcast_source(source)
       end
       assert_not_empty payloads, "expected a turbo-stream broadcast for source details"
 
@@ -305,13 +305,13 @@ module FeedMonitor
     end
 
     test "bulk scrape modal enqueues selections and handles empty scopes" do
-      FeedMonitor.configure do |config|
+      SourceMonitor.configure do |config|
         config.scraping.max_in_flight_per_source = 5
       end
 
       source = create_source!(name: "Bulk Scrape", scraping_enabled: true, auto_scrape: false)
       3.times do |index|
-        FeedMonitor::Item.create!(
+        SourceMonitor::Item.create!(
           source: source,
           guid: "bulk-item-#{index}",
           url: "https://example.com/bulk/#{index}",
@@ -320,7 +320,7 @@ module FeedMonitor
         )
       end
 
-      visit feed_monitor.source_path(source)
+      visit source_monitor.source_path(source)
 
       find("[data-testid='bulk-scrape-button']").click
 
@@ -335,7 +335,7 @@ module FeedMonitor
       assert_equal 3, enqueued_jobs.size
       clear_enqueued_jobs
       source.reload
-      assert_equal 3, FeedMonitor::Item.where(source: source, scrape_status: "pending").count
+      assert_equal 3, SourceMonitor::Item.where(source: source, scrape_status: "pending").count
 
       within "[data-testid='source-items-table'] tbody tr:first-child" do
         assert_selector "[data-testid='item-scrape-status-badge'][data-status='pending']"
@@ -351,13 +351,13 @@ module FeedMonitor
       assert_text "No items match the selected scope"
       assert_equal 0, enqueued_jobs.size
       source.reload
-      assert_equal 3, FeedMonitor::Item.where(source: source, scrape_status: "pending").count
+      assert_equal 3, SourceMonitor::Item.where(source: source, scrape_status: "pending").count
     end
 
     private
 
     def assert_source_order(expected)
-      within "turbo-frame#feed_monitor_sources_table" do
+      within "turbo-frame#source_monitor_sources_table" do
         expected.each_with_index do |name, index|
           assert_selector :xpath,
             format(".//tbody/tr[%<row>d]/td[1]", row: index + 1),
@@ -372,16 +372,16 @@ module FeedMonitor
         feed_url: "https://www.ruby-lang.org/en/feeds/news.rss"
       )
 
-      visit feed_monitor.source_path(source)
+      visit source_monitor.source_path(source)
 
       click_button "Fetch Now"
       assert_selector "[data-testid='fetch-status-badge']", text: "Queued"
 
-      VCR.use_cassette("feed_monitor/fetching/rss_success") do
+      VCR.use_cassette("source_monitor/fetching/rss_success") do
         with_inline_jobs { perform_enqueued_jobs }
       end
 
-      visit feed_monitor.source_path(source)
+      visit source_monitor.source_path(source)
 
       assert_selector "[data-testid='source-items-table'] tbody tr", minimum: 1
 
@@ -408,7 +408,7 @@ module FeedMonitor
         fetch_circuit_until: 1.hour.from_now
       )
 
-      visit feed_monitor.source_path(source)
+      visit source_monitor.source_path(source)
 
       assert_button "Retry Now"
       assert_selector "[data-testid='fetch-status-badge']", text: "Failed"
@@ -427,7 +427,7 @@ module FeedMonitor
         auto_paused_until: 2.hours.from_now
       )
 
-      visit feed_monitor.sources_path
+      visit source_monitor.sources_path
 
       within find("tr", text: source.name) do
         assert_selector "span", text: "Auto-Paused"
@@ -447,7 +447,7 @@ module FeedMonitor
         last_error_at: 30.minutes.ago
       )
 
-      visit feed_monitor.sources_path
+      visit source_monitor.sources_path
 
       row = find("tr##{dom_id(source, :row)}")
       health_menu = row.find("[data-testid='source-health-menu']")
@@ -459,16 +459,16 @@ module FeedMonitor
       menu_button = menu.find("button", text: /Run Health Check/i, visible: :all)
       page.execute_script("arguments[0].click()", menu_button.native)
 
-      within "turbo-frame#feed_monitor_sources_table" do
+      within "turbo-frame#source_monitor_sources_table" do
         assert_selector "span", text: /Processing/i
       end
 
       assert_text "Health check enqueued"
-      assert_equal FeedMonitor::SourceHealthCheckJob, enqueued_jobs.last[:job]
+      assert_equal SourceMonitor::SourceHealthCheckJob, enqueued_jobs.last[:job]
 
       with_inline_jobs { perform_enqueued_jobs }
 
-      visit feed_monitor.logs_path(log_type: "health_check")
+      visit source_monitor.logs_path(log_type: "health_check")
 
       assert_selector "table tbody tr td", text: "Problematic Feed"
       assert_selector "table tbody tr td", text: "Health Check"
@@ -489,7 +489,7 @@ module FeedMonitor
         next_fetch_at: 2.hours.from_now
       )
 
-      visit feed_monitor.source_path(source)
+      visit source_monitor.source_path(source)
 
       health_menu = find("[data-testid='source-health-menu']")
       health_menu.find("[data-testid='source-health-menu-toggle']").click

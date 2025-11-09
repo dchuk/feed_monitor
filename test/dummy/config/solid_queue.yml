@@ -9,12 +9,12 @@ default: &default
 
 development:
   <<: *default
-  database: <%= ENV.fetch("SOLID_QUEUE_DB", "feed_monitor_dummy_queue_development") %>
+  database: <%= ENV.fetch("SOLID_QUEUE_DB", "sourcemon_dummy_queue_development") %>
 
 test:
   <<: *default
-  database: <%= ENV.fetch("SOLID_QUEUE_TEST_DB", "feed_monitor_dummy_queue_test") %>
+  database: <%= ENV.fetch("SOLID_QUEUE_TEST_DB", "sourcemon_dummy_queue_test") %>
 
 production:
   <<: *default
-  database: <%= ENV.fetch("SOLID_QUEUE_PRODUCTION_DB", "feed_monitor_dummy_queue_production") %>
+  database: <%= ENV.fetch("SOLID_QUEUE_PRODUCTION_DB", "sourcemon_dummy_queue_production") %>

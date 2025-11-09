@@ -1,0 +1,46 @@
+<% distribution = Array(local_assigns.fetch(:fetch_interval_distribution, [])) %>
+<% selected_bucket = local_assigns[:selected_bucket] %>
+<% search_params = local_assigns[:search_params] || {} %>
+<% max_count = distribution.map(&:count).max.to_i %>
+
+<div id="source_monitor_sources_heatmap" class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+  <div class="border-b border-slate-200 bg-slate-50 px-6 py-4">
+    <h2 class="text-base font-semibold text-slate-900">Fetch Interval Distribution</h2>
+    <p class="mt-1 text-xs text-slate-500">Heatmap shows how many sources sit in each scheduling bucket.</p>
+  </div>
+  <div class="px-6 py-4" data-testid="fetch-interval-heatmap">
+    <table class="w-full table-fixed text-center text-sm">
+      <thead class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <tr>
+          <% distribution.each do |bucket| %>
+            <th scope="col" class="px-2 pb-3"><%= bucket.label %></th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <% distribution.each do |bucket| %>
+            <% bucket_classes = heatmap_bucket_classes(bucket.count, max_count) %>
+            <% selected = bucket == selected_bucket %>
+            <% link_path = fetch_interval_bucket_path(bucket, search_params, selected: selected) %>
+            <% bucket_key = [bucket.min || 0, bucket.max || "plus"].join("-") %>
+            <% highlight_classes = selected ? "ring-2 ring-blue-500 shadow-lg" : "ring-1 ring-transparent hover:ring-blue-400 hover:shadow" %>
+            <td class="px-2">
+              <%= link_to link_path,
+                    class: "block focus:outline-none group",
+                    data: { turbo_frame: "_top" },
+                    "data-testid" => "fetch-interval-bucket-#{bucket_key}",
+                    aria: { label: selected ? "Show all sources" : "Filter sources by #{bucket.label}" } do %>
+                <div class="flex flex-col items-center justify-center gap-1 rounded-lg px-3 py-4 text-xs font-semibold transition <%= bucket_classes %> <%= highlight_classes %>"
+                     title="<%= "#{bucket.count} sources between #{bucket.label}" %>">
+                  <span class="text-base"><%= bucket.count %></span>
+                  <span class="font-medium">sources</span>
+                </div>
+              <% end %>
+            </td>
+          <% end %>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

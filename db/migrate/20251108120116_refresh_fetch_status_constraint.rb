@@ -16,12 +16,12 @@ class RefreshFetchStatusConstraint < ActiveRecord::Migration[8.0]
     quoted_values = statuses.map { |status| ActiveRecord::Base.connection.quote(status) }.join(", ")
 
     execute <<~SQL
-      ALTER TABLE feed_monitor_sources
+      ALTER TABLE sourcemon_sources
       DROP CONSTRAINT IF EXISTS check_fetch_status_values
     SQL
 
     execute <<~SQL
-      ALTER TABLE feed_monitor_sources
+      ALTER TABLE sourcemon_sources
       ADD CONSTRAINT check_fetch_status_values
       CHECK (fetch_status IN (#{quoted_values}))
     SQL

@@ -3,9 +3,9 @@
 require "test_helper"
 require "yaml"
 
-module FeedMonitor
+module SourceMonitor
   class DockerConfigTest < ActiveSupport::TestCase
-    COMPOSE_PATH = FeedMonitor::Engine.root.join("examples/docker/docker-compose.yml")
+    COMPOSE_PATH = SourceMonitor::Engine.root.join("examples/docker/docker-compose.yml")
 
     test "compose file defines core services" do
       config = YAML.safe_load(COMPOSE_PATH.read, aliases: true)

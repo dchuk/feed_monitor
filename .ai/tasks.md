@@ -1,4 +1,4 @@
-# Feed Monitor Engine - Rails 8 Thin Slice TDD Development Roadmap
+# SourceMonitor Engine - Rails 8 Thin Slice TDD Development Roadmap
 
 ## Phase 01: Minimal Engine Setup & Rails Integration
 
@@ -6,14 +6,14 @@
 
 ### 01.01 Generate Mountable Engine
 
-- [x] 01.01.01 Generate Rails engine with `rails plugin new feed_monitor --mountable`
+- [x] 01.01.01 Generate Rails engine with `rails plugin new source_monitor --mountable`
 - [x] 01.01.02 Configure isolate_namespace in engine.rb
 
 ### 01.02 Create Installation Generator
 
 - [x] 01.02.01 Write test for install generator existence
 - [x] 01.02.02 Create basic install generator class
-- [x] 01.02.03 Make mount path configurable (default /feed_monitor)
+- [x] 01.02.03 Make mount path configurable (default /source_monitor)
 - [x] 01.02.04 Add generator usage instructions to README
 
 ### 01.03 Mount Engine in Host App
@@ -42,7 +42,7 @@
 ### 02.02 Add Observability
 
 - [x] 02.02.01 Setup ActiveSupport::Notifications events
-- [x] 02.02.02 Add feed_monitor.fetch.start/finish events
+- [x] 02.02.02 Add source_monitor.fetch.start/finish events
 - [x] 02.02.03 Create /health endpoint
 - [x] 02.02.04 Add basic metrics collection module
 
@@ -58,7 +58,7 @@
 ### 03.01 Create Source Model & Migration
 
 - [x] 03.01.01 Create sources migration with all fields: name, feed_url (unique/indexed), website_url, active (default true/indexed), feed_format, fetch_interval_hours (default 6), next_fetch_at (indexed), last_fetched_at, last_fetch_duration_ms, last_http_status, last_error (text), last_error_at, etag, last_modified, failure_count (default 0), backoff_until, items_count (counter cache), scraping_enabled (default false), auto_scrape (default false), scrape_settings (jsonb), scraper_adapter (default 'readability'), requires_javascript (default false), custom_headers (jsonb), items_retention_days, max_items, metadata (jsonb), timestamps
-- [x] 03.01.02 Create FeedMonitor::Source model with validations
+- [x] 03.01.02 Create SourceMonitor::Source model with validations
 - [x] 03.01.03 Add URL validation and normalization
 - [x] 03.01.04 Add scopes for active, due_for_fetch, failed, healthy
 - [x] 03.01.05 Test creating source via console and UI form
@@ -66,7 +66,7 @@
 ### 03.02 Create Item Model & Migration
 
 - [x] 03.02.01 Create items migration with all fields: source_id (references/indexed/fk), guid (indexed), content_fingerprint (indexed SHA256), title, url (indexed), canonical_url, author, authors (jsonb), summary (text), content (text), scraped_html (text), scraped_content (text), scraped_at, scrape_status (indexed), published_at (indexed), updated_at_source, categories (jsonb), tags (jsonb), keywords (jsonb), enclosures (jsonb), media_thumbnail_url, media_content (jsonb), language, copyright, comments_url, comments_count, metadata (jsonb), timestamps; add unique constraints on (source_id, guid) and (source_id, content_fingerprint)
-- [x] 03.02.02 Create FeedMonitor::Item model
+- [x] 03.02.02 Create SourceMonitor::Item model
 - [x] 03.02.03 Add associations to Source
 - [x] 03.02.04 Add validations and scopes
 - [x] 03.02.05 Test creating items programmatically
@@ -74,14 +74,14 @@
 ### 03.03 Create FetchLog Model & Migration
 
 - [x] 03.03.01 Create fetch_logs migration with all fields: source_id (references/indexed/fk), success (indexed), items_created (default 0), items_updated (default 0), items_failed (default 0), started_at (indexed), completed_at, duration_ms, http_status, http_response_headers (jsonb), error_class, error_message (text), error_backtrace (text), feed_size_bytes, items_in_feed, job_id (indexed), metadata (jsonb), created_at (indexed)
-- [x] 03.03.02 Create FeedMonitor::FetchLog model
+- [x] 03.03.02 Create SourceMonitor::FetchLog model
 - [x] 03.03.03 Add associations and scopes
 - [x] 03.03.04 Test log creation with various scenarios
 
 ### 03.04 Create ScrapeLog Model & Migration
 
 - [x] 03.04.01 Create scrape_logs migration with all fields: item_id (references/indexed/fk), source_id (references/indexed/fk), success (indexed), started_at, completed_at, duration_ms, http_status, scraper_adapter, content_length, error_class, error_message (text), metadata (jsonb), created_at (indexed)
-- [x] 03.04.02 Create FeedMonitor::ScrapeLog model
+- [x] 03.04.02 Create SourceMonitor::ScrapeLog model
 - [x] 03.04.03 Add associations
 - [x] 03.04.04 Test scrape log tracking
 
@@ -270,7 +270,7 @@
 ### 08.01 Establish Job Infrastructure
 
 - [x] 08.01.01 Ensure Solid Queue/Postgres are the default while allowing host apps to override ActiveJob backend if already configured
-- [x] 08.01.02 Introduce `FeedMonitor::ApplicationJob` that inherits the host `ApplicationJob` when present, falling back to `ActiveJob::Base`
+- [x] 08.01.02 Introduce `SourceMonitor::ApplicationJob` that inherits the host `ApplicationJob` when present, falling back to `ActiveJob::Base`
 - [x] 08.01.03 Provide configurable queue names/concurrency that respect host settings and avoid namespace clashes
 - [x] 08.01.04 Add lightweight job visibility in the engine (e.g., queue depth/last run) and document optional Mission Control integration without hard dependency
 - [x] 08.01.05 Verify job execution path inside dummy app with Postgres-backed Solid Queue
@@ -383,7 +383,7 @@
 
 ### 11.01 Configuration DSL
 
-- [x] 11.01.01 Create FeedMonitor.configure method
+- [x] 11.01.01 Create SourceMonitor.configure method
 - [x] 11.01.02 Add HTTP client settings (timeouts, retries)
 - [x] 11.01.03 Configure scraper adapters
 - [x] 11.01.04 Set retention policies globally
@@ -562,19 +562,19 @@
 
 ### 17.05 Service Decomposition
 
-- [x] 17.05.01 Extract advisory lock management from `FeedMonitor::Fetching::FetchRunner` into a dedicated collaborator with unit tests
+- [x] 17.05.01 Extract advisory lock management from `SourceMonitor::Fetching::FetchRunner` into a dedicated collaborator with unit tests
 - [x] 17.05.02 Split fetch completion responsibilities (retention, scrape enqueue, events) into injectable services and cover with integration specs
-- [x] 17.05.03 Refactor `FeedMonitor::Scraping::ItemScraper` into adapter resolver and persistence steps with contract tests for adapters
-- [x] 17.05.04 Break `FeedMonitor::Items::RetentionPruner` strategies into separate classes/modules and expand test coverage for destroy vs soft delete
+- [x] 17.05.03 Refactor `SourceMonitor::Scraping::ItemScraper` into adapter resolver and persistence steps with contract tests for adapters
+- [x] 17.05.04 Break `SourceMonitor::Items::RetentionPruner` strategies into separate classes/modules and expand test coverage for destroy vs soft delete
 - [x] 17.05.05 Introduce a shared sanitization module for models (e.g., Source, future models) and migrate existing callbacks with unit coverage
 - [x] 17.05.06 Extract reusable URL normalization helpers for Item and other URL-backed models with regression tests
 
 ### 17.06 Job & Scheduling Reliability
 
-- [x] 17.06.01 Align `FeedMonitor::ScrapeItemJob` with shared state helpers, ensuring consistent pending/processing transitions and job tests
+- [x] 17.06.01 Align `SourceMonitor::ScrapeItemJob` with shared state helpers, ensuring consistent pending/processing transitions and job tests
 - [x] 17.06.02 Centralize cleanup job option parsing into a shared utility and update ItemCleanupJob/LogCleanupJob specs
-- [x] 17.06.03 Add explicit retry/backoff policy for transient errors in `FeedMonitor::FetchFeedJob` with coverage for retry scheduling
-- [x] 17.06.04 Instrument `FeedMonitor::Scheduler` runs and expose metrics/hooks verified by integration tests
+- [x] 17.06.03 Add explicit retry/backoff policy for transient errors in `SourceMonitor::FetchFeedJob` with coverage for retry scheduling
+- [x] 17.06.04 Instrument `SourceMonitor::Scheduler` runs and expose metrics/hooks verified by integration tests
 
 ### 17.07 Front-End Pipeline Modernization
 
@@ -593,7 +593,7 @@
 
 ### 17.09 Dashboard Performance Enhancements
 
-- [x] 17.09.01 Refactor `FeedMonitor::Dashboard::Queries` to batch/cache queries and separate routing/presentation concerns, with performance-focused tests
+- [x] 17.09.01 Refactor `SourceMonitor::Dashboard::Queries` to batch/cache queries and separate routing/presentation concerns, with performance-focused tests
 - [x] 17.09.02 Add instrumentation for dashboard query durations and expose metrics for Mission Control integration
 - [x] 17.09.03 Document dashboard configuration expectations for host apps, including Mission Control linking prerequisites
 
@@ -638,7 +638,7 @@
 ### 19.02 Add "Scrape All" Control to Source Show
 
 - [x] 19.02.01 Define UX placement, confirmation copy, and authorization expectations for a "Scrape All" button on the source detail page. Default to scraping all items on the current page of the table, with a radio button, and another option for "all unscraped items for this source ([count])" and also "All items (even those previously scraped) ([count])" that the user can toggle
-- [x] 19.02.02 Wire the control to enqueue scraping for eligible items via the existing `FeedMonitor::Scraping::Enqueuer`, respecting auto-scrape settings and avoiding duplicate jobs
+- [x] 19.02.02 Wire the control to enqueue scraping for eligible items via the existing `SourceMonitor::Scraping::Enqueuer`, respecting auto-scrape settings and avoiding duplicate jobs
 - [x] 19.02.03 Provide user feedback (flash/turbo partial) summarizing how many items were enqueued and expose errors when nothing qualifies
 - [x] 19.02.04 Ensure the system allows per-source scraping rate limits so that the queue is properly metered to not denial of service the source to scrape their items
 - [x] 19.02.05 Cover the new control with system and service tests, including a regression case for sources with no scrape-eligible items
@@ -668,9 +668,9 @@
 
 **Priority:** MUST FIX - Immediate impact on code quality and performance
 
-- [x] 20.01.01 **Refactor SourcesController destroy method** (2-3 hours) - Extract 61-line method into service object. Reference: `.ai/codebase_audit_2025.md:41-216` - Create `FeedMonitor::Sources::DestroyService` that handles deletion, query rebuilding, metrics recalculation, and returns Result object. Reduce controller method to <15 lines.
-- [x] 20.01.02 **Extract BulkScrapeResultPresenter** (2-3 hours) - Extract 47-line flash message builder from controller. Reference: `.ai/codebase_audit_2025.md:941-1015` - Create `FeedMonitor::Scraping::BulkResultPresenter` that handles all message formatting logic. Testable without mocking view_context.
-- [x] 20.01.03 **Create TurboStreamPresenter for sources** (2-3 hours) - Extract duplicated Turbo Stream response building. Reference: `.ai/codebase_audit_2025.md:90-215` - Create `FeedMonitor::Sources::TurboStreamPresenter` with methods for deletion, heatmap updates, empty state rendering. Consolidate 40+ lines of repeated logic.
+- [x] 20.01.01 **Refactor SourcesController destroy method** (2-3 hours) - Extract 61-line method into service object. Reference: `.ai/codebase_audit_2025.md:41-216` - Create `SourceMonitor::Sources::DestroyService` that handles deletion, query rebuilding, metrics recalculation, and returns Result object. Reduce controller method to <15 lines.
+- [x] 20.01.02 **Extract BulkScrapeResultPresenter** (2-3 hours) - Extract 47-line flash message builder from controller. Reference: `.ai/codebase_audit_2025.md:941-1015` - Create `SourceMonitor::Scraping::BulkResultPresenter` that handles all message formatting logic. Testable without mocking view_context.
+- [x] 20.01.03 **Create TurboStreamPresenter for sources** (2-3 hours) - Extract duplicated Turbo Stream response building. Reference: `.ai/codebase_audit_2025.md:90-215` - Create `SourceMonitor::Sources::TurboStreamPresenter` with methods for deletion, heatmap updates, empty state rendering. Consolidate 40+ lines of repeated logic.
 - [x] 20.01.04 **Fix N+1 query in sources index** (1-2 hours) - Pre-calculate activity rates for all sources. Reference: `.ai/codebase_audit_2025.md:220-311` - Ensure `@item_activity_rates` hash contains entries for ALL sources in result set. Update view to never fall back to individual queries. Verify with query log that N+1 is eliminated.
 - [x] 20.01.05 **Remove inline script from turbo_visit partial** (1-2 hours) - Replace inline JavaScript with Turbo Stream action. Reference: `.ai/codebase_audit_2025.md:313-389` - Create custom `StreamActions.redirect` function in `turbo_actions.js`. Update all usages of `_turbo_visit.html.erb` partial. Test CSP compliance.
 
@@ -691,9 +691,9 @@
 **Priority:** HIGH - Significant maintainability impact
 
 - [x] 20.02.01 **Replace default_scope anti-pattern in Item model** (4-6 hours) - Remove global default_scope for soft deletes. Reference: `.ai/codebase_audit_2025.md:391-452` - Remove `default_scope { where(deleted_at: nil) }`. Add explicit `.active` scope. Update Source associations to use `-> { active }` lambda. Update ALL Item queries in controllers/services to explicitly use `.active`. Update 7+ controller actions and 10+ service objects. Test thoroughly.
-- [x] 20.02.02 **Create validates_url_format method in UrlNormalizable concern** (2-3 hours) - Eliminate 5 duplicated URL validation methods. Reference: `.ai/codebase_audit_2025.md:456-544` - Add `validates_url_format(*attributes)` class method to `lib/feed_monitor/models/url_normalizable.rb`. Dynamically define validation methods. Update Source model to use `validates_url_format :feed_url, :website_url`. Update Item model to use `validates_url_format :url, :canonical_url, :comments_url`. Remove 5 manual validation methods.
-- [x] 20.02.03 **Create Loggable concern for shared log behavior** (1-2 hours) - Consolidate FetchLog and ScrapeLog duplicated code. Reference: `.ai/codebase_audit_2025.md:548-626` - Create `app/models/concerns/feed_monitor/loggable.rb` with shared validations, scopes, and attribute defaults. Include in both FetchLog and ScrapeLog models. Remove duplicated code from both models.
-- [x] 20.02.04 **Create TurboStreamable concern for response building** (3-4 hours) - DRY up 50+ lines repeated 5+ times. Reference: `.ai/codebase_audit_2025.md:630-736` - **COMPLETE**: Phase 20.01 already created `FeedMonitor::Sources::TurboStreamPresenter` which adequately addresses the major duplication. Remaining duplication in `render_fetch_enqueue_response` and `respond_to_bulk_scrape` serves different purposes and doesn't warrant a generic concern. Presenter pattern is superior to a generic concern for these use cases.
+- [x] 20.02.02 **Create validates_url_format method in UrlNormalizable concern** (2-3 hours) - Eliminate 5 duplicated URL validation methods. Reference: `.ai/codebase_audit_2025.md:456-544` - Add `validates_url_format(*attributes)` class method to `lib/source_monitor/models/url_normalizable.rb`. Dynamically define validation methods. Update Source model to use `validates_url_format :feed_url, :website_url`. Update Item model to use `validates_url_format :url, :canonical_url, :comments_url`. Remove 5 manual validation methods.
+- [x] 20.02.03 **Create Loggable concern for shared log behavior** (1-2 hours) - Consolidate FetchLog and ScrapeLog duplicated code. Reference: `.ai/codebase_audit_2025.md:548-626` - Create `app/models/concerns/source_monitor/loggable.rb` with shared validations, scopes, and attribute defaults. Include in both FetchLog and ScrapeLog models. Remove duplicated code from both models.
+- [x] 20.02.04 **Create TurboStreamable concern for response building** (3-4 hours) - DRY up 50+ lines repeated 5+ times. Reference: `.ai/codebase_audit_2025.md:630-736` - **COMPLETE**: Phase 20.01 already created `SourceMonitor::Sources::TurboStreamPresenter` which adequately addresses the major duplication. Remaining duplication in `render_fetch_enqueue_response` and `respond_to_bulk_scrape` serves different purposes and doesn't warrant a generic concern. Presenter pattern is superior to a generic concern for these use cases.
 - [x] 20.02.05 **Enhance SanitizesSearchParams with query building** (2-3 hours) - Consolidate ransack query setup. Reference: `.ai/codebase_audit_2025.md:740-824` - Add `searchable_with` class method accepting scope and default_sorts. Add `build_search_query` instance method. Update SourcesController and ItemsController to use new DSL. Remove duplicated ransack initialization code from 3+ locations. All duplication eliminated.
 - [x] 20.02.06 **Add NOT NULL database constraints** (2-3 hours) - Enforce critical field constraints at DB level. Reference: `.ai/codebase_audit_2025.md:826-903` - Create migration to add NOT NULL constraints on `items.guid` and `items.url`. Write data cleanup script to handle existing nulls. Run migration and verify constraints applied. All constraints active.
 
@@ -774,7 +774,7 @@
 - [x] 20.05.03 **Rename log filtering methods** (1 hour) - Inconsistent naming conventions. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Rename `log_filter_status` to `status_filter`, `log_filter_item_id` to `item_id_filter`. Rename `filter_fetch_logs` to `apply_fetch_log_filters`. Use consistent verb/noun patterns.
 - [x] 20.05.04 **Add performance indexes** (2-3 hours) - Missing indexes for common queries. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Create migration adding: `index_items_on_source_and_created_at_for_rates`, `index_sources_on_active_and_next_fetch` (partial), `index_sources_on_failures` (partial). Analyze query performance before/after.
 - [x] 20.05.05 **Add check constraint on fetch_status enum** (1-2 hours) - Application-level validation only. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Create migration adding PostgreSQL CHECK constraint: `CHECK (fetch_status IN ('idle', 'queued', 'fetching', 'failed'))`. Test invalid status rejection at DB level.
-- [x] 20.05.06 **Optimize dashboard queries with JOINs** (2-3 hours) - Subqueries less efficient than JOINs. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Refactor `FeedMonitor::Dashboard::Queries` correlated subqueries to use LEFT JOINs. Measure query performance improvement. Update `scrape_log_sql` and `item_sql` methods.
+- [x] 20.05.06 **Optimize dashboard queries with JOINs** (2-3 hours) - Subqueries less efficient than JOINs. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Refactor `SourceMonitor::Dashboard::Queries` correlated subqueries to use LEFT JOINs. Measure query performance improvement. Update `scrape_log_sql` and `item_sql` methods.
 - [x] 20.05.07 **Simplify dropdown controller async import** (30 min, OPTIONAL) - Over-engineered progressive enhancement. Reference: `.ai/codebase_audit_2025.md:1069-1082` - Evaluate static import of stimulus-use vs dynamic import. Document trade-offs. Simplify if benefits outweigh loss of progressive enhancement. **Decision: Keep current implementation, documented reasoning in code.**
 
 **Acceptance Criteria:**
@@ -798,7 +798,7 @@
 - [x] 20.06.01 **Audit current asset tooling and bundler deps** (2h) - Completed. Updated gemspec to include `cssbundling-rails`/`jsbundling-rails`, refreshed `package.json` scripts and dependencies. Reference: `.ai/engine-asset-configuration.md:11-28`.
 - [x] 20.06.02 **Document current dummy app breakage** (1h) - Captured the missing Tailwind/JS failure mode and added troubleshooting guidance referencing the asset guide. Reference: `.ai/engine-asset-configuration.md:11-28`.
 - [x] 20.06.03 **Plan asset directory realignment** (1.5h) - Namespaced builds, images, and svgs per guide recommendations. Reference: `.ai/engine-asset-configuration.md:32-44`.
-- [x] 20.06.04 **Implement bundling pipeline setup** (3h) - Installed bundling toolchain via dummy app flow, established npm build/watch scripts, and added `FeedMonitor::Assets::Bundler`. Reference: `.ai/engine-asset-configuration.md:21-28`.
+- [x] 20.06.04 **Implement bundling pipeline setup** (3h) - Installed bundling toolchain via dummy app flow, established npm build/watch scripts, and added `SourceMonitor::Assets::Bundler`. Reference: `.ai/engine-asset-configuration.md:21-28`.
 - [x] 20.06.05 **Expose asset paths via engine initializer** (1.5h) - Engine initializer now exposes builds/images/svgs for both pipelines. Reference: `.ai/engine-asset-configuration.md:48-76`.
 - [x] 20.06.06 **Add Sprockets precompile automation** (2h) - Added programmable precompile list and tests covering Sprockets discovery. Reference: `.ai/engine-asset-configuration.md:79-113`.
 - [x] 20.06.07 **Assess manifest fallback path** (optional, 1h) - Documented manifest fallback option in configuration docs; keeping programmatic approach as default. Reference: `.ai/engine-asset-configuration.md:114-143`.
@@ -857,18 +857,18 @@
 
 ## Phase 22: Release Readiness & Host Installation Experience
 
-**Goal: Ship Feed Monitor as an installable gem with bulletproof host app onboarding**
+**Goal: Ship SourceMonitor as an installable gem with bulletproof host app onboarding**
 
 ### 22.01 Package Readiness Audit
 
-- [x] 22.01.01 Review `feed_monitor.gemspec` metadata, dependencies, and executables to match release expectations (homepage, changelog, docs URLs, Ruby/Rails version constraints)
+- [x] 22.01.01 Review `source_monitor.gemspec` metadata, dependencies, and executables to match release expectations (homepage, changelog, docs URLs, Ruby/Rails version constraints)
 - [x] 22.01.02 Establish semantic versioning policy and release cadence, updating `.ai/project_overview.md` and `CHANGELOG.md` with the release checklist
-- [x] 22.01.03 Confirm gem build artifacts (`gem build feed_monitor.gemspec`) exclude development-only files via `.gemspec` and `.npmignore`/`.gitignore` alignment
+- [x] 22.01.03 Confirm gem build artifacts (`gem build source_monitor.gemspec`) exclude development-only files via `.gemspec` and `.npmignore`/`.gitignore` alignment
 
 ### 22.02 Fresh Host App Installation Flow
 
 - [x] 22.02.01 Script a disposable Rails 8 host app harness (e.g., `tmp/host_app`) that installs the gem from the local path and exercises the install generator
-- [x] 22.02.02 Add automated test suite (bin/rails test or RSpec) that boots the harness, runs `rails g feed_monitor:install`, and asserts migrations/routes initializers mount without manual edits
+- [x] 22.02.02 Add automated test suite (bin/rails test or RSpec) that boots the harness, runs `rails g source_monitor:install`, and asserts migrations/routes initializers mount without manual edits
 - [x] 22.02.03 Verify host app retains existing configuration (environment settings, Solid Queue adapter, Action Cable config) by snapshotting before/after diffs in the harness tests
 
 ### 22.03 Isolation & Compatibility Guarantees

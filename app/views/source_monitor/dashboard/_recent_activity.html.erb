@@ -1,0 +1,39 @@
+<div id="source_monitor_dashboard_recent_activity" class="rounded-lg border border-slate-200 bg-white shadow-sm">
+  <div class="border-b border-slate-200 px-5 py-4">
+    <h2 class="text-lg font-medium">Recent Activity</h2>
+    <p class="mt-1 text-xs text-slate-500">Latest fetch, scrape, and item events across sources.</p>
+  </div>
+  <div class="divide-y divide-slate-100">
+    <% if recent_activity.any? %>
+      <% recent_activity.each do |event| %>
+        <div class="flex items-center justify-between px-5 py-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <div class="text-sm font-medium text-slate-900">
+                <% if event[:path].present? %>
+                  <%= link_to event[:label], event[:path], data: { turbo_frame: "_top" }, class: "text-slate-900 hover:text-blue-600" %>
+                <% else %>
+                  <%= event[:label] %>
+                <% end %>
+              </div>
+              <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-600"><%= event[:type].to_s.humanize %></span>
+            </div>
+            <div class="mt-1 text-xs text-slate-500">
+              <%= event[:description].presence || "No additional details recorded." %>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold <%= event[:status] == :success ? "bg-green-100 text-green-700" : "bg-rose-100 text-rose-700" %>">
+              <%= event[:status] == :success ? "Success" : "Failure" %>
+            </span>
+            <div class="mt-1 text-xs text-slate-400">
+              <%= event[:time]&.strftime("%b %d, %H:%M") || "Unknown" %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="px-5 py-6 text-sm text-slate-500">No recent activity yet. Fetches, scrapes, and new items will appear here.</div>
+    <% end %>
+  </div>
+</div>

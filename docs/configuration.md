@@ -1,9 +1,9 @@
 # Configuration & API Reference
 
-All configuration lives in `FeedMonitor.configure`—the install generator creates `config/initializers/feed_monitor.rb` with sensible defaults and inline documentation. This guide expands on every namespace so you know which knobs to turn in production.
+All configuration lives in `SourceMonitor.configure`—the install generator creates `config/initializers/source_monitor.rb` with sensible defaults and inline documentation. This guide expands on every namespace so you know which knobs to turn in production.
 
 ```ruby
-FeedMonitor.configure do |config|
+SourceMonitor.configure do |config|
   # customize settings here
 end
 ```
@@ -12,23 +12,23 @@ Restart your application whenever you change these settings. The engine reloads 
 
 ## Asset Bundling
 
-- FeedMonitor ships with npm-based bundling via `cssbundling-rails` and `jsbundling-rails`; follow `.ai/engine-asset-configuration.md:11-113` when adjusting dependency versions or adding new entrypoints.
-- Keep bundled outputs under the namespaced directories (`app/assets/builds/feed_monitor`, `images/feed_monitor`, `svgs/feed_monitor`) so host apps avoid collisions. See `.ai/engine-asset-configuration.md:32-44` for the layout recommendations.
-- Use `rbenv exec bundle exec rake app:feed_monitor:assets:build` (or `npm run build`) after tweaking Tailwind/Stimulus code to refresh the builds, and rely on `test/dummy/bin/dev` to watch `build:css:watch` + `build:js:watch` during development.
+- SourceMonitor ships with npm-based bundling via `cssbundling-rails` and `jsbundling-rails`; follow `.ai/engine-asset-configuration.md:11-113` when adjusting dependency versions or adding new entrypoints.
+- Keep bundled outputs under the namespaced directories (`app/assets/builds/source_monitor`, `images/source_monitor`, `svgs/source_monitor`) so host apps avoid collisions. See `.ai/engine-asset-configuration.md:32-44` for the layout recommendations.
+- Use `rbenv exec bundle exec rake app:source_monitor:assets:build` (or `npm run build`) after tweaking Tailwind/Stimulus code to refresh the builds, and rely on `test/dummy/bin/dev` to watch `build:css:watch` + `build:js:watch` during development.
 - Sprockets hosts receive automatic precompile coverage; if a host prefers manifest-based precompilation, adapt the approach documented in `.ai/engine-asset-configuration.md:114-143`.
 
 ## Queue & Worker Settings
 
-- `config.queue_namespace` – prefix applied to queue names (`"feed_monitor"` by default)
+- `config.queue_namespace` – prefix applied to queue names (`"source_monitor"` by default)
 - `config.fetch_queue_name` / `config.scrape_queue_name` – base queue names before the host's `ActiveJob.queue_name_prefix` is applied
 - `config.fetch_queue_concurrency` / `config.scrape_queue_concurrency` – advisory values Solid Queue uses for per-queue limits
 - `config.queue_name_for(:fetch | :scrape)` – helper that respects the host's queue prefix
 
-Use the helpers exposed on `FeedMonitor`:
+Use the helpers exposed on `SourceMonitor`:
 
 ```ruby
-FeedMonitor.queue_name(:fetch)    # => "feed_monitor_fetch"
-FeedMonitor.queue_concurrency(:scrape) # => 2
+SourceMonitor.queue_name(:fetch)    # => "source_monitor_fetch"
+SourceMonitor.queue_concurrency(:scrape) # => 2
 ```
 
 ## Job Metrics & Mission Control
@@ -37,7 +37,7 @@ FeedMonitor.queue_concurrency(:scrape) # => 2
 - `config.mission_control_enabled` – surfaces the Mission Control link on the dashboard when `true`
 - `config.mission_control_dashboard_path` – host route helper or callable returning the Mission Control path/URL; left blank by default
 
-The helper `FeedMonitor.mission_control_dashboard_path` performs a routing check so the dashboard only renders links that resolve.
+The helper `SourceMonitor.mission_control_dashboard_path` performs a routing check so the dashboard only renders links that resolve.
 
 ## HTTP Client Settings
 
@@ -46,7 +46,7 @@ The helper `FeedMonitor.mission_control_dashboard_path` performs a routing check
 - `timeout` – total request timeout in seconds (default `15`)
 - `open_timeout` – connection open timeout in seconds (`5`)
 - `max_redirects` – maximum redirects to follow (`5`)
-- `user_agent` – defaults to `FeedMonitor/<version>`
+- `user_agent` – defaults to `SourceMonitor/<version>`
 - `proxy` – hash or URL to configure proxy usage
 - `headers` – hash (or callables) merged into every request
 - `retry_max`, `retry_interval`, `retry_interval_randomness`, `retry_backoff_factor`, `retry_statuses` – mapped to `faraday-retry`
@@ -72,14 +72,14 @@ The retention pruner runs after every successful fetch and inside nightly cleanu
 
 ## Scraper Registry
 
-Register adapters that inherit from `FeedMonitor::Scrapers::Base`:
+Register adapters that inherit from `SourceMonitor::Scrapers::Base`:
 
 ```ruby
-config.scrapers.register(:readability, FeedMonitor::Scrapers::Readability)
+config.scrapers.register(:readability, SourceMonitor::Scrapers::Readability)
 config.scrapers.register(:custom, "MyApp::Scrapers::Premium" )
 ```
 
-Adapters receive merged settings (`default -> source -> invocation`), and must return a `FeedMonitor::Scrapers::Result` object. Use `config.scrapers.unregister(:custom)` to remove overrides.
+Adapters receive merged settings (`default -> source -> invocation`), and must return a `SourceMonitor::Scrapers::Result` object. Use `config.scrapers.unregister(:custom)` to remove overrides.
 
 ## Events & Item Processors
 
@@ -105,8 +105,8 @@ Event structs expose `item`, `source`, `entry`, `result`, `status`, and `occurre
 
 `config.models` lets host apps customise engine models at load time.
 
-- `config.models.table_name_prefix` – override the default `feed_monitor_` prefix
-- `config.models.source.include_concern "MyApp::FeedMonitor::SourceExtensions"` – mix in concerns before models load
+- `config.models.table_name_prefix` – override the default `sourcemon_` prefix
+- `config.models.source.include_concern "MyApp::SourceMonitor::SourceExtensions"` – mix in concerns before models load
 - `config.models.source.validate :ensure_metadata_rules` – register validations (blocks or symbols)
 - Equivalent hooks exist for items, fetch logs, scrape logs, and item content via `config.models.item`, etc.
 
@@ -129,7 +129,7 @@ Protect the dashboard with host-specific auth in one place:
 ```ruby
 config.authentication.authenticate_with :authenticate_admin!
 config.authentication.authorize_with ->(controller) {
-  controller.current_user&.feature_enabled?(:feed_monitor)
+  controller.current_user&.feature_enabled?(:source_monitor)
 }
 config.authentication.current_user_method = :current_user
 config.authentication.user_signed_in_method = :user_signed_in?
@@ -148,11 +148,11 @@ Handlers can be symbols (invoked on the controller) or callables. Return `false`
 
 ## Helper APIs
 
-- `FeedMonitor.configure` – run-time configuration entry point
-- `FeedMonitor.reset_configuration!` – revert to defaults (useful in tests)
-- `FeedMonitor.events` – direct access to the events registry
-- `FeedMonitor.queue_name(role)` / `FeedMonitor.queue_concurrency(role)` – convenience helpers
-- `FeedMonitor::Metrics.snapshot` – inspect counters/gauges (great for health checks)
+- `SourceMonitor.configure` – run-time configuration entry point
+- `SourceMonitor.reset_configuration!` – revert to defaults (useful in tests)
+- `SourceMonitor.events` – direct access to the events registry
+- `SourceMonitor.queue_name(role)` / `SourceMonitor.queue_concurrency(role)` – convenience helpers
+- `SourceMonitor::Metrics.snapshot` – inspect counters/gauges (great for health checks)
 
 ## Environment Variables
 

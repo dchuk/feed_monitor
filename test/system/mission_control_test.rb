@@ -2,7 +2,7 @@
 
 require "application_system_test_case"
 
-module FeedMonitor
+module SourceMonitor
   class MissionControlTest < ApplicationSystemTestCase
     test "mission control renders in light theme with queues tab" do
       page.driver.browser.basic_authorize("feedmonitor", "change-me")

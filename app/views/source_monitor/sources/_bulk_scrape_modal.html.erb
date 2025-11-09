@@ -1,0 +1,53 @@
+<% selected = (local_assigns[:selected] || :current).to_sym %>
+<% preview_limit = local_assigns[:preview_limit] || SourceMonitor::Scraping::BulkSourceScraper::DEFAULT_PREVIEW_LIMIT %>
+<% preview_items_relation = SourceMonitor::Item.where(source_id: source.id)
+  .order(Arel.sql("published_at DESC NULLS LAST, created_at DESC"))
+  .limit(preview_limit) %>
+<% preview_items = preview_items_relation.to_a %>
+<% counts = SourceMonitor::Scraping::BulkSourceScraper.selection_counts(
+     source: source,
+     preview_items: preview_items,
+     preview_limit: preview_limit
+   ) %>
+
+<div data-controller="modal" data-modal-open-class="flex" class="relative">
+  <button
+    type="button"
+    class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+    data-action="modal#open"
+    data-testid="bulk-scrape-button"
+  >
+    Bulk Scrape
+  </button>
+
+  <div
+    data-modal-target="panel"
+    class="hidden fixed inset-0 z-50 items-center justify-center"
+    data-testid="bulk-scrape-modal"
+  >
+    <div class="absolute inset-0 bg-slate-900/40" data-action="click->modal#close"></div>
+    <div class="relative z-10 w-full max-w-xl overflow-hidden rounded-lg bg-white shadow-xl">
+      <div class="flex items-start justify-between border-b border-slate-200 px-6 py-4">
+        <div>
+          <h2 class="text-lg font-semibold text-slate-900">Bulk Scrape Items</h2>
+          <p class="mt-1 text-xs text-slate-500">Queue scraping jobs for this source without leaving the page.</p>
+        </div>
+        <button
+          type="button"
+          class="inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+          data-action="modal#close"
+          aria-label="Close bulk scrape modal"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <div class="px-6 py-5">
+        <%= render "source_monitor/sources/bulk_scrape_form",
+              source: source,
+              counts: counts,
+              selected: selected %>
+      </div>
+    </div>
+  </div>
+</div>

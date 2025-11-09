@@ -3,7 +3,7 @@ class AddFetchStatusCheckConstraint < ActiveRecord::Migration[8.0]
     # Add PostgreSQL CHECK constraint to enforce fetch_status enum values at database level
     # This complements the application-level validation in the Source model
     execute <<-SQL
-      ALTER TABLE feed_monitor_sources
+      ALTER TABLE sourcemon_sources
       ADD CONSTRAINT check_fetch_status_values
       CHECK (fetch_status IN ('idle', 'queued', 'fetching', 'failed'))
     SQL
@@ -11,7 +11,7 @@ class AddFetchStatusCheckConstraint < ActiveRecord::Migration[8.0]
 
   def down
     execute <<-SQL
-      ALTER TABLE feed_monitor_sources
+      ALTER TABLE sourcemon_sources
       DROP CONSTRAINT check_fetch_status_values
     SQL
   end

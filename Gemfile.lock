@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    feed_monitor (0.1.0)
+    source_monitor (0.1.0)
       cssbundling-rails (~> 1.4)
       faraday (~> 2.9)
       faraday-follow_redirects (~> 0.4)
@@ -395,7 +395,7 @@ PLATFORMS
 DEPENDENCIES
   brakeman
   capybara
-  feed_monitor!
+  source_monitor!
   pg
   propshaft
   puma
