@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "tempfile"
-require "source_monitor/release/changelog"
+require_relative "changelog"
 
 module SourceMonitor
   module Release
