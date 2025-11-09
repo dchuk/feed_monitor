@@ -15,6 +15,16 @@ All notable changes to this project are documented below. The format follows [Ke
 
 - No unreleased changes yet.
 
+## [0.1.1] - 2025-11-09
+
+### Changed
+
+- Bumped the gem to 0.1.1 so the republished package on RubyGems matches the revamped 0.1.0 release notes without reusing the yanked version number.
+
+### Fixed
+
+- Clarified that the 0.1.0 entry now reflects the authoritative feature overview for the first release, preventing consumers from encountering inconsistent documentation across yanks.
+
 ## [0.1.0] - 2025-11-08
 
 ### Added
