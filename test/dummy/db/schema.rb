@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_08_120116) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_09_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -213,7 +213,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_08_120116) do
     t.index ["health_status"], name: "index_feedmon_sources_on_health_status"
     t.index ["next_fetch_at"], name: "index_feedmon_sources_on_next_fetch_at"
     t.index ["type"], name: "index_feedmon_sources_on_type"
-    t.check_constraint "fetch_status::text = ANY (ARRAY['idle'::character varying, 'queued'::character varying, 'fetching'::character varying, 'failed'::character varying, 'invalid'::character varying]::text[])", name: "check_fetch_status_values"
+    t.check_constraint "fetch_status::text = ANY (ARRAY['idle'::character varying::text, 'queued'::character varying::text, 'fetching'::character varying::text, 'failed'::character varying::text, 'invalid'::character varying::text])", name: "check_fetch_status_values"
   end
 
   create_table "solid_cable_messages", force: :cascade do |t|
