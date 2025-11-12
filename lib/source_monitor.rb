@@ -81,6 +81,10 @@ require "source_monitor/scheduler"
 require "source_monitor/items/item_creator"
 require "source_monitor/health"
 require "source_monitor/assets"
+require "source_monitor/setup/requirements"
+require "source_monitor/setup/shell_runner"
+require "source_monitor/setup/detectors"
+require "source_monitor/setup/dependency_checker"
 
 module SourceMonitor
   class << self

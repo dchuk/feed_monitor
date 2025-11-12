@@ -19,13 +19,13 @@ IMPORTANT: As you complete each task, check it off by changing `- [ ]` to `- [x]
 
 ## Tasks
 
-- [ ] 0.0 Create feature branch
-  - [ ] 0.1 Create and checkout `feature/setup-workflow-streamlining`
+- [x] 0.0 Create feature branch
+  - [x] 0.1 Create and checkout `feature/setup-workflow-streamlining`
 - [ ] 1.0 Build prerequisite detection and dependency helpers
-  - [ ] 1.1 Design dependency checker interface (Ruby/Rails/Postgres/Node/Solid Queue)
-  - [ ] 1.2 Implement version detection services with unit tests (TDD)
-  - [ ] 1.3 Add remediation guidance mapping (error messages) with tests
-  - [ ] 1.4 Wire helpers into CLI task to block/skip steps appropriately
+  - [x] 1.1 Design dependency checker interface (Ruby/Rails/Postgres/Node/Solid Queue)
+  - [x] 1.2 Implement version detection services with unit tests (TDD)
+  - [x] 1.3 Add remediation guidance mapping (error messages) with tests
+  - [x] 1.4 Wire helpers into CLI task to block/skip steps appropriately
 - [ ] 2.0 Implement guided setup command/workflow
   - [ ] 2.1 Scaffold Thor/Rails task entry point with prompts, ensuring specs cover CLI flow
   - [ ] 2.2 Automate Gemfile injection + `bundle install` and cover via integration-style tests/mocks
