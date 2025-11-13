@@ -187,6 +187,11 @@ module HostAppHarness
       "BUNDLE_PATH" => BUNDLE_ROOT,
       "BUNDLE_CACHE_ALL" => "1"
     }
+    env["POSTGRES_HOST"] ||= ENV.fetch("POSTGRES_HOST", "localhost")
+    env["POSTGRES_USER"] ||= ENV.fetch("POSTGRES_USER", "postgres")
+    env["POSTGRES_PASSWORD"] ||= ENV.fetch("POSTGRES_PASSWORD", "")
+    env["POSTGRES_DB"] ||= ENV.fetch("POSTGRES_DB", "sourcemon_dummy_development")
+    env["POSTGRES_TEST_DB"] ||= ENV.fetch("POSTGRES_TEST_DB", "sourcemon_dummy_test")
     env["RBENV_VERSION"] = TARGET_RUBY_VERSION if rbenv_available?
     env
   end

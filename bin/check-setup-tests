@@ -1,0 +1,34 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "pathname"
+
+ROOT = Pathname.new(File.expand_path("..", __dir__))
+LIB_ROOT = ROOT.join("lib/source_monitor/setup")
+TEST_ROOT = ROOT.join("test/lib/source_monitor/setup")
+ALLOWED = %w[
+  lib/source_monitor/setup/requirements.rb
+  lib/source_monitor/setup/shell_runner.rb
+  lib/source_monitor/setup/verification/result.rb
+].freeze
+
+missing = []
+Dir.glob(LIB_ROOT.join("**/*.rb")).each do |lib_path|
+  relative = Pathname.new(lib_path).relative_path_from(ROOT).to_s
+  next if ALLOWED.include?(relative)
+
+  expected = TEST_ROOT.join(Pathname.new(lib_path).relative_path_from(LIB_ROOT)).sub_ext("_test.rb")
+  unless expected.exist?
+    missing << [ relative, expected.relative_path_from(ROOT).to_s ]
+  end
+end
+
+if missing.any?
+  warn "Missing setup tests for:\n"
+  missing.each do |lib_file, test_file|
+    warn "  - #{lib_file} (expected #{test_file})"
+  end
+  exit 1
+end
+
+puts "All setup library files have matching tests."

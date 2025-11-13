@@ -18,6 +18,22 @@ module SourceMonitor
             assert_includes content, "\"overall_status\":\"ok\""
           end
         end
+
+        test "defaults to rails root log path" do
+          Dir.mktmpdir do |dir|
+            summary = Summary.new([
+              Result.new(key: :demo, name: "Demo", status: :ok, details: "fine")
+            ])
+
+            Rails.stub(:root, Pathname.new(dir)) do
+              TelemetryLogger.new.log(summary)
+            end
+
+            default_path = File.join(dir, "log", "source_monitor_setup.log")
+            assert File.exist?(default_path)
+            assert_includes File.read(default_path), "overall_status"
+          end
+        end
       end
     end
   end

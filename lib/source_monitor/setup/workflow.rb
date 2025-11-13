@@ -1,3 +1,5 @@
+require "pathname"
+
 module SourceMonitor
   module Setup
     class Workflow
@@ -95,4 +97,3 @@ module SourceMonitor
     end
   end
 end
-require "pathname"

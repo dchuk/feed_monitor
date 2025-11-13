@@ -37,6 +37,9 @@ jobs:
       - name: Lint code for consistent style
         run: bin/rubocop -f github
 
+      - name: Verify setup files have matching tests
+        run: bin/check-setup-tests
+
   security:
     runs-on: ubuntu-latest
     steps:

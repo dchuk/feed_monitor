@@ -1,4 +1,5 @@
 require "test_helper"
+require "tmpdir"
 
 module SourceMonitor
   module Setup
@@ -102,6 +103,53 @@ module SourceMonitor
 
         error = assert_raises(Workflow::RequirementError) { workflow.run }
         assert_match(/Ruby/, error.message)
+      end
+
+      test "skips devise wizard when detector returns false" do
+        dependency_checker = Minitest::Mock.new
+        dependency_checker.expect(:call, StubSummary.new(status: :ok))
+
+        prompter = Minitest::Mock.new
+        prompter.expect(:ask, "/app", [ String ], default: Workflow::DEFAULT_MOUNT_PATH)
+
+        initializer_patcher = Spy.new
+
+        workflow = Workflow.new(
+          dependency_checker: dependency_checker,
+          prompter: prompter,
+          initializer_patcher: initializer_patcher,
+          devise_detector: -> { false },
+          gemfile_editor: Spy.new(true),
+          bundle_installer: Spy.new,
+          node_installer: Spy.new,
+          install_generator: Spy.new,
+          migration_installer: Spy.new,
+          verifier: Spy.new(StubSummary.new)
+        )
+
+        workflow.run
+
+        refute initializer_patcher.calls.any? { |call| call.first == :ensure_devise_hooks }
+        prompter.verify
+      end
+
+      test "default devise detector inspects Gemfile contents" do
+        Dir.mktmpdir do |dir|
+          Dir.chdir(dir) do
+            File.write("Gemfile", 'gem "devise"')
+            workflow = Workflow.new
+            assert workflow.send(:default_devise_detector)
+          end
+        end
+      end
+
+      test "gemfile_mentions_devise? returns false when file missing" do
+        Dir.mktmpdir do |dir|
+          Dir.chdir(dir) do
+            workflow = Workflow.new
+            refute workflow.send(:default_devise_detector)
+          end
+        end
       end
     end
   end

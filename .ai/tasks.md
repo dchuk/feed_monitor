@@ -5,6 +5,12 @@
 - PRD: `tasks/prd-setup-workflow-streamlining.md`
 - Task list: `tasks/tasks-setup-workflow-streamlining.md`
 
+## Coverage Workflow
+
+- Always run `bin/test-coverage` followed by `bin/check-diff-coverage` before pushing.
+- When legitimate changes lower coverage, run `bin/update-coverage-baseline` and commit the refreshed `config/coverage_baseline.json` in the same branch.
+- CI enforces these steps (diff coverage + setup test presence), so follow them locally to avoid failures.
+
 ## Phase 01: Minimal Engine Setup & Rails Integration
 
 **Goal: Get engine mountable in host Rails 8 app immediately**

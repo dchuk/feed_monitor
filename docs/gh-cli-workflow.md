@@ -6,7 +6,11 @@ Use this checklist whenever you create or land a slice. It keeps `gh` commands p
 1. `git checkout main && git fetch origin && git reset --hard origin/main`
 2. `git checkout -b <feature|bugfix>/<description>`
 3. Do the work, run tests/lint, then `git commit -am "scope: summary"`
-4. Push: `git push -u origin <branch>`
+4. Run the coverage gate locally before pushing:
+   - `bin/test-coverage`
+   - `bin/check-diff-coverage`
+   - If new code is intentionally uncovered, refresh the baseline with `bin/update-coverage-baseline` and commit the updated `config/coverage_baseline.json`.
+5. Push: `git push -u origin <branch>`
 
 ## 2. Open a PR (as draft)
 1. `gh pr create --base main --head <branch> --title "scope: summary" --body "## Summary\n..." --draft`
