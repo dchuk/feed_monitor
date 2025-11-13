@@ -34,7 +34,7 @@ module SourceMonitor
 
       def print_next_steps
         say_status :info,
-          "Next steps: review docs/installation.md for install walkthroughs and docs/troubleshooting.md for common fixes.",
+          "Next steps: review docs/setup.md for the guided + manual install walkthrough and docs/troubleshooting.md for common fixes.",
           :green
       end
 

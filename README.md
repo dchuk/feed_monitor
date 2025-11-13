@@ -33,7 +33,7 @@ SourceMonitor is a production-ready Rails 8 mountable engine for ingesting, norm
 See [docs/setup.md](docs/setup.md) for the full workflow (prereq table, rollback steps, telemetry flag, Devise system test template).
 
 ### Manual Install (Advanced)
-Prefer explicit Rails generator steps or need to customize each phase? Follow the detailed walkthrough in [docs/installation.md](docs/installation.md). It mirrors the guided workflow but breaks out each command (generator, migrations, queue wiring) so you can integrate them into bespoke pipelines.
+Prefer explicit Rails generator steps or need to customize each phase? The same document covers a full **Manual Installation** section so you can copy/paste each command into bespoke pipelines.
 
 Troubleshooting advice lives in [docs/troubleshooting.md](docs/troubleshooting.md).
 

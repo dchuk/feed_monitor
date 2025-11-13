@@ -61,6 +61,45 @@ bin/source_monitor install --yes
 - Results show human-friendly lines plus a JSON blob; exit status is non-zero when any check fails.
 - To persist telemetry for support, set `SOURCE_MONITOR_SETUP_TELEMETRY=true`. Logs append to `log/source_monitor_setup.log`.
 
+## Manual Installation (Advanced)
+
+Prefer to script each step or plug SourceMonitor into an existing deployment checklist? Use the manual flow below. It mirrors the guided CLI internals while keeping every command explicit.
+
+### Quick Reference
+
+| Step | Command | Purpose |
+| --- | --- | --- |
+| 1 | `gem "source_monitor", github: "dchuk/source_monitor"` | Add the engine to your Gemfile (skip if already present) |
+| 2 | `bundle install` | Install Ruby dependencies |
+| 3 | `bin/rails generate source_monitor:install --mount-path=/source_monitor` | Mount the engine and create the initializer |
+| 4 | `bin/rails railties:install:migrations FROM=source_monitor` | Copy engine migrations (idempotent) |
+| 5 | `bin/rails db:migrate` | Apply schema updates, including Solid Queue tables |
+| 6 | `bin/rails solid_queue:start` | Ensure jobs process via Solid Queue |
+| 7 | `bin/jobs --recurring_schedule_file=config/recurring.yml` | Start recurring scheduler (optional but recommended) |
+| 8 | `bin/source_monitor verify` | Confirm Solid Queue/Action Cable readiness and emit telemetry |
+
+> Tip: You can drop these commands directly into your CI pipeline or release scripts. The CLI uses the same services, so mixing and matching is safe.
+
+### Step-by-step Details
+
+1. **Add the gem** to the host `Gemfile` (GitHub edge or released version) and run `bundle install`. If your host manages node tooling, run `npm install` also.
+2. **Install the engine** via `bin/rails generate source_monitor:install --mount-path=/source_monitor`. The generator mounts the engine, creates `config/initializers/source_monitor.rb`, and prints follow-up instructions. Re-running the generator is safe; it detects existing mounts/initializers.
+3. **Copy migrations** with `bin/rails railties:install:migrations FROM=source_monitor`. This brings in the SourceMonitor tables plus Solid Cable/Queue schema when needed. The command is idempotent—run it again after upgrading the gem.
+4. **Apply database changes** using `bin/rails db:migrate`. If your host already installed Solid Queue migrations manually, delete duplicate files before migrating.
+5. **Wire Action Cable** if necessary. SourceMonitor defaults to Solid Cable; confirm `ApplicationCable::Connection`/`Channel` exist and that `config/initializers/source_monitor.rb` uses the adapter you expect. To switch to Redis, set `config.realtime.adapter = :redis` and `config.realtime.redis_url`.
+6. **Start workers** with `bin/rails solid_queue:start` (or your process manager). Add a recurring process via `bin/jobs --recurring_schedule_file=config/recurring.yml` when you need fetch/scrape schedules.
+7. **Review the initializer** and tune queue names, HTTP timeouts, scraping adapters, retention limits, authentication hooks, and Mission Control integration. The [configuration reference](configuration.md) details every option.
+8. **Verify the install**: run `bin/source_monitor verify` to ensure Solid Queue workers and Action Cable are healthy, then visit the mount path to trigger a fetch manually. Enable telemetry if you want JSON logs recorded for support.
+
+### Host Compatibility Matrix
+
+| Host Scenario | Status | Notes |
+| --- | --- | --- |
+| Rails 8 full-stack app | ✅ Supported | Use the guided workflow or the manual generator steps above |
+| Rails 8 API-only app (`--api`) | ✅ Supported | Generator mounts engine; provide your own UI entry point if needed |
+| Dedicated Solid Queue database | ✅ Supported | Run `bin/rails solid_queue:install` in the host app before copying SourceMonitor migrations |
+| Redis-backed Action Cable | ✅ Supported | Set `config.realtime.adapter = :redis` and provide `config.realtime.redis_url`; existing `config/cable.yml` entries are preserved |
+
 ## Rollback Steps
 
 If you need to revert the integration in a host app:

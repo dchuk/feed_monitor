@@ -81,7 +81,7 @@ module SourceMonitor
     def test_outputs_next_steps_with_doc_links
       output = run_generator
 
-      assert_includes output, "docs/installation.md"
+      assert_includes output, "docs/setup.md"
       assert_includes output, "docs/troubleshooting.md"
     end
 
