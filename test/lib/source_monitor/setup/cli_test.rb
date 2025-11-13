@@ -73,7 +73,7 @@ module SourceMonitor
         logger = Minitest::Mock.new
         logger.expect(:log, nil, [ summary ])
 
-        ENV['SOURCE_MONITOR_SETUP_TELEMETRY'] = 'true'
+        ENV["SOURCE_MONITOR_SETUP_TELEMETRY"] = "true"
         cli.stub(:printer, printer) do
           SourceMonitor::Setup::Verification::TelemetryLogger.stub(:new, logger) do
             cli.stub(:exit, nil) do
@@ -86,7 +86,7 @@ module SourceMonitor
         assert_mock printer
         assert_mock logger
       ensure
-        ENV.delete('SOURCE_MONITOR_SETUP_TELEMETRY')
+        ENV.delete("SOURCE_MONITOR_SETUP_TELEMETRY")
       end
     end
   end
