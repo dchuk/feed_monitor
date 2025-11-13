@@ -15,6 +15,16 @@ All notable changes to this project are documented below. The format follows [Ke
 
 - No unreleased changes yet.
 
+## [0.1.3] - 2025-11-13
+
+### Added
+
+- Clarified installation instructions for consumers: add `gem "source_monitor"` via RubyGems before running the guided workflow (README + docs/setup.md).
+
+### Testing
+
+- Documentation-only update; no code changes.
+
 ## [0.1.2] - 2025-11-13
 
 ### Added
