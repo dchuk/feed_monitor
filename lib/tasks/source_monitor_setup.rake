@@ -20,5 +20,20 @@ namespace :source_monitor do
         raise "SourceMonitor setup requirements failed. #{messages.join(' ')}"
       end
     end
+
+    desc "Verify queue workers, Action Cable, and telemetry hooks"
+    task verify: :environment do
+      summary = SourceMonitor::Setup::Verification::Runner.new.call
+      printer = SourceMonitor::Setup::Verification::Printer.new
+      printer.print(summary)
+
+      if ENV["SOURCE_MONITOR_SETUP_TELEMETRY"].present?
+        SourceMonitor::Setup::Verification::TelemetryLogger.new.log(summary)
+      end
+
+      unless summary.ok?
+        raise "SourceMonitor setup verification failed. See output above for remediation steps."
+      end
+    end
   end
 end

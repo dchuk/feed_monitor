@@ -36,4 +36,28 @@ class SourceMonitorSetupTaskTest < ActiveSupport::TestCase
 
     checker.verify
   end
+
+  test "verify task prints summary and raises on failure" do
+    task = Rake::Task["source_monitor:setup:verify"]
+    task.reenable
+
+    summary = SourceMonitor::Setup::Verification::Summary.new([
+      SourceMonitor::Setup::Verification::Result.new(key: :solid_queue, name: "Solid Queue", status: :error, details: "missing", remediation: "fix")
+    ])
+
+    runner = Minitest::Mock.new
+    runner.expect(:call, summary)
+
+    printer = Minitest::Mock.new
+    printer.expect(:print, nil, [ summary ])
+
+    SourceMonitor::Setup::Verification::Runner.stub(:new, ->(*) { runner }) do
+      SourceMonitor::Setup::Verification::Printer.stub(:new, printer) do
+        assert_raises(RuntimeError) { task.invoke }
+      end
+    end
+
+    runner.verify
+    printer.verify
+  end
 end
