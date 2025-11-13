@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    source_monitor (0.1.1)
+    source_monitor (0.1.2)
       cssbundling-rails (~> 1.4)
       faraday (~> 2.9)
       faraday-follow_redirects (~> 0.4)
@@ -395,13 +395,13 @@ PLATFORMS
 DEPENDENCIES
   brakeman
   capybara
-  source_monitor!
   pg
   propshaft
   puma
   rubocop-rails-omakase
   selenium-webdriver
   simplecov
+  source_monitor!
   stackprof
   test-prof
   vcr
