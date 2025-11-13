@@ -13,6 +13,18 @@ This guide consolidates the new guided installer, verification commands, and rol
 | Background jobs | Solid Queue (>= 0.3, < 3.0) | Add `solid_queue` to the host Gemfile if not present. |
 | Realtime | Solid Cable (>= 3.0) or Redis | Solid Cable is the default; Redis requires `config.realtime.adapter = :redis`. |
 
+## Install the Gem
+
+Run these commands inside your host Rails application before invoking the guided workflow:
+
+```bash
+bundle add source_monitor --version "~> 0.1.2"
+# or add gem "source_monitor", "~> 0.1.2" to Gemfile manually
+bundle install
+```
+
+This ensures Bundler can load SourceMonitor so the commands below are available.
+
 ## Guided Setup (Recommended)
 
 1. **Check prerequisites** (optional but fast):
