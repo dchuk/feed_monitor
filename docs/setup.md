@@ -1,6 +1,6 @@
 # SourceMonitor Setup Workflow
 
-This guide consolidates the new guided installer, verification commands, and rollback steps so teams can onboard the engine into either a fresh Rails host or an existing application without missing prerequisites.
+This guide consolidates the new guided installer, verification commands, and rollback steps so teams can onboard the engine into either a fresh Rails host or an existing application without missing prerequisites. You never need to clone the SourceMonitor repository for installation—simply add the gem to your host application's Gemfile and run the steps below.
 
 ## Prerequisites
 
@@ -12,6 +12,18 @@ This guide consolidates the new guided installer, verification commands, and rol
 | Node.js | 18+ | Needed for Tailwind/esbuild assets when the host owns node tooling. |
 | Background jobs | Solid Queue (>= 0.3, < 3.0) | Add `solid_queue` to the host Gemfile if not present. |
 | Realtime | Solid Cable (>= 3.0) or Redis | Solid Cable is the default; Redis requires `config.realtime.adapter = :redis`. |
+
+## Install the Gem
+
+Run these commands inside your host Rails application before invoking the guided workflow:
+
+```bash
+bundle add source_monitor --version "~> 0.1.2"
+# or add gem "source_monitor", "~> 0.1.2" to Gemfile manually
+bundle install
+```
+
+This ensures Bundler can load SourceMonitor so the commands below are available.
 
 ## Guided Setup (Recommended)
 

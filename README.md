@@ -2,6 +2,20 @@
 
 SourceMonitor is a production-ready Rails 8 mountable engine for ingesting, normalising, scraping, and monitoring RSS/Atom/JSON feeds. It ships with a Tailwind-powered admin UI, Solid Queue job orchestration, Solid Cable realtime broadcasting, and an extensible configuration layer so host applications can offer full-stack feed operations without rebuilding infrastructure.
 
+> **Note:** Application developers consume SourceMonitor via RubyGems—add the gem to your host application's Gemfile and follow the guided installer. Clone this repository only when contributing to the engine itself.
+
+## Installation (RubyGems)
+
+In your host Rails app:
+
+```bash
+bundle add source_monitor --version "~> 0.1.2"
+# or add `gem "source_monitor", "~> 0.1.2"` manually, then run:
+bundle install
+```
+
+This exposes `bin/source_monitor` (via Bundler binstubs) so you can run the guided workflow described below.
+
 ## Highlights
 - Full-featured source and item administration backed by Turbo Streams and Tailwind UI components
 - Adaptive fetch pipeline (Feedjira + Faraday) with conditional GETs, retention pruning, and scrape orchestration
@@ -22,6 +36,16 @@ SourceMonitor is a production-ready Rails 8 mountable engine for ingesting, norm
 
 > **Command prefixes:** Examples below show bare `bundle`, `bin/rails`, and `bin/source_monitor`. If you use rbenv/asdf or containerized tooling, prefix/adjust commands accordingly so they run inside your Ruby environment.
 
+### Install the Gem
+
+Before running any SourceMonitor commands inside your host app, add the gem and install dependencies:
+
+```bash
+bundle add source_monitor --version "~> 0.1.2"
+# or edit your Gemfile, then run
+bundle install
+```
+
 ### Recommended: Guided Workflow
 1. **Optional prerequisite check:** `bin/rails source_monitor:setup:check`
 2. **Run the guided installer:** `bin/source_monitor install --yes`
@@ -30,7 +54,7 @@ SourceMonitor is a production-ready Rails 8 mountable engine for ingesting, norm
 4. **Verify anytime:** `bin/source_monitor verify` (also exposed as `bin/rails source_monitor:setup:verify`). The command prints a human summary plus JSON so CI can gate on Solid Queue and Action Cable health.
 5. **Visit the dashboard** at the chosen mount path and trigger “Fetch Now” on a source to confirm everything is wired.
 
-See [docs/setup.md](docs/setup.md) for the full workflow (prereq table, rollback steps, telemetry flag, Devise system test template).
+See [docs/setup.md](docs/setup.md) for the full workflow (prereq table, gem installation, rollback steps, telemetry flag, Devise system test template).
 
 ### Manual Install (Advanced)
 Prefer explicit Rails generator steps or need to customize each phase? The same document covers a full **Manual Installation** section so you can copy/paste each command into bespoke pipelines.
