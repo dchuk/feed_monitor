@@ -18,14 +18,14 @@ module SourceMonitor
       end
 
       test "ask returns default when blank" do
-        shell = FakeShell.new(["\n"])
+        shell = FakeShell.new([ "\n" ])
         prompter = Prompter.new(shell: shell)
 
         assert_equal "/source_monitor", prompter.ask("Mount?", default: "/source_monitor")
       end
 
       test "yes? parses responses" do
-        shell = FakeShell.new(["yes", "no"])
+        shell = FakeShell.new([ "yes", "no" ])
         prompter = Prompter.new(shell: shell)
 
         assert prompter.yes?("Wire Devise?", default: true)

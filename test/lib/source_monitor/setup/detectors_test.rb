@@ -23,7 +23,7 @@ module SourceMonitor
         version = Detectors.node_version(shell: runner)
 
         assert_equal Gem::Version.new("20.1.0"), version
-        assert_equal [ ["node", "--version"] ], runner.commands
+        assert_equal [ [ "node", "--version" ] ], runner.commands
       end
 
       test "node_version returns nil when command missing" do

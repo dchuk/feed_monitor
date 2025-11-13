@@ -31,7 +31,7 @@ module SourceMonitor
           installer = NodeInstaller.new(root: dir, shell: shell)
 
           assert installer.install_if_needed
-          assert_equal [ ["npm", "install"] ], shell.commands
+          assert_equal [ [ "npm", "install" ] ], shell.commands
         end
       end
     end

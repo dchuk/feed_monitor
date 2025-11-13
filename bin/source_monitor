@@ -2,6 +2,17 @@
 # frozen_string_literal: true
 
 require "bundler/setup"
+
+ENV["RAILS_ENV"] ||= ENV["RACK_ENV"] || "development"
+
+begin
+  require File.expand_path("config/environment", Dir.pwd)
+rescue LoadError => e
+  warn "SourceMonitor setup commands must be run from a Rails application root (missing config/environment)."
+  warn e.message
+  exit 1
+end
+
 require "source_monitor"
 
 SourceMonitor::Setup::CLI.start(ARGV)

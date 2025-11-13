@@ -2,6 +2,8 @@
 
 SourceMonitor installs like any other Rails engine, but it ships enough infrastructure (background jobs, realtime broadcasting, configuration DSL) that it is worth walking through the full setup. This guide assumes you are adding the engine to an existing Rails 8 host application.
 
+> **Looking for the new guided workflow?** Start with [docs/setup.md](./setup.md). It walks through the `bin/source_monitor install` / `verify` commands, telemetry options, rollback steps, and CI adoption tips. The remainder of this document focuses on the manual/advanced flow you can drop into bespoke pipelines.
+
 ## Prerequisites
 
 - Ruby 3.4.4 (we recommend [rbenv](https://github.com/rbenv/rbenv) for local development: `rbenv install 3.4.4 && rbenv local 3.4.4`, but asdf, chruby, rvm, or container-managed Ruby all work equally well—choose whatever fits your environment)
@@ -17,13 +19,15 @@ SourceMonitor installs like any other Rails engine, but it ships enough infrastr
 
 | Step | Command | Purpose |
 | --- | --- | --- |
-| 1 | `gem "source_monitor", github: "dchuk/source_monitor"` | Add the engine to your Gemfile |
-| 2 | `bundle install` | Install Ruby dependencies |
-| 3 | `bin/rails generate source_monitor:install --mount-path=/source_monitor` | Mount the engine and create the initializer |
-| 4 | `bin/rails railties:install:migrations FROM=source_monitor` | Copy engine migrations (idempotent) |
-| 5 | `bin/rails db:migrate` | Apply schema updates, including Solid Queue tables |
-| 6 | `bin/rails solid_queue:start` | Ensure jobs process via Solid Queue |
-| 7 | `bin/jobs --recurring_schedule_file=config/recurring.yml` | Start recurring scheduler (optional but recommended) |
+| A | `bin/source_monitor install --yes` | Recommended all-in-one workflow (mounts engine, runs migrations, patches initializer, verifies Solid Queue + Action Cable) |
+| B | `bin/source_monitor verify` | Re-run verification/telemetry without reinstalling |
+| C | `bin/rails source_monitor:setup:check` | Optional prerequisite audit before installing |
+
+If you need the manual flow (e.g., inserting commands into an existing custom script), follow the sections below.
+
+## Manual Installation Steps
+
+### 1. Add the Gem
 
 ## 1. Add the Gem
 
@@ -123,10 +127,10 @@ Open `config/initializers/source_monitor.rb` and adjust queue namespaces, HTTP t
 
 1. Start your Rails server: `bin/rails server`
 2. Ensure a Solid Queue worker is running (see step 6)
-3. Visit the mount path (`/source_monitor` by default)
-4. Create a source and trigger `Fetch Now`—watch fetch logs appear and dashboard metrics update
+3. Run `bin/source_monitor verify` for an automated Solid Queue / Action Cable check (same as the guided workflow). Add `SOURCE_MONITOR_SETUP_TELEMETRY=true` to persist JSON logs to `log/source_monitor_setup.log`.
+4. Visit the mount path (`/source_monitor` by default). Create a source and trigger “Fetch Now” to watch logs/metrics update in realtime.
 
-If you encounter issues, consult the [troubleshooting guide](troubleshooting.md).
+If you encounter issues, consult the [troubleshooting guide](troubleshooting.md) or the validation log in `docs/setup-validation-log.md`.
 
 ## Next Steps
 
@@ -138,7 +142,7 @@ If you encounter issues, consult the [troubleshooting guide](troubleshooting.md)
 
 | Host Scenario | Status | Notes |
 | --- | --- | --- |
-| Rails 8 full-stack app | ✅ Supported | Default generator flow (mount + initializer) |
+| Rails 8 full-stack app | ✅ Supported | Use the guided workflow or the manual generator steps above |
 | Rails 8 API-only app (`--api`) | ✅ Supported | Generator mounts engine; ensure you provide a UI entry point if needed |
 | Dedicated Solid Queue database | ✅ Supported | Run `bin/rails solid_queue:install` in the host app before copying SourceMonitor migrations |
 | Redis-backed Action Cable | ✅ Supported | Set `config.realtime.adapter = :redis` and provide `config.realtime.redis_url`; existing `config/cable.yml` entries are preserved |

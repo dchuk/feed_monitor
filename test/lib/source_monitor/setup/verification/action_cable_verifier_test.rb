@@ -7,7 +7,7 @@ module SourceMonitor
         test "ok when solid cable tables exist" do
           config = OpenStruct.new(adapter: :solid_cable)
           connection = Minitest::Mock.new
-          connection.expect(:table_exists?, true, ["solid_cable_messages"])
+          connection.expect(:table_exists?, true, [ "solid_cable_messages" ])
 
           existing = Object.const_defined?(:SolidCable)
           Object.const_set(:SolidCable, Module.new) unless existing

@@ -20,25 +20,29 @@ SourceMonitor is a production-ready Rails 8 mountable engine for ingesting, norm
 
 ## Quick Start (Host Application)
 
-> **Note on commands:** The examples below use bare `bundle` and `bin/rails` commands. If you use rbenv, prefix them with `rbenv exec` (e.g., `rbenv exec bundle install`). For Docker/container environments, run commands directly or via your container runtime. Adjust to match your Ruby version management approach.
+> **Command prefixes:** Examples below show bare `bundle`, `bin/rails`, and `bin/source_monitor`. If you use rbenv/asdf or containerized tooling, prefix/adjust commands accordingly so they run inside your Ruby environment.
 
-### Initial Install
-1. Add `gem "source_monitor", github: "dchuk/source_monitor"` to your Gemfile and run `bundle install`.
-2. Install the engine: `bin/rails generate source_monitor:install --mount-path=/source_monitor` (updates routes, drops the initializer, prints doc links).
-3. Copy migrations: `bin/rails railties:install:migrations FROM=source_monitor`.
-4. Apply migrations: `bin/rails db:migrate` (creates sources/items/logs tables, Solid Cable messages, and Solid Queue schema when required).
-5. Install frontend tooling if you plan to extend engine assets: `npm install`.
-6. Start background workers: `bin/rails solid_queue:start` (or your preferred process manager).
-7. Boot your app and visit the mount path you chose (default `/source_monitor`) to explore the dashboard and confirm Solid Queue metrics render.
+### Recommended: Guided Workflow
+1. **Optional prerequisite check:** `bin/rails source_monitor:setup:check`
+2. **Run the guided installer:** `bin/source_monitor install --yes`
+   - Prompts for the mount path (default `/source_monitor`), adds the gem entry when missing, runs `bundle install`, `npm install` (when `package.json` exists), copies/deduplicates migrations, patches the initializer, and runs verification.
+3. **Start workers / scheduler:** `bin/rails solid_queue:start` and, if you use recurring jobs, `bin/jobs --recurring_schedule_file=config/recurring.yml`.
+4. **Verify anytime:** `bin/source_monitor verify` (also exposed as `bin/rails source_monitor:setup:verify`). The command prints a human summary plus JSON so CI can gate on Solid Queue and Action Cable health.
+5. **Visit the dashboard** at the chosen mount path and trigger “Fetch Now” on a source to confirm everything is wired.
 
-Detailed instructions, optional flags, and verification steps live in [docs/installation.md](docs/installation.md), with troubleshooting advice in [docs/troubleshooting.md](docs/troubleshooting.md).
+See [docs/setup.md](docs/setup.md) for the full workflow (prereq table, rollback steps, telemetry flag, Devise system test template).
+
+### Manual Install (Advanced)
+Prefer explicit Rails generator steps or need to customize each phase? Follow the detailed walkthrough in [docs/installation.md](docs/installation.md). It mirrors the guided workflow but breaks out each command (generator, migrations, queue wiring) so you can integrate them into bespoke pipelines.
+
+Troubleshooting advice lives in [docs/troubleshooting.md](docs/troubleshooting.md).
 
 ### Upgrading SourceMonitor
 1. Bump the gem version in your host `Gemfile` and run `bundle install` (or `bundle update source_monitor` when targeting a specific release).
 2. Re-run `bin/rails railties:install:migrations FROM=source_monitor` and then `bin/rails db:migrate` to pick up schema changes.
 3. Compare your `config/initializers/source_monitor.rb` against the newly generated template for configuration diffs (new queue knobs, HTTP options, etc.).
 4. Review release notes for optional integrations—when enabling Mission Control, ensure `mission_control-jobs` stays mounted and linked via `config.mission_control_dashboard_path`.
-5. Smoke test Solid Queue workers, Action Cable, and admin UI flows after the upgrade.
+5. Smoke test Solid Queue workers, Action Cable, and admin UI flows after the upgrade, and run `bin/source_monitor verify` so CI/deploys confirm workers/cable health before rollout.
 
 ## Example Applications
 - `examples/basic_host/template.rb` – Minimal host that seeds a Rails blog source and redirects `/` to the dashboard.

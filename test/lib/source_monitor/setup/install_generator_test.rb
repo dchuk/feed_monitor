@@ -22,7 +22,7 @@ module SourceMonitor
 
         generator.run(mount_path: "/admin/source_monitor")
 
-        assert_includes shell.commands, ["bin/rails", "generate", "source_monitor:install", "--mount-path=/admin/source_monitor"]
+        assert_includes shell.commands, [ "bin/rails", "generate", "source_monitor:install", "--mount-path=/admin/source_monitor" ]
       end
     end
   end

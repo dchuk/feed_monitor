@@ -40,12 +40,12 @@ IMPORTANT: As you complete each task, check it off by changing `- [ ]` to `- [x]
   - [x] 3.3 Add reusable `source_monitor:setup:verify` task leveraging verification services with coverage
   - [x] 3.4 Emit structured JSON + human-readable summaries; test serialization and logging
   - [x] 3.5 Optional telemetry output (file/webhook) guarded by feature flag with tests
-- [ ] 4.0 Refresh documentation and onboarding assets
-  - [ ] 4.1 Update `docs/setup.md` to mirror automated workflow, referencing new commands
-  - [ ] 4.2 Document rollback steps and optional Devise system test template
-  - [ ] 4.3 Ensure `.ai/tasks.md` references this slice and link to PRD/tasks documents
-- [ ] 5.0 Validate workflow end-to-end and define rollout
-  - [ ] 5.1 Run setup workflow inside fresh Rails dummy app; record findings/logs
-  - [ ] 5.2 Run workflow inside existing host scenario (dummy app variations); capture diffs
-  - [ ] 5.3 Execute full test suite (`bin/rails test`, targeted setup tests, linters) and document results
-  - [ ] 5.4 Draft release notes + rollout checklist (include CI verification task adoption plan)
+- [x] 4.0 Refresh documentation and onboarding assets
+  - [x] 4.1 Update `docs/setup.md` to mirror automated workflow, referencing new commands
+  - [x] 4.2 Document rollback steps and optional Devise system test template
+  - [x] 4.3 Ensure `.ai/tasks.md` references this slice and link to PRD/tasks documents
+- [x] 5.0 Validate workflow end-to-end and define rollout
+  - [x] 5.1 Run setup workflow inside fresh Rails dummy app; record findings/logs
+  - [x] 5.2 Run workflow inside existing host scenario (dummy app variations); capture diffs
+  - [x] 5.3 Execute full test suite (`bin/rails test`, targeted setup tests, linters) and document results
+  - [x] 5.4 Draft release notes + rollout checklist (include CI verification task adoption plan)

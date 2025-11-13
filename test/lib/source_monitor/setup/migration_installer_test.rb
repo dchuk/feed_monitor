@@ -30,8 +30,8 @@ module SourceMonitor
           installer.install
 
           expected_commands = [
-            ["bin/rails", "railties:install:migrations", "FROM=source_monitor"],
-            ["bin/rails", "db:migrate"]
+            [ "bin/rails", "railties:install:migrations", "FROM=source_monitor" ],
+            [ "bin/rails", "db:migrate" ]
           ]
           assert_equal expected_commands, shell.commands
 

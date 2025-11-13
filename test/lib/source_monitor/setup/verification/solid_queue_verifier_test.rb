@@ -25,8 +25,8 @@ module SourceMonitor
         end
 
         test "returns ok when heartbeats are present" do
-          relation = FakeRelation.new([1], "solid_queue_processes")
-          connection = FakeConnection.new(tables: ["solid_queue_processes"])
+          relation = FakeRelation.new([ 1 ], "solid_queue_processes")
+          connection = FakeConnection.new(tables: [ "solid_queue_processes" ])
 
           result = SolidQueueVerifier.new(process_relation: relation, connection: connection, clock: -> { Time.current }).call
 
@@ -35,7 +35,7 @@ module SourceMonitor
 
         test "warns when no recent workers" do
           relation = FakeRelation.new([], "solid_queue_processes")
-          connection = FakeConnection.new(tables: ["solid_queue_processes"])
+          connection = FakeConnection.new(tables: [ "solid_queue_processes" ])
 
           result = SolidQueueVerifier.new(process_relation: relation, connection: connection, clock: -> { Time.current }).call
 

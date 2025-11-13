@@ -61,3 +61,11 @@ Keep this guide alongside your platform runbooks so teams can confidently deploy
 ## Container Reference Stack
 
 The repository ships a reusable Docker stack under `examples/docker` that mirrors the recommended process model. It builds a Ruby 3.3 image with Node, mounts your generated example via `APP_PATH`, and launches three services (`web`, `worker`, `scheduler`) alongside Postgres and Redis. Use it to trial production settings locally or as a baseline for ECS/Kubernetes manifests.
+
+## Setup Workflow Rollout Checklist
+
+1. **Adopt the CLI** – add `bin/source_monitor install --yes` (or an equivalent rake task wrapper) to your internal onboarding docs for both greenfield apps and existing hosts. Pair it with `bin/source_monitor verify` so operators can re-check queue/Action Cable health after deployments.
+2. **CI Gate** – extend your deploy pipeline to invoke `bin/source_monitor verify` right after migrations. Fail the build when the command exits non-zero and surface the JSON blob produced by the printer for diagnostics. This step replaces ad-hoc “did you start Solid Queue?” questions before merging.
+3. **Telemetry Opt-In** – set `SOURCE_MONITOR_SETUP_TELEMETRY=true` in staging/pre-prod so setup runs append logs to `log/source_monitor_setup.log`. Ship the file as a build artifact for debugging failed installs.
+4. **Rollback Ready** – reference `docs/setup.md#rollback-steps` in your release checklist so anyone piloting the workflow knows how to revert gem/routes/initializer changes if the experiment needs to pause.
+5. **Worker Coverage** – ensure at least one Solid Queue worker is running (or emits a heartbeat) before moving the PR out of draft; otherwise verification exits with a warning and CI will fail.

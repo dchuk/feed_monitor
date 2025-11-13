@@ -22,7 +22,7 @@ module SourceMonitor
 
         installer.install
 
-        assert_equal [ ["bundle", "install"] ], shell.commands
+        assert_equal [ [ "bundle", "install" ] ], shell.commands
       end
     end
   end

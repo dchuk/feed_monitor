@@ -1,5 +1,10 @@
 # SourceMonitor Engine - Rails 8 Thin Slice TDD Development Roadmap
 
+## Active Slice Tracker
+
+- PRD: `tasks/prd-setup-workflow-streamlining.md`
+- Task list: `tasks/tasks-setup-workflow-streamlining.md`
+
 ## Phase 01: Minimal Engine Setup & Rails Integration
 
 **Goal: Get engine mountable in host Rails 8 app immediately**

@@ -13,7 +13,15 @@ All notable changes to this project are documented below. The format follows [Ke
 
 ## [Unreleased]
 
-- No unreleased changes yet.
+### Added
+
+- Guided setup workflow (`bin/source_monitor install`) with dependency checks, Gemfile automation, migration deduplication, initializer patching, and Devise prompt support.
+- Reusable verification tooling (`bin/source_monitor verify` / `bin/rails source_monitor:setup:verify`) plus Solid Queue/Action Cable verifiers, JSON output, and optional telemetry logging.
+- Fresh documentation (`docs/setup.md`, rollout checklist in `docs/deployment.md`, validation log) outlining prerequisites, rollback steps, and CI adoption guidance.
+
+### Testing
+
+- Full suite (`bin/rails test`) and RuboCop (`bin/rubocop`) pass on Ruby 3.4.4 after adding the setup workflow.
 
 ## [0.1.1] - 2025-11-09
 
