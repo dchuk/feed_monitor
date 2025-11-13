@@ -1,6 +1,6 @@
 # SourceMonitor Setup Workflow
 
-This guide consolidates the new guided installer, verification commands, and rollback steps so teams can onboard the engine into either a fresh Rails host or an existing application without missing prerequisites.
+This guide consolidates the new guided installer, verification commands, and rollback steps so teams can onboard the engine into either a fresh Rails host or an existing application without missing prerequisites. You never need to clone the SourceMonitor repository for installation—simply add the gem to your host application's Gemfile and run the steps below.
 
 ## Prerequisites
 

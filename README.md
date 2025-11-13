@@ -2,6 +2,20 @@
 
 SourceMonitor is a production-ready Rails 8 mountable engine for ingesting, normalising, scraping, and monitoring RSS/Atom/JSON feeds. It ships with a Tailwind-powered admin UI, Solid Queue job orchestration, Solid Cable realtime broadcasting, and an extensible configuration layer so host applications can offer full-stack feed operations without rebuilding infrastructure.
 
+> **Note:** Application developers consume SourceMonitor via RubyGems—add the gem to your host application's Gemfile and follow the guided installer. Clone this repository only when contributing to the engine itself.
+
+## Installation (RubyGems)
+
+In your host Rails app:
+
+```bash
+bundle add source_monitor --version "~> 0.1.2"
+# or add `gem "source_monitor", "~> 0.1.2"` manually, then run:
+bundle install
+```
+
+This exposes `bin/source_monitor` (via Bundler binstubs) so you can run the guided workflow described below.
+
 ## Highlights
 - Full-featured source and item administration backed by Turbo Streams and Tailwind UI components
 - Adaptive fetch pipeline (Feedjira + Faraday) with conditional GETs, retention pruning, and scrape orchestration
